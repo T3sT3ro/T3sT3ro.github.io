@@ -89,19 +89,10 @@ int part(int p, int k) {
 	return ile;
 }
 
-int check(int n) {
-	int ile = 0;
-	fr(i, n) {
-		rep(j, i + 1, n) {
-			if (tab[i] > tab[j]) ile++;
-		}
-	}
-	return ile;
-}
 inline void run() {
 	INT(n);
 	fr(i, n) { I(tab[i]); }
-	printf("%d %d", part(0, n - 1), check(n));
+	printf("%d", part(0, n - 1));
 	return;
 }
 
