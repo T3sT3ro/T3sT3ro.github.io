@@ -2,6 +2,9 @@
 #include <string>
 #include <vector>
 #include "Heap.hpp"
+#include "MinMaxHeap.hpp"
+
+//#include <gtest\gtest.h>
 
 using namespace std;
 
@@ -112,12 +115,17 @@ void test5() {
 }
 
 void test6() {
-	cout << "6# clear test" << endl;
-	vector<int> V = { 56,2,5,8,3,1,23,4,6,7 };
-	Heap<int> h1(V);
-	h1.pretty();
-	h1.clear();
-	h1.pretty();
+	try {
+		cout << "6# clear test" << endl;
+		vector<int> V = { 56,2,5,8,3,1,23,4,6,7 };
+		Heap<int> h1(V);
+		h1.pretty();
+		h1.clear();
+		h1.pretty();
+	}
+	catch (string w) {
+		cout << w << endl;
+	}
 	return;
 }
 
@@ -127,19 +135,69 @@ void test7() {
 		Heap<int> h1;
 		h1.pretty();
 	}
-	catch (string w) {
-		cout << w << endl;
-	}
+	catch (string w) { cout << w << endl; }
 	return;
 }
 
-int main() {
-	test1();
-	test2();
-	test3();
-	test4();
-	test5();
-	test6();
-	test7();
+void test2_1() {
+	cout << "1# construct from vector with unique values, extract all Min, extract all max" << endl;
+	vector<int> V = { 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 };
+	random_shuffle(V.begin(), V.end());
+	MinMaxHeap<int> h1 = V;
+	h1 = V;
+	h1.pretty();
+	while (!h1.isEmpty())
+		printf("min: %d\n", h1.extractMin());
+	h1 = V;
+	while (!h1.isEmpty())
+		printf("max: %d\n", h1.extractMax());
+	h1 = V;
+	vector<int> V2 = h1.getContainer();
+	try {
+		while (!h1.isEmpty()) {
+			printf("min: %d\n", h1.extractMin());
+			printf("max: %d\n", h1.extractMax());
+		}
+	}
+	catch (string w) { cout << w << endl; }
+
+	return;
+}
+
+void test2_interactive() {
+	MinMaxHeap<int> H;
+	cout << "operations:" << endl << "insert <val> ; min ; max ; exmin ; exmax ; delmin ; delmax ; clear ; size ; empty ; tostring ; pretty ; exit" << endl;
+	while (true) {
+		try {
+			string querry;
+			int val;
+			cout << "$ ";
+			cin >> querry;
+			if (querry == "insert") {
+				cin >> val;
+				H.insert(val);
+			}
+			else if (querry == "min") cout << H.getMin() << endl;
+			else if (querry == "max") cout << H.getMax() << endl;
+			else if (querry == "exmin") cout << H.extractMin() << endl;
+			else if (querry == "exmax") cout << H.extractMax() << endl;
+			else if (querry == "delmin") H.deleteMin();
+			else if (querry == "delmax") H.deleteMax();
+			else if (querry == "clear") H.clear();
+			else if (querry == "size") cout << H.size() << endl;
+			else if (querry == "empty") cout << H.isEmpty() << endl;
+			else if (querry == "tostring") cout << H.toString() << endl;
+			else if (querry == "pretty") H.pretty();
+			else if (querry == "exit") break;
+			if (querry != "pretty") H.pretty();
+		}
+		catch (string w) { cout << w << endl; }
+	}
+}
+
+
+int main(int argc, char* argv[]) {
+	test2_1();
+	test2_interactive();
 	return 0;
 }
