@@ -4,6 +4,9 @@
 #include <sstream>
 #include <iterator>
 #include <algorithm>
+#include <iostream>
+#include <cstdio>
+#include <functional>
 
 
 
@@ -11,6 +14,7 @@
 /// @class	Heap
 ///
 /// @brief	A Heap implementation in c++.
+/// 		To compile without errors use -std=c++11 flag.
 ///
 /// @author	Tooster
 /// @date	2017-04-07
@@ -19,8 +23,11 @@
 template<class T, class Compare = std::less<T> >
 class Heap {
 protected:
+	/// @brief	The container
 	std::vector<T>  V_;
+	/// @brief	The size
 	int size_;
+	/// @brief	The compare function
 	Compare compare_;
 
 	//internal
@@ -119,7 +126,7 @@ protected:
 	inline int minElement_(const int& index1, const int& index2);
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// @fn	int Heap::lvl_(int val);
+	/// @fn	int Heap::lvl_(int index);
 	///
 	/// @brief			Returns a level in a heap of the index: lvl_(0)=0; lvl_(1)=lvl__(2)=1; etc.
 	/// @param	index	the index
@@ -267,13 +274,13 @@ public:
 //	 internal
 // ==================
 
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare >
 inline void Heap<T, Compare>::heapify_(const std::vector<T>& val) {
 	for (int i = size_ / 2; i >= 0; i--)
 		bubbleDown_(i);
 }
 
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare>
 void Heap<T, Compare>::bubbleUp_(const int& index) {
 	if (!valid_(index)) throw (std::string)("Index argument in bubbleDown_ is outsite the Heap range.");
 
@@ -291,7 +298,7 @@ void Heap<T, Compare>::bubbleUp_(const int& index) {
 		V_[currentNode] = val;
 }
 
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare>
 void Heap<T, Compare>::bubbleDown_(const int &index) {
 	if (!valid_(index)) throw (std::string)("Index argument in bubbleDown_ is outsite the Heap range.");
 
@@ -370,14 +377,14 @@ int Heap<T, Compare>::lvl_(int index) {
 //	 modification
 // ==================
 
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare>
 inline void Heap<T, Compare>::insert(const T& val) {
 	V_.emplace_back(val);
 	size_++;
 	bubbleUp_(size_ - 1);
 }
 
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare>
 inline T Heap<T, Compare>::extractMin() {
 	if (isEmpty())
 		throw (std::string)"Cannot extract min on empty Heap.";
@@ -391,7 +398,7 @@ inline T Heap<T, Compare>::extractMin() {
 	}
 }
 
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare>
 inline void Heap<T, Compare>::deleteMin() {
 	if (isEmpty())
 		throw (std::string)"Cannot delete min on empty Heap.";
@@ -401,7 +408,7 @@ inline void Heap<T, Compare>::deleteMin() {
 	if (!isEmpty()) bubbleDown_(0);
 }
 
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare>
 void Heap<T, Compare>::clear() {
 	V_.clear();
 	size_ = 0;
@@ -410,17 +417,17 @@ void Heap<T, Compare>::clear() {
 // ==================
 //	 information
 // ==================
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare>
 bool Heap<T, Compare>::isEmpty() const {
 	return size_ == 0;
 }
 
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare>
 int Heap<T, Compare>::size() const {
 	return size_;
 }
 
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare>
 T Heap<T, Compare>::getMin() const {
 	if (isEmpty())
 		throw (std::string)"Cannot find min on empty Heap.";
@@ -432,7 +439,7 @@ std::vector<T> Heap<T, Compare>::getContainer() const {
 	return V_;
 }
 
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare>
 std::string Heap<T, Compare>::toString() {
 	if (isEmpty()) return "";
 	std::ostringstream oss;
@@ -441,7 +448,7 @@ std::string Heap<T, Compare>::toString() {
 	return oss.str();
 }
 
-template<class T, class Compare = std::less<T>>
+template<class T, class Compare>
 void Heap<T, Compare>::drawSegment_(int partWidth, bool nodeLine, int index) {
 	for (int i = 0; i < partWidth; i++) std::printf("     ");
 	valid_(leftSon_(index)) ?
@@ -458,7 +465,7 @@ void Heap<T, Compare>::drawSegment_(int partWidth, bool nodeLine, int index) {
 	for (int i = 0; i < partWidth; i++) std::printf("     ");
 }
 
-template<class T, class Compare = std::less<T> >
+template<class T, class Compare>
 void Heap<T, Compare>::pretty() {
 	try {
 		std::cout << std::endl;

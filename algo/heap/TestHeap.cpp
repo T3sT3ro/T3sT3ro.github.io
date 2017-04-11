@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <functional>
 #include "Heap.hpp"
 #include "MinMaxHeap.hpp"
 
@@ -165,8 +166,11 @@ void test2_1() {
 }
 
 void test2_interactive() {
+	cout << "2# interactive test" << endl;
 	MinMaxHeap<int> H;
 	cout << "operations:" << endl << "insert <val> ; min ; max ; exmin ; exmax ; delmin ; delmax ; clear ; size ; empty ; tostring ; pretty ; exit" << endl;
+	cout << "To enable/disable auto pretty() function, use type 'autopretty'. Disabled by default" << endl;
+	bool AUTOPRETTY = false;
 	while (true) {
 		try {
 			string querry;
@@ -189,7 +193,8 @@ void test2_interactive() {
 			else if (querry == "tostring") cout << H.toString() << endl;
 			else if (querry == "pretty") H.pretty();
 			else if (querry == "exit") break;
-			if (querry != "pretty") H.pretty();
+			else if (querry == "autopretty") AUTOPRETTY = !AUTOPRETTY;
+			if (querry != "pretty" && AUTOPRETTY) H.pretty();
 		}
 		catch (string w) { cout << w << endl; }
 	}
@@ -197,6 +202,13 @@ void test2_interactive() {
 
 
 int main(int argc, char* argv[]) {
+	test1();
+	test2();
+	test3();
+	test4();
+	test5();
+	test6();
+	test7();
 	test2_1();
 	test2_interactive();
 	return 0;
