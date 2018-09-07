@@ -1,0 +1,18 @@
+{
+    "floors": [
+        {"alias": "basement",  "value": "B"},
+        {"alias": "1st floor", "value": "1F"},
+        {"alias": "2nd floor", "value": "2F"},
+        {"alias": "3rd floor", "value": "3F"}
+    ],
+    "modes": [
+        {"alias":"floor hatch",         "value": "hatch-floor"},
+        {"alias":"ceiling hatch",       "value": "hatch-ceiling"},
+        {"alias":"breachable walls",    "value": "breachable-wall"},
+        {"alias":"doors",               "value": "door"},
+        {"alias":"windows",             "value": "window"},
+        {"alias":"drone tunnels",       "value": "droneholes"},
+        {"alias":"cameras",             "value": "cams"},
+        {"alias":"spot names",          "value": "names"}
+    ]
+}
