@@ -6,7 +6,7 @@
 ///NOTES:
 /*
 point(int x, int y) : x{x}, y{y} {}
-x&(-x) potêga 2 najwiêksza która dzieli x : zwraca prawy 1-bit
+x&(-x) potÄ™ga 2 najwiï¿½ksza ktï¿½ra dzieli x : zwraca prawy 1-bit
 x&(x-1) kasuje ostatni 1-bit
 command line argument: < "$(ProjectDir)IN.txt" >"$(ProjectDir)OUT.txt"
 */
