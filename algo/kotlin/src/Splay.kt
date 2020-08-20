@@ -1,4 +1,3 @@
-import org.jetbrains.annotations.TestOnly
 import utils.TreePrinter
 import java.util.function.Function
 
@@ -71,11 +70,7 @@ class SplayTree {
 }
 
 fun main() {
-    val printer = TreePrinter<SplayTree.Node>(
-            Function<SplayTree.Node, String> { it.value.toString() },
-            Function<SplayTree.Node, SplayTree.Node?>{it.left},
-            Function<SplayTree.Node, SplayTree.Node?>{it.right}
-            )
+    val printer = TreePrinter<SplayTree.Node>({ it.value.toString() }, { it.left }, { it.right })
 //    printer.setSquareBranches(true)
     val T = SplayTree()
     val seq = if (false)
