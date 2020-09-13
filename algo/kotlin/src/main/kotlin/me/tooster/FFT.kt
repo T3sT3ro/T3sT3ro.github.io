@@ -1,5 +1,11 @@
-import utils.kotlinmath.*
+package main.me.tooster.kotlin
+
 import kotlin.math.roundToInt
+import main.me.tooster.kotlin.util.bitReversalPermutation
+import main.me.tooster.kotlin.util.kotlinmath.Complex
+import main.me.tooster.kotlin.util.kotlinmath.I
+import main.me.tooster.kotlin.util.kotlinmath.R
+import main.me.tooster.kotlin.util.kotlinmath.exp
 
 // finds smallest power of 2 greater or equal to n
 fun logcap(n: Int) = Integer.highestOneBit(n + Integer.highestOneBit(n) - 1)
@@ -12,7 +18,7 @@ fun logcap(n: Int) = Integer.highestOneBit(n + Integer.highestOneBit(n) - 1)
 fun fft(input: List<Complex>, inverse: Boolean = false): List<Complex> {
     assert(Integer.bitCount(input.size) == 1)
     // in-place bit-reversal permutation
-    val permutation = utils.bitReversalPermutation(Integer.numberOfTrailingZeros(input.size))
+    val permutation = bitReversalPermutation(Integer.numberOfTrailingZeros(input.size))
 
     val n = permutation.size
     var output = MutableList(n) { input[permutation[it]] }

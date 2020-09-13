@@ -1,6 +1,5 @@
 // from https://github.com/billvanyo/tree_printer by billvanyo
 // I claim no rights to this
-package utils;
 
 import java.io.PrintStream;
 import java.util.ArrayList;

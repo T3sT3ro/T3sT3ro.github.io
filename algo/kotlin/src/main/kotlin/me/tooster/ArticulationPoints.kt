@@ -1,3 +1,5 @@
+package main.me.tooster.kotlin
+
 import java.lang.Integer.min
 
 fun getArticulationPoints(V: Array<MutableList<Int>>): Int {
