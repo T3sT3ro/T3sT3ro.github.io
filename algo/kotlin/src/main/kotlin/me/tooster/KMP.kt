@@ -1,4 +1,4 @@
-// KMP string pattern searching
+package main.me.tooster.kotlin// kotlin.KMP string pattern searching
 
 fun testcase() {
     readLine() // trunc
@@ -44,5 +44,5 @@ fun KMP(text: String, pattern: String) {
 
 fun main(){
     val tests = readLine()!!.toInt()
-    (1..tests).forEach{_ -> testcase()}
+    (1..tests).forEach{_ -> testcase() }
 }

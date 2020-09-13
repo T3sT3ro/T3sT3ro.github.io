@@ -1,4 +1,4 @@
-package utils.kotlinmath
+package main.me.tooster.kotlin.util.kotlinmath
 
 import java.util.*
 import kotlin.math.*
@@ -8,7 +8,7 @@ import kotlin.math.*
  * a tupel of two Double values, the real (re) and the imaginary (im) part.
  * Additionally, there are two further calculated properties arg and mod, which
  * are the values of the corresponding polar coordinate representation.
- * The main purpose of this interface/class is that you can combine complex numbers
+ * The kotlin.main purpose of this interface/class is that you can combine complex numbers
  * using the four basic arithmetic operations (+, -, *, /) with each other but also
  * with all other objects of the type Number.
  */
