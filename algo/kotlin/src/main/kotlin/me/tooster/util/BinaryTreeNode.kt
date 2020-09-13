@@ -1,4 +1,4 @@
-package main.me.tooster.kotlin.util
+package me.tooster.util
 
 import kotlin.reflect.KMutableProperty0
 

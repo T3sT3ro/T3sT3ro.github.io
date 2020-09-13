@@ -1,6 +1,6 @@
-package main.me.tooster.kotlin
+package me.tooster
 
-import main.me.tooster.kotlin.util.MutableBinaryTreeNode
+import me.tooster.util.MutableBinaryTreeNode
 
 typealias Node<T> = MutableBinaryTreeNode<T>
 
@@ -53,7 +53,7 @@ class SplayTree<T: Comparable<T>> {
     fun insert(x: T) {
         val greater = split(x)
         if (root?.value == x) root!!.right = greater.root // reassign if already exists in tree
-        else root = main.me.tooster.kotlin.Node(x, root, greater.root)
+        else root = Node(x, root, greater.root)
     }
 
     fun delete(x: T) {

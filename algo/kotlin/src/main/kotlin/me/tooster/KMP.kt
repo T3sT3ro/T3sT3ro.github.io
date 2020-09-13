@@ -1,4 +1,4 @@
-package main.me.tooster.kotlin// kotlin.KMP string pattern searching
+package me.tooster// kotlin.KMP string pattern searching
 
 fun testcase() {
     readLine() // trunc

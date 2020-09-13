@@ -1,4 +1,4 @@
-package main.me.tooster.kotlin
+package me.tooster
 
 import java.lang.Integer.min
 
