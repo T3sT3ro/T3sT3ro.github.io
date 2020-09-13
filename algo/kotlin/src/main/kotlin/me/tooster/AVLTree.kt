@@ -1,6 +1,6 @@
-package main.me.tooster.kotlin
+package me.tooster
 
-import main.me.tooster.kotlin.util.MutableBinaryTreeNodeWithParent
+import me.tooster.util.MutableBinaryTreeNodeWithParent
 
 class AVLTree<T: Comparable<T>>{
 

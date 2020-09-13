@@ -1,5 +1,6 @@
-package main.me.tooster.kotlin.util.kotlinmath
+package me.tooster.util.kotlinmath
 
+import me.tooster.util.kotlinmath.*
 import kotlin.math.*
 
 /**

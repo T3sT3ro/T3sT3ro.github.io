@@ -1,4 +1,4 @@
-package main.me.tooster.kotlin
+package me.tooster
 
 import java.util.*
 import kotlin.collections.HashMap
@@ -73,3 +73,6 @@ class StaticHuffmanDictionary<SigmaT>(alphabet: Map<SigmaT, Int>): HuffmanDictio
     override fun toString(): String = encoder.toString()
 }
 
+fun main(){
+    val h = StaticHuffmanDictionary<Char>(mapOf('a' to 1, 'b' to 2, 'c' to 3))
+}

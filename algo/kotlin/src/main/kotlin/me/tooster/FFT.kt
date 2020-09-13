@@ -1,11 +1,11 @@
 package main.me.tooster.kotlin
 
 import kotlin.math.roundToInt
-import main.me.tooster.kotlin.util.bitReversalPermutation
-import main.me.tooster.kotlin.util.kotlinmath.Complex
-import main.me.tooster.kotlin.util.kotlinmath.I
-import main.me.tooster.kotlin.util.kotlinmath.R
-import main.me.tooster.kotlin.util.kotlinmath.exp
+import me.tooster.util.bitReversalPermutation
+import me.tooster.util.kotlinmath.Complex
+import me.tooster.util.kotlinmath.I
+import me.tooster.util.kotlinmath.R
+import me.tooster.util.kotlinmath.exp
 
 // finds smallest power of 2 greater or equal to n
 fun logcap(n: Int) = Integer.highestOneBit(n + Integer.highestOneBit(n) - 1)

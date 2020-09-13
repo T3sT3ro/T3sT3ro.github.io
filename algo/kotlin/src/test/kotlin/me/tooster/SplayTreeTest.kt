@@ -1,9 +1,8 @@
-import main.me.tooster.kotlin.Node
-import main.me.tooster.kotlin.SplayTree
+package me.tooster
+
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
-import
 internal class SplayTreeTest {
 
     fun Node<Int>.isHeapOrder(): Boolean {

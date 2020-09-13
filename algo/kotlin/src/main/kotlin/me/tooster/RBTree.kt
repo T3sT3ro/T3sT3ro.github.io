@@ -1,6 +1,6 @@
-package main.me.tooster.kotlin
+package me.tooster
 
-import main.me.tooster.kotlin.util.MutableBinaryTreeNode
+import me.tooster.util.MutableBinaryTreeNode
 
 class RBTree<T: Comparable<T>> {
 

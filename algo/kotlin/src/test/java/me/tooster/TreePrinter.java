@@ -1,5 +1,5 @@
-// from https://github.com/billvanyo/tree_printer by billvanyo
-// I claim no rights to this
+package me.tooster; // from https://github.com/billvanyo/tree_printer by billvanyo
+// I (Tooster) claim no rights to this
 
 import java.io.PrintStream;
 import java.util.ArrayList;
