@@ -1,5 +1,6 @@
 package me.tooster.util.graph
 
+import me.tooster.util.MemoizedResult
 import java.util.*
 import kotlin.collections.HashMap
 import kotlin.math.abs
@@ -13,6 +14,8 @@ import kotlin.math.sign
         Decrease degrees of vertices _w_ and if their degree is 0, push them onto stack for topological order
 */
 
+internal typealias TopPaths = Map<Vertex, List<Int>>
+
 /** Finds nth shortest/longest path in a graph.
  * @receiver        DAG (directed acyclic graph) as a list of weighted edges for every vertex
  * @param source    source vertex
@@ -22,8 +25,7 @@ import kotlin.math.sign
  * @return          length of the path or null if path doesn't exist
  * @throws IllegalArgumentException when n is equal to 0
  * */
-fun Graph.nthShortestPath(source: Vertex, target: Vertex, n: Int = 1): Int? {
-
+fun Graph.nthShortestPath(source: Vertex, target: Vertex, n: Int = 1, resultsCache: MemoizedResult<TopPaths>): Int? {
 
     if (n == 0) throw IllegalArgumentException("n cannot be 0")
 
@@ -52,7 +54,7 @@ fun Graph.nthShortestPath(source: Vertex, target: Vertex, n: Int = 1): Int? {
 
     while (topologicalOrder.isNotEmpty()) {
         val v = topologicalOrder.pop() // next vertex to process
-        if (v == target) return topPaths[target]?.getOrNull(abs(n) - 1) // target reached - return nth path
+        if (v == target) break
 
         graph[v]?.forEach { edge -> // fix the top lists of all neighbors and push on topological stack if needed
             topPaths[edge.target] = meldTopPaths(
@@ -61,26 +63,29 @@ fun Graph.nthShortestPath(source: Vertex, target: Vertex, n: Int = 1): Int? {
 
             inDegree[edge.target] = inDegree[edge.target]!! - 1
             if (inDegree[edge.target] == 0)
-                topologicalOrder.add(edge.target.also {inDegree.remove(it)})
+                topologicalOrder.add(edge.target.also { inDegree.remove(it) })
         }
     }
-    return null
+    resultsCache.data = topPaths
+    return topPaths[target]?.getOrNull(abs(n) - 1) // target reached - return nth path
 }
 
 fun main() {
-    val diamond: Graph = mapOf(
-            1 to mutableListOf(
+    val diamond = Graph(
+            1 to listOf(
                     Edge(2, 1),
                     Edge(3, 7),
                     Edge(4, 20),
             ),
-            2 to mutableListOf(
+            2 to listOf(
                     Edge(3, 5),
                     Edge(4, 9),
             ),
-            3 to mutableListOf(
+            3 to listOf(
                     Edge(4, 10)
             )
     )
-    println(diamond.nthShortestPath(1, 4, n=-4))
+    val results = MemoizedResult<TopPaths>()
+    println(diamond.nthShortestPath(1, 4, n = 4, results))
+    println(results.data)
 }
