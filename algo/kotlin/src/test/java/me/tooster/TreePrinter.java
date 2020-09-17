@@ -26,17 +26,15 @@ public class TreePrinter<T> {
         this.getRight = getRight;
     }
 
-    public void setPrintStream(PrintStream outStream) {
-        this.outStream = outStream;
-    }
+    public TreePrinter<T> withPrintStream(PrintStream outStream) { this.outStream = outStream; return this; }
 
-    public void setSquareBranches(boolean squareBranches) { this.squareBranches = squareBranches; }
+    public TreePrinter<T> withSquareBranches() { this.squareBranches = true; return this; }
 
-    public void setLrAgnostic(boolean lrAgnostic) { this.lrAgnostic = lrAgnostic; }
+    public TreePrinter<T> withLrAgnostic() { this.lrAgnostic = true; return this; }
 
-    public void setHspace(int hspace) { this.hspace = hspace; }
+    public TreePrinter<T> withHspace(int hspace) { this.hspace = hspace; return this; }
 
-    public void setTspace(int tspace) { this.hspace = tspace; }
+    public TreePrinter<T> withTspace(int tspace) { this.hspace = tspace; return this; }
 
     /*
         Prints ascii representation of binary tree.
@@ -86,7 +84,7 @@ public class TreePrinter<T> {
             endTreeIndex--;
 
             // find max number of lines for tallest tree
-            int maxLines = allTreeLines.stream().mapToInt(list -> list.size()).max().orElse(0);
+            int maxLines = allTreeLines.stream().mapToInt(List::size).max().orElse(0);
 
             // print trees line by line
             for (int i = 0; i < maxLines; i++) {
@@ -150,9 +148,12 @@ public class TreePrinter<T> {
 
             List<TreeLine> allTreeLines = new ArrayList<>();
 
+            // strip the ANSI escape codes to get length of rendered string. Fixes wrong padding when labels use ANSI escapes for colored nodes.
+            String visibleRootLabel = rootLabel.replaceAll("\\e\\[[\\d;]*[^\\d;]", "");
+
             // add the root and the two branches leading to the subtrees
 
-            allTreeLines.add(new TreeLine(rootLabel, -(rootLabel.length() - 1) / 2, rootLabel.length() / 2));
+            allTreeLines.add(new TreeLine(rootLabel, -(visibleRootLabel.length() - 1) / 2, visibleRootLabel.length() / 2));
 
             // also calculate offset adjustments for left and right subtrees
             int leftTreeAdjust = 0;
