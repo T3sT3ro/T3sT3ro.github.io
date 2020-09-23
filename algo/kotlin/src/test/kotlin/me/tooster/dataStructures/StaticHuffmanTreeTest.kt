@@ -1,6 +1,6 @@
 package me.tooster
 
-import main.me.tooster.kotlin.*
+import me.tooster.dataStructures.*
 import org.junit.jupiter.api.Test
 import java.io.File
 

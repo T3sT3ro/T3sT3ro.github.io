@@ -1,4 +1,4 @@
-package me.tooster
+package me.tooster.algorithms
 
 import java.lang.Integer.min
 
