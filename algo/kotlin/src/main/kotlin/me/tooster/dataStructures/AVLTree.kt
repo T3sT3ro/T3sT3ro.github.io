@@ -1,4 +1,4 @@
-package me.tooster
+package me.tooster.dataStructures
 
 import me.tooster.util.MutableBinaryTreeNodeWithParent
 
