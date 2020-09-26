@@ -1,6 +1,5 @@
-package me.tooster
+package me.tooster.dataStructures
 
-import me.tooster.dataStructures.SplayTree
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test

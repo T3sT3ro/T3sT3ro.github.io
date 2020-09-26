@@ -1,19 +1,14 @@
 package me.tooster.algorithms
 
-import org.aspectj.lang.annotation.Around
-import org.aspectj.lang.annotation.Aspect
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.InvocationInterceptor
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext
 import java.io.File
 import java.lang.reflect.Method
 
-@Aspect
 internal class KMPKtTest : InvocationInterceptor{
 
     @Override
@@ -24,8 +19,7 @@ internal class KMPKtTest : InvocationInterceptor{
 
     }
 
-    @Around("execution ")
-    fun displayPi() {
+    fun displayPi(pattern: String) {
         println(pattern.chunked(1).joinToString("|"))
         println(pi(pattern).joinToString("|"))
     }
