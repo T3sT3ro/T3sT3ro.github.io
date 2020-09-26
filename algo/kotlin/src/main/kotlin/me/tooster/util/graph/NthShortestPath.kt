@@ -2,7 +2,6 @@ package me.tooster.util.graph
 
 import me.tooster.util.MemoizedResult
 import java.util.*
-import kotlin.collections.HashMap
 import kotlin.math.abs
 import kotlin.math.sign
 
@@ -71,20 +70,12 @@ fun Graph.nthShortestPath(source: Vertex, target: Vertex, n: Int = 1, resultsCac
 }
 
 fun main() {
-    val diamond = Graph(
-            1 to listOf(
-                    Edge(2, 1),
-                    Edge(3, 7),
-                    Edge(4, 20),
-            ),
-            2 to listOf(
-                    Edge(3, 5),
-                    Edge(4, 9),
-            ),
-            3 to listOf(
-                    Edge(4, 10)
-            )
-    )
+    val diamond = Graph("""->
+        1 2$1 3$7 4$20
+        2     3$5 4$9
+        3         4$10
+    """.trimIndent())
+
     val results = MemoizedResult<TopPaths>()
     println(diamond.nthShortestPath(1, 4, n = 4, results))
     println(results.data)

@@ -1,6 +1,6 @@
-package me.tooster
+package me.tooster.dataStructures
 
-import me.tooster.dataStructures.*
+import me.tooster.TreePrinter
 import org.junit.jupiter.api.Test
 import java.io.File
 

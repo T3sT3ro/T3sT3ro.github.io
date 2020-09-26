@@ -1,24 +1,25 @@
-apply plugin: 'idea'
-apply plugin: 'java'
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+group = "me.tooster"
 
 repositories {
     mavenCentral()
 }
 
 plugins {
-    kotlin("jvm")
-}
+    kotlin("jvm") version "1.4.10"
+    idea
 
-group = "me.tooster"
+}
 
 val agent: Configuration by configurations.creating
 
 dependencies {
-    agent("org.aspectj:aspectjweaver:1.9.6")
-    compileOnly("org.aspectj:aspectjrt:1.9.6")
     implementation(kotlin("stdlib-jdk8"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
+    implementation(kotlin("script-runtime"))
+    implementation("org.jgrapht:jgrapht-core:1.5.0")
 }
 
 tasks.withType<KotlinCompile> {

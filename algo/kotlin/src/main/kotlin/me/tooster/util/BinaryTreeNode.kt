@@ -1,7 +1,5 @@
 package me.tooster.util
 
-import kotlin.reflect.KMutableProperty0
-
 interface BinaryTreeNode<TNode : BinaryTreeNode<TNode, TData>, TData> {
     var value: TData
     var left: TNode?
@@ -32,7 +30,6 @@ class MutableBinaryTreeNode<T>(override var value: T,
 }
 
 typealias MTPNode<T> = MutableBinaryTreeNodeWithParent<T>
-typealias REF<T> = KMutableProperty0<T>
 class MutableBinaryTreeNodeWithParent<T>(override var value: T,
                                          override var left: MTPNode<T>?,
                                          override var right: MTPNode<T>?,
