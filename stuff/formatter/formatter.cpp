@@ -43,6 +43,11 @@ const char* HELP = R"-(
 ┃ ┃  default color is default terminal color ┃ ┃
 ┃ ┃  empty options insert reset code (0)     ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
+┃ ┏━[Known Bugs]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
+┃ ┃  [ ] leading trim not working            ┃ ┃
+┃ ┃  [ ] {%*-- test --} gives pink text ?!?! ┃ ┃
+┃ ┃  [ ] {*--} gives pink text ?!?!          ┃ ┃
+┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 )-";
 
@@ -89,7 +94,7 @@ enum Masks {
     DIM           = 1 << 28,
     
     //-CONTROL--------------
-    TRIM          = 1 << 39,
+    TRIM          = 1 << 29,
     RESET         = 1 << 30,
     VALID         = 1 << 31,
     
@@ -101,8 +106,8 @@ enum Masks {
 };
 
 #define LIGHTER(color)                      ((color) | 1 << 4)       // returns lighter color mask
-#define MASK_TO_FG_ANSI(mask)               ((((mask) & FG_MASK) >> 0) + 30 + (mask >> 4 & 1) * 60) // returns ANSI code for fg color
-#define MASK_TO_BG_ANSI(mask)               ((((mask) & BG_MASK) >> 5) + 40 + (mask >> 9 & 1) * 60) // returns ANSI code for bg color
+#define MASK_TO_FG_ANSI(mask)               ((((mask) & FG_COLOR) >> 0) + 30 + ((mask) & FG_LIGHT ? 60 : 0)) // returns ANSI code for fg color
+#define MASK_TO_BG_ANSI(mask)               ((((mask) & BG_COLOR) >> 5) + 40 + ((mask) & BG_LIGHT ? 60 : 0)) // returns ANSI code for bg color
 #define OVERRIDE(target, submask, source)   ((target) & ~(submask) | (source) & (submask)) // returns mask with submask from other
 // returns mask with set primary(part=0) or secondary(part!=0) color
 inline mask_t WITH_COLOR(mask_t mask, int color, int part) {
@@ -113,7 +118,7 @@ class FormatterAutomaton {
 public:
     FormatterAutomaton() {
         formatStack.push(DEFAULT_FORMAT_MASK);
-        printf("%s", formatToAnsi(DEFAULT_FORMAT_MASK));
+        printf("%s", formatToAnsi(DEFAULT_FORMAT_MASK).c_str());
     }
 
 private: 
@@ -151,8 +156,8 @@ private:
         if (mask & RESET) format = DEFAULT_FORMAT_MASK;                         // RESET to base off default mask
         format = OVERRIDE(format, TRIM, mask);                                  // trim doesn't propagate through stack
         format ^= mask & FORMAT_MASK;                                           // toggle the formatting specified in `mask`
-        if (mask & FG_COLOR != CURRENT_COLOR) OVERRIDE(format, FG_MASK, mask);  // override fg color
-        if (mask & BG_COLOR != CURRENT_COLOR) OVERRIDE(format, BG_MASK, mask);  // override bg color
+        if (mask & FG_COLOR != CURRENT_COLOR) format = OVERRIDE(format, FG_MASK, mask);  // override fg color
+        if (mask & BG_COLOR != CURRENT_COLOR) format = OVERRIDE(format, BG_MASK, mask);  // override bg color
 
         // 2. store absolute format
         formatStack.push(format);
@@ -178,14 +183,17 @@ private:
     } state = DEFAULT_STATE;
 
     inline void storeChar(int c) { store += c; }
-    inline void clearStore() { store = "";}
-    inline void flushStore() { if(!store.empty()) ("%s", store); clearStore(); }
+    inline void clearStore() { store = ""; }
+    inline void flushStore() {
+        if (!store.empty()) printf("%s", store.c_str());
+        clearStore();
+    }
     bool storeContains(string suffix) {
         regex suffixRegex = regex(suffix);
         return regex_search(store, suffixRegex);
     }
-    
-    #pragma endregion
+
+#pragma endregion
 
 
     const string formatChars =
@@ -200,7 +208,8 @@ private:
     void   cleanAfterBracketParse(bool parseSuccess) {
         parseSuccess ? clearStore() : flushStore();
         parsedColorParts = 0;
-        state = parseSuccess && (bracketMask & TRIM) ? SKIP_LEADING_PADDING_STATE : DEFAULT_STATE;
+        state = (parseSuccess && (bracketMask & TRIM)) ? SKIP_LEADING_PADDING_STATE : DEFAULT_STATE;
+
         bracketMask = INVALID_MASK;
     }
 
@@ -212,8 +221,9 @@ private:
     void accept(int c) {
 
         // whitespace trimming
-        if (isspace(c) && state != SKIP_LEADING_PADDING_STATE) {
-            storeChar(c);
+        if (isspace(c)) {
+            if(state != SKIP_LEADING_PADDING_STATE)
+                storeChar(c);
         }
 
 
@@ -236,8 +246,9 @@ private:
                     return cleanAfterBracketParse(false);
                 } else if (storeContains("--$")) {  // success parsing bracket
                     // deal with empty format {--
+                    // fprintf(stderr, "[#:%x]\n", bracketMask);
                     auto ansi = pushFormat(bracketMask == INVALID_MASK ? DEFAULT_FORMAT_MASK : VALID | bracketMask);
-                    printf("%s", ansi);
+                    printf("%s", ansi.c_str());
                     return cleanAfterBracketParse(true);
                 }
             } else {
@@ -255,7 +266,7 @@ private:
             // dealing with color
             if (found <= 18) {
                 if (parsedColorParts < 2)           // fg, bg not set
-                    WITH_COLOR(bracketMask, isupper(c) ? found : LIGHTER(found - 11), parsedColorParts++);
+                    bracketMask = WITH_COLOR(bracketMask, islower(c) ? found : LIGHTER(found - 11), parsedColorParts++);
                 else { 
                     return cleanAfterBracketParse(false);
                 }
@@ -268,7 +279,7 @@ private:
                 mask_t opMask;
                 switch (c) {  // todo check if valid
                     case '%': opMask = REVERSED; break;
-                    case '1': opMask = BLINK; break;
+                    case '!': opMask = BLINK; break;
                     case '*': opMask = BOLD; break;
                     case '/': opMask = ITALIC; break;
                     case '_': opMask = UNDERLINE; break;
@@ -290,15 +301,13 @@ private:
 
             storeChar(c);
             if(storeContains("--}$")) {
-                regex_replace(store, regex(formatStack.top() & TRIM ? R"(\s*--}$)" : R"(--}$)"), "");
+                if(formatStack.size() > 1) // don't truncate unbalanced pairs
+                    store = regex_replace(store, regex(formatStack.top() & TRIM ? R"(\s*--}$)" : R"(--}$)"), "");
 
-                //-------------------------------------------+
-                assert(store.length() == 0);         // TEST |
                 flushStore(); // but it should be empty IMHO |
-                //-------------------------------------------+
 
                 auto ansi = popFormat();
-                printf("%s", ansi);
+                printf("%s", ansi.c_str());
                 state = DEFAULT_STATE;
 
             } else { // some giberrish } in text, continue
@@ -309,7 +318,8 @@ private:
               
 
         else { // done
-            putchar(c);
+            storeChar(c);
+            flushStore();
             state = DEFAULT_STATE;
         }
 
@@ -322,7 +332,7 @@ private:
 
     ~FormatterAutomaton() {
         flushStore();
-        printf("%s", formatToAnsi(DEFAULT_FORMAT_MASK));
+        printf("%s", formatToAnsi(DEFAULT_FORMAT_MASK).c_str());
     }
 };
 
@@ -341,13 +351,24 @@ void linearProcessText() {
 }
 
 int main(int argc, char* argv[]) {
-    int opt;
-    while ((opt = getopt(argc, argv, "h")) != -1) {
-        switch (opt) {
-            case 'h': printf("%s", HELP + 1); break;
-            default:
-                fprintf(stderr, "Usage: %s [-h]\n", argv[0]);
-                exit(EXIT_FAILURE);
+    while(optind < argc){
+
+        int opt;
+        if ((opt = getopt(argc, argv, "h")) != -1) {
+            switch (opt) {
+                case 'h': 
+                    printf("%s", HELP + 1); 
+                    exit(EXIT_SUCCESS);
+                default:
+                usage:
+                    fprintf(stderr, "Usage: %s [-h]\n", argv[0]);
+                    exit(EXIT_FAILURE);
+            }
+
+        } else {
+            // regular argument
+            goto usage;
+            optind++;
         }
     }
     linearProcessText();
