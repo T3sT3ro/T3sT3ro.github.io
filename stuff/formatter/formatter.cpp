@@ -19,7 +19,12 @@ const char* HELP = R"-(
 ┃   usage:  formatter [options]                ┃
 ┃   options:                                   ┃
 ┃     -h      displays this help               ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃     -s      strip off formatting sequences   ┃
+┃     -l      show formatting legend           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+)-";
+const char* LEGEND = R"-(
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ ┏━[ANSI format]━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
 ┃ ┃  '{options--text--}' e.g. {%Y:*--foo--}  ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
@@ -120,14 +125,22 @@ inline mask_t WITH_COLOR(mask_t mask, int color, int part) {
 }
 
 class FormatterAutomaton {
-public:
-    FormatterAutomaton() {
+    bool strip = false;
+   private:
+    void printANSI(string ANSI){
+        if(!strip)
+            printf("%s", ANSI.c_str());
+    }
+   public:
+    // strip: should formatting be parsed to ANSI or stripped off
+    FormatterAutomaton(bool strip) {
+        this->strip = strip;
         formatStack.push(INITIAL_FORMAT_MASK);
-        printf("%s", formatToAnsi(formatStack.top()).c_str());
+        printANSI(formatToAnsi(formatStack.top()));
     }
 
-private: 
-    stack<mask_t> formatStack = stack<mask_t>(); // mask always describes active formatting (absolute format)
+   private:
+    stack<mask_t> formatStack = stack<mask_t>();  // mask always describes active formatting (absolute format)
 
     // converts absolute format mask to ANSI string that can be printed
     string formatToAnsi(mask_t format){
@@ -222,7 +235,7 @@ private:
 
         // whitespace trimming
         if (isspace(c)) {
-            if(state != SKIP_LEADING_PADDING_STATE)
+            if(state != SKIP_LEADING_PADDING_STATE || strip) // skip whitespace if trim mode
                 storeChar(c);
         }
 
@@ -246,9 +259,7 @@ private:
                     return cleanAfterBracketParse(false);
                 } else if (storeContains("--$")) {  // success parsing bracket
                     // deal with empty format {--
-                    // fprintf(stderr, "[#:%x]\n", bracketMask);
-                    auto ansi = pushFormat(bracketMask);
-                    printf("%s", ansi.c_str());
+                    printANSI(pushFormat(bracketMask));
                     return cleanAfterBracketParse(true);
                 }
             } else {
@@ -304,12 +315,13 @@ private:
             storeChar(c);
             if(storeContains("--}$")) {
                 if(formatStack.size() > 1) // don't truncate unbalanced pairs
-                    store = regex_replace(store, regex(formatStack.top() & TRIM ? R"(\s*--}$)" : R"(--}$)"), "");
+                    store = regex_replace(store,
+                                          regex((formatStack.top() & TRIM) && !strip ? R"(\s*--}$)" : R"(--}$)"),
+                                          "");
 
-                flushStore(); // but it should be empty IMHO |
+                flushStore();
 
-                auto ansi = popFormat();
-                printf("%s", ansi.c_str());
+                printANSI(popFormat());
                 state = DEFAULT_STATE;
 
             } else { // some giberrish } in text, continue
@@ -334,7 +346,7 @@ private:
 
     ~FormatterAutomaton() {
         flushStore();
-        printf("%s", formatToAnsi(INITIAL_FORMAT_MASK).c_str());
+        printANSI(formatToAnsi(INITIAL_FORMAT_MASK));
     }
 };
 
@@ -345,22 +357,25 @@ private:
 // thanks to that we can always reset on exit sequences
 
 void linearProcessText() {
-    FormatterAutomaton automaton = FormatterAutomaton();
-
-    int c;
-    while ((c = getchar()) != EOF) 
-        automaton.accept(c);
+    
 }
 
 int main(int argc, char* argv[]) {
+    bool strip = false;
     while(optind < argc){
 
         int opt;
-        if ((opt = getopt(argc, argv, "h")) != -1) {
+        if ((opt = getopt(argc, argv, "hsl")) != -1) {
             switch (opt) {
                 case 'h': 
                     printf("%s", HELP + 1); 
                     exit(EXIT_SUCCESS);
+                case 'l':
+                    printf("%s", LEGEND + 1); 
+                    exit(EXIT_SUCCESS);
+                case 's':
+                    strip = true;
+                    break;
                 default:
                 usage:
                     fprintf(stderr, "Usage: %s [-h]\n", argv[0]);
@@ -373,7 +388,12 @@ int main(int argc, char* argv[]) {
             optind++;
         }
     }
-    linearProcessText();
+
+    FormatterAutomaton automaton = FormatterAutomaton(strip);
+
+    int c;
+    while ((c = getchar()) != EOF) 
+        automaton.accept(c);
 }
 
 // {::*--testing--}
