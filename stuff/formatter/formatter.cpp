@@ -44,9 +44,7 @@ const char* HELP = R"-(
 ┃ ┃  empty options insert reset code (0)     ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Known Bugs]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
-┃ ┃  [ ] leading trim not working            ┃ ┃
-┃ ┃  [ ] {%*-- test --} gives pink text ?!?! ┃ ┃
-┃ ┃  [ ] {*--} gives pink text ?!?!          ┃ ┃
+┃ ┃  {kR--x{:k--x--}x--} inner is not black  ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 )-";
@@ -68,7 +66,7 @@ enum Masks {
     BG_COLOR      = FG_COLOR << 5,
     BG_MASK       = BG_LIGHT | BG_COLOR, // mask for all BG
     
-    BLACK         = 0,
+    BLACK         = 0, // ANSI color base +0
     RED           = 1,
     GREEN         = 2,
     YELLOW        = 3,
@@ -79,8 +77,8 @@ enum Masks {
 
 
     //-COLOR-SPECIAL--------
-    DEFAULT_COLOR   = 9,   // default terminal color
-    CURRENT_COLOR   = 10,  // means that last used color should be used.
+    DEFAULT_COLOR   = 9,   // default terminal color: ANSI color base +9
+    CURRENT_COLOR   = 0xf, // means that last used color should be used.
     
     //-FORMAT---------------
     FORMAT_MASK   = 0x7f << 22,
@@ -99,15 +97,15 @@ enum Masks {
     VALID         = 1 << 31,
     
     //-SPECIAL-MASKS--------
-    DEFAULT_FORMAT_MASK = VALID | RESET | DEFAULT_COLOR << 5 | DEFAULT_COLOR,
-    INVALID_FG          = FG_MASK,
-    INVALID_BG          = BG_MASK,
-    INVALID_MASK        = INVALID_FG | INVALID_BG // mask used in parsing bracket to check if option was already read
+    INITIAL_FORMAT_MASK = VALID | RESET | DEFAULT_COLOR << 5 | DEFAULT_COLOR,
+    EMPTY_FORMAT_MASK   = VALID | CURRENT_COLOR << 5 | CURRENT_COLOR,
 };
 
-#define LIGHTER(color)                      ((color) | 1 << 4)       // returns lighter color mask
-#define MASK_TO_FG_ANSI(mask)               ((((mask) & FG_COLOR) >> 0) + 30 + ((mask) & FG_LIGHT ? 60 : 0)) // returns ANSI code for fg color
-#define MASK_TO_BG_ANSI(mask)               ((((mask) & BG_COLOR) >> 5) + 40 + ((mask) & BG_LIGHT ? 60 : 0)) // returns ANSI code for bg color
+#define GET_FG(mask)                        (((mask) & FG_COLOR) >> 0) // returns FG on LSBits
+#define GET_BG(mask)                        (((mask) & BG_COLOR) >> 5) // returns BG on LSBits
+#define LIGHTER(color)                      ((color) | (1 << 4))       // returns lighter color mask
+#define MASK_TO_FG_ANSI(mask)               (GET_FG(mask) + 30 + ((mask) & FG_LIGHT ? 60 : 0)) // returns ANSI code for fg color
+#define MASK_TO_BG_ANSI(mask)               (GET_BG(mask) + 40 + ((mask) & BG_LIGHT ? 60 : 0)) // returns ANSI code for bg color
 #define OVERRIDE(target, submask, source)   ((target) & ~(submask) | (source) & (submask)) // returns mask with submask from other
 // returns mask with set primary(part=0) or secondary(part!=0) color
 inline mask_t WITH_COLOR(mask_t mask, int color, int part) {
@@ -117,8 +115,8 @@ inline mask_t WITH_COLOR(mask_t mask, int color, int part) {
 class FormatterAutomaton {
 public:
     FormatterAutomaton() {
-        formatStack.push(DEFAULT_FORMAT_MASK);
-        printf("%s", formatToAnsi(DEFAULT_FORMAT_MASK).c_str());
+        formatStack.push(INITIAL_FORMAT_MASK);
+        printf("%s", formatToAnsi(formatStack.top()).c_str());
     }
 
 private: 
@@ -126,7 +124,7 @@ private:
 
     // converts absolute format mask to ANSI string that can be printed
     string formatToAnsi(mask_t format){
-        assert(format & VALID);
+        assert(format & VALID && format & RESET);
 
         vector<int> codes;
         // ANSI VALUES
@@ -153,11 +151,11 @@ private:
         mask_t format = formatStack.top();
 
         // 1. calculate the absolute format
-        if (mask & RESET) format = DEFAULT_FORMAT_MASK;                         // RESET to base off default mask
-        format = OVERRIDE(format, TRIM, mask);                                  // trim doesn't propagate through stack
-        format ^= mask & FORMAT_MASK;                                           // toggle the formatting specified in `mask`
-        if (mask & FG_COLOR != CURRENT_COLOR) format = OVERRIDE(format, FG_MASK, mask);  // override fg color
-        if (mask & BG_COLOR != CURRENT_COLOR) format = OVERRIDE(format, BG_MASK, mask);  // override bg color
+        if (mask & RESET) format = INITIAL_FORMAT_MASK;                                  // RESET to base off default mask
+        format = OVERRIDE(format, TRIM, mask);                                           // trim doesn't propagate through stack
+        format ^= mask & FORMAT_MASK;                                                    // toggle the formatting specified in `mask`
+        if (GET_FG(mask) != CURRENT_COLOR) format = OVERRIDE(format, FG_MASK, mask);  // override fg color
+        if (GET_BG(mask) != CURRENT_COLOR) format = OVERRIDE(format, BG_MASK, mask);  // override bg color
 
         // 2. store absolute format
         formatStack.push(format);
@@ -202,15 +200,14 @@ private:
         ":d"         // 9-10
         "KRGYBMCW"   // 11-18
         "%!*/_~.#0"; // 19-27
-    mask_t bracketMask      = INVALID_MASK;
+    mask_t bracketMask      = EMPTY_FORMAT_MASK;
     int    parsedColorParts = 0;
     size_t found            = string::npos;
     void   cleanAfterBracketParse(bool parseSuccess) {
         parseSuccess ? clearStore() : flushStore();
         parsedColorParts = 0;
         state = (parseSuccess && (bracketMask & TRIM)) ? SKIP_LEADING_PADDING_STATE : DEFAULT_STATE;
-
-        bracketMask = INVALID_MASK;
+        bracketMask = EMPTY_FORMAT_MASK;
     }
 
 
@@ -232,7 +229,7 @@ private:
 
             flushStore();
             storeChar(c);
-            bracketMask = INVALID_MASK;
+            bracketMask = EMPTY_FORMAT_MASK;
             state = PARSE_OPENING_BRACKET_STATE;
         } 
 
@@ -247,7 +244,7 @@ private:
                 } else if (storeContains("--$")) {  // success parsing bracket
                     // deal with empty format {--
                     // fprintf(stderr, "[#:%x]\n", bracketMask);
-                    auto ansi = pushFormat(bracketMask == INVALID_MASK ? DEFAULT_FORMAT_MASK : VALID | bracketMask);
+                    auto ansi = pushFormat(bracketMask);
                     printf("%s", ansi.c_str());
                     return cleanAfterBracketParse(true);
                 }
@@ -264,9 +261,9 @@ private:
             storeChar(c);
 
             // dealing with color
-            if (found <= 18) {
+            if (found <= 18) { // a ':' can be passed here
                 if (parsedColorParts < 2)           // fg, bg not set
-                    bracketMask = WITH_COLOR(bracketMask, islower(c) ? found : LIGHTER(found - 11), parsedColorParts++);
+                    bracketMask = WITH_COLOR(bracketMask, isupper(c) ? LIGHTER(found - 11) : found, parsedColorParts++);
                 else { 
                     return cleanAfterBracketParse(false);
                 }
@@ -332,7 +329,7 @@ private:
 
     ~FormatterAutomaton() {
         flushStore();
-        printf("%s", formatToAnsi(DEFAULT_FORMAT_MASK).c_str());
+        printf("%s", formatToAnsi(INITIAL_FORMAT_MASK).c_str());
     }
 };
 
