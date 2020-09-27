@@ -13,7 +13,7 @@ using namespace std;
 // TODO: overlined '^' (53), double underline '=' (23)
 const char* HELP = R"-(
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Markdown-like Formatter by Tooster           ┃
+┃ Markdown-like Formatter by Tooster v1.1      ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ Reads stdin, writes to stdout with ANSI      ┃
 ┃   usage:  formatter [options]                ┃
