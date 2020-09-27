@@ -29,11 +29,13 @@ const char* HELP = R"-(
 ┃ ┃  [g]reen     ┃  [*] Bold                 ┃ ┃
 ┃ ┃  [y]ellow    ┃  [/] Italic               ┃ ┃
 ┃ ┃  [b]lue      ┃  [_] Underline            ┃ ┃
-┃ ┃  [m]agenta   ┃  [~] Strikethrough        ┃ ┃
-┃ ┃  [c]yan      ┃  [.] dim                  ┃ ┃
-┃ ┃  [w]hite     ┃  [fb] set fg/bg colors    ┃ ┃
-┃ ┃  [:] current ┃  [#] trim text paddings   ┃ ┃
-┃ ┃  [d] default ┃  [0] reset all formatting ┃ ┃
+┃ ┃  [m]agenta   ┃  [^] overline             ┃ ┃
+┃ ┃  [c]yan      ┃  [=] double underline     ┃ ┃
+┃ ┃  [w]hite     ┃  [~] Strikethrough        ┃ ┃
+┃ ┃  [:] current ┃  [.] dim                  ┃ ┃
+┃ ┃  [d] default ┃  [fb] set fg/bg colors    ┃ ┃
+┃ ┃              ┃  [#] trim text paddings   ┃ ┃
+┃ ┃              ┃  [0] reset all formatting ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Control]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
 ┃ ┃  options are toggled AKA XORed           ┃ ┃
@@ -43,63 +45,68 @@ const char* HELP = R"-(
 ┃ ┃  default color is default terminal color ┃ ┃
 ┃ ┃  empty options insert reset code (0)     ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
-┃ ┏━[Known Bugs]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
-┃ ┃  {kR--x{:k--x--}x--} inner is not black  ┃ ┃
-┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 )-";
 
 /*
-format bitmask:     ┃ valid|0|# ┃ .|~|_|/|*|!|% ┃          ┃ light bg|bg ┃ light fg|fg ┃
-bit widths:     MSB ┃   1  |1|1 ┃ 1|1|1|1|1|1|1 ┃          ┃    1    | 4 ┃    1    | 4 ┃ LSB
-                    ┃  ctrl(3b) ┃    fmt(7b)    ┃ pad(12b) ┃     bg(5b)  ┃     fg(5b)  ┃
+format bitmask:     ┃ valid|0|# ┃ .|~|=|^|_|/|*|!|% ┃          ┃ light bg|bg ┃ light fg|fg ┃
+bit widths:     MSB ┃   1  |1|1 ┃ 1|1|1|1|1|1|1|1|1 ┃          ┃    1    | 4 ┃    1    | 4 ┃ LSB
+                    ┃  ctrl(3b) ┃    fmt(9b)        ┃ pad(10b) ┃     bg(5b)  ┃     fg(5b)  ┃
 */
 
 typedef __uint32_t mask_t;
 
 enum Masks {
     //-COLOR-MASKS----------
-    FG_LIGHT      = 0x10 << 0, // mask light bit of fg
-    FG_COLOR      = 0x0f << 0, // mask for color code of fg
-    FG_MASK       = FG_LIGHT | FG_COLOR, // mask for whole FG of
-    BG_LIGHT      = FG_LIGHT << 5,
-    BG_COLOR      = FG_COLOR << 5,
-    BG_MASK       = BG_LIGHT | BG_COLOR, // mask for all BG
-    
-    BLACK         = 0, // ANSI color base +0
-    RED           = 1,
-    GREEN         = 2,
-    YELLOW        = 3,
-    BLUE          = 4,
-    MAGENTA       = 5,
-    CYAN          = 6,
-    WHITE         = 7,
+    FG_LIGHT = 0x10 << 0,            // mask light bit of fg
+    FG_COLOR = 0x0f << 0,            // mask for color code of fg
+    FG_MASK  = FG_LIGHT | FG_COLOR,  // mask for whole FG of
+    BG_LIGHT = FG_LIGHT << 5,
+    BG_COLOR = FG_COLOR << 5,
+    BG_MASK  = BG_LIGHT | BG_COLOR,  // mask for all BG
 
+    BLACK   = 0,  // ANSI color base +0
+    RED     = 1,
+    GREEN   = 2,
+    YELLOW  = 3,
+    BLUE    = 4,
+    MAGENTA = 5,
+    CYAN    = 6,
+    WHITE   = 7,
 
     //-COLOR-SPECIAL--------
-    DEFAULT_COLOR   = 9,   // default terminal color: ANSI color base +9
-    CURRENT_COLOR   = 0xf, // means that last used color should be used.
-    
+    DEFAULT_COLOR = 9,   // 0b1001  default terminal color: ANSI color base +9
+    CURRENT_COLOR = 10,  // 0b1010  means that last used color should be used.
+
     //-FORMAT---------------
-    FORMAT_MASK   = 0x7f << 22,
-    
-    REVERSED      = 1 << 22,
-    BLINK         = 1 << 23,
-    BOLD          = 1 << 24,
-    ITALIC        = 1 << 25,
-    UNDERLINE     = 1 << 26,
-    STRIKETHROUGH = 1 << 27,
-    DIM           = 1 << 28,
-    
+    FORMAT_MASK      = 0x1ff << 20,
+
+    REVERSED         = 1 << 20,
+    BLINK            = 1 << 21,
+    BOLD             = 1 << 22,
+    ITALIC           = 1 << 23,
+    UNDERLINE        = 1 << 24,
+    OVERLINE         = 1 << 25,
+    DOUBLE_UNDERLINE = 1 << 26,
+    STRIKETHROUGH    = 1 << 27,
+    DIM              = 1 << 28,
+
     //-CONTROL--------------
-    TRIM          = 1 << 29,
-    RESET         = 1 << 30,
-    VALID         = 1 << 31,
-    
+    TRIM  = 1 << 29,
+    RESET = 1 << 30,
+    VALID = 1 << 31,
+
     //-SPECIAL-MASKS--------
     INITIAL_FORMAT_MASK = VALID | RESET | DEFAULT_COLOR << 5 | DEFAULT_COLOR,
     EMPTY_FORMAT_MASK   = VALID | CURRENT_COLOR << 5 | CURRENT_COLOR,
 };
+
+const string formatChars =
+        "krgybmcw"     // 0-7
+        "-"            // 8
+        "d:"           // 9-10
+        "KRGYBMCW"     // 11-18
+        "%!*/_^=~.#0"; // 19-29
 
 #define GET_FG(mask)                        (((mask) & FG_COLOR) >> 0) // returns FG on LSBits
 #define GET_BG(mask)                        (((mask) & BG_COLOR) >> 5) // returns BG on LSBits
@@ -128,14 +135,16 @@ private:
 
         vector<int> codes;
         // ANSI VALUES
-        if(format & RESET)          codes.push_back(0);
-        if(format & BOLD)           codes.push_back(1);
-        if(format & DIM)            codes.push_back(2);
-        if(format & ITALIC)         codes.push_back(3);
-        if(format & UNDERLINE)      codes.push_back(4);
-        if(format & BLINK)          codes.push_back(6);
-        if(format & REVERSED)       codes.push_back(7);
-        if(format & STRIKETHROUGH)  codes.push_back(9);
+        if(format & RESET)              codes.push_back(0);
+        if(format & BOLD)               codes.push_back(1);
+        if(format & DIM)                codes.push_back(2);
+        if(format & ITALIC)             codes.push_back(3);
+        if(format & UNDERLINE)          codes.push_back(4);
+        if(format & BLINK)              codes.push_back(6);
+        if(format & REVERSED)           codes.push_back(7);
+        if(format & STRIKETHROUGH)      codes.push_back(9);
+        if(format & DOUBLE_UNDERLINE)   codes.push_back(21);
+        if(format & OVERLINE)           codes.push_back(53);
         codes.push_back(MASK_TO_FG_ANSI(format));
         codes.push_back(MASK_TO_BG_ANSI(format)); 
         string ANSI = "";
@@ -151,11 +160,11 @@ private:
         mask_t format = formatStack.top();
 
         // 1. calculate the absolute format
-        if (mask & RESET) format = INITIAL_FORMAT_MASK;                                  // RESET to base off default mask
-        format = OVERRIDE(format, TRIM, mask);                                           // trim doesn't propagate through stack
-        format ^= mask & FORMAT_MASK;                                                    // toggle the formatting specified in `mask`
-        if (GET_FG(mask) != CURRENT_COLOR) format = OVERRIDE(format, FG_MASK, mask);  // override fg color
-        if (GET_BG(mask) != CURRENT_COLOR) format = OVERRIDE(format, BG_MASK, mask);  // override bg color
+        if (mask & RESET) format = INITIAL_FORMAT_MASK;                                 // RESET to base off default mask
+        format = OVERRIDE(format, TRIM, mask);                                          // trim doesn't propagate through stack
+        format ^= mask & FORMAT_MASK;                                                   // toggle the formatting specified in `mask`
+        if (GET_FG(mask) != CURRENT_COLOR) format = OVERRIDE(format, FG_MASK, mask);    // override fg color from mask
+        if (GET_BG(mask) != CURRENT_COLOR) format = OVERRIDE(format, BG_MASK, mask);    // override bg color from mask
 
         // 2. store absolute format
         formatStack.push(format);
@@ -194,12 +203,6 @@ private:
 #pragma endregion
 
 
-    const string formatChars =
-        "krgybmcw"   // 0-7
-        "-"          // 8
-        ":d"         // 9-10
-        "KRGYBMCW"   // 11-18
-        "%!*/_~.#0"; // 19-27
     mask_t bracketMask      = EMPTY_FORMAT_MASK;
     int    parsedColorParts = 0;
     size_t found            = string::npos;
@@ -280,6 +283,8 @@ private:
                     case '*': opMask = BOLD; break;
                     case '/': opMask = ITALIC; break;
                     case '_': opMask = UNDERLINE; break;
+                    case '^': opMask = OVERLINE; break;
+                    case '=': opMask = DOUBLE_UNDERLINE; break;
                     case '~': opMask = STRIKETHROUGH; break;
                     case '.': opMask = DIM; break;
                     case '#': opMask = TRIM; break;
