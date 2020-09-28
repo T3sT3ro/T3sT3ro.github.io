@@ -1,4 +1,4 @@
-version = v1.4
+version = v1.5
 
 all: formatter
 
@@ -10,7 +10,7 @@ install: formatter
 	cp -iu formatter /usr/local/bin/
 
 demo: formatter demo.txt
-	./formatter < demo.txt
+	./formatter -e < demo.txt
 
 dist: formatter.cpp demo.txt Makefile README.md
 	tar -czf formatter-$(version).tar.gz --transform 's,^,formatter-$(version)/,' \

@@ -21,8 +21,9 @@ const char* HELP = R"-(
 ┃   options:                                   ┃
 ┃     -h      displays this help               ┃
 ┃     -v      get version string (since v1.4)  ┃
-┃     -s      strip off formatting sequences   ┃
 ┃     -l      show formatting legend           ┃
+┃     -s      strip off formatting sequences   ┃
+┃     -e      escape sequences (\[\abrnftv])   ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 )-";
 const char* LEGEND = R"-(
@@ -133,22 +134,27 @@ inline mask_t WITH_COLOR(mask_t mask, int color, int part) {
 }
 
 class FormatterAutomaton {
-    bool strip = false;
-   private:
-    void printANSI(string ANSI){
-        if(!strip)
+    const bool strip  = false; // should strip instead of printing ANSI
+    const bool escape = false; // should escape special characters
+
+    enum STATE {
+        DEFAULT_STATE,
+        PARSE_ESCAPE_STATE,
+        PARSE_OPENING_BRACKET_STATE,
+        SKIP_LEADING_PADDING_STATE,
+    } state = DEFAULT_STATE;
+
+    string        store            = "";               // stores current buffered input if processing potential parts
+    stack<mask_t> formatStack      = stack<mask_t>();  // mask always describes active formatting (absolute format)
+    mask_t        bracketMask      = EMPTY_FORMAT_MASK;
+    int           parsedColorParts = 0;
+
+#pragma region innards
+
+    void printANSI(string ANSI) {
+        if (!strip)
             printf("%s", ANSI.c_str());
     }
-   public:
-    // strip: should formatting be parsed to ANSI or stripped off
-    FormatterAutomaton(bool strip) {
-        this->strip = strip;
-        formatStack.push(INITIAL_FORMAT_MASK);
-        printANSI(formatToAnsi(formatStack.top()));
-    }
-
-   private:
-    stack<mask_t> formatStack = stack<mask_t>();  // mask always describes active formatting (absolute format)
 
     // converts absolute format mask to ANSI string that can be printed
     string formatToAnsi(mask_t format){
@@ -181,11 +187,11 @@ class FormatterAutomaton {
         mask_t format = formatStack.top();
 
         // 1. calculate the absolute format
-        if (mask & RESET) format = INITIAL_FORMAT_MASK;                                 // RESET to base off default mask
-        format = OVERRIDE(format, TRIM, mask);                                          // trim doesn't propagate through stack
-        format ^= mask & FORMAT_MASK;                                                   // toggle the formatting specified in `mask`
-        if (GET_FG(mask) != CURRENT_COLOR) format = OVERRIDE(format, FG_MASK, mask);    // override fg color from mask
-        if (GET_BG(mask) != CURRENT_COLOR) format = OVERRIDE(format, BG_MASK, mask);    // override bg color from mask
+        if (mask & RESET) format = INITIAL_FORMAT_MASK;                               // RESET to base off default mask
+        format = OVERRIDE(format, TRIM, mask);                                        // trim doesn't propagate through stack
+        format ^= mask & FORMAT_MASK;                                                 // toggle the formatting specified in `mask`
+        if (GET_FG(mask) != CURRENT_COLOR) format = OVERRIDE(format, FG_MASK, mask);  // override fg color from mask
+        if (GET_BG(mask) != CURRENT_COLOR) format = OVERRIDE(format, BG_MASK, mask);  // override bg color from mask
 
         // 2. store absolute format
         formatStack.push(format);
@@ -200,16 +206,6 @@ class FormatterAutomaton {
         return formatToAnsi(formatStack.top());  // restore previous format
     }
 
-    #pragma region automaton control
-
-    string store = "";  // stores current buffered input if processing potential parts
-
-    enum STATE {
-        DEFAULT_STATE,
-        PARSE_OPENING_BRACKET_STATE,
-        SKIP_LEADING_PADDING_STATE,
-    } state = DEFAULT_STATE;
-
     inline void storeChar(int c) { store += c; }
     inline void clearStore() { store = ""; }
     inline void flushStore() {
@@ -217,46 +213,77 @@ class FormatterAutomaton {
         clearStore();
     }
 
-#pragma endregion
-
-
-    mask_t bracketMask      = EMPTY_FORMAT_MASK;
-    int    parsedColorParts = 0;
-    size_t found            = string::npos;
-    void   cleanAfterBracketParse(bool parseSuccess) {
+    void cleanAfterBracketParse(bool parseSuccess) {
         parseSuccess ? clearStore() : flushStore();
         parsedColorParts = 0;
-        state = (parseSuccess && (bracketMask & TRIM)) ? SKIP_LEADING_PADDING_STATE : DEFAULT_STATE;
-        bracketMask = EMPTY_FORMAT_MASK;
+        state            = (parseSuccess && (bracketMask & TRIM)) ? SKIP_LEADING_PADDING_STATE : DEFAULT_STATE;
+        bracketMask      = EMPTY_FORMAT_MASK;
     }
 
-
-    
-
+#pragma endregion
 
    public:
-    void accept(int c) {
+    // strip: should formatting be parsed to ANSI or stripped off
+    FormatterAutomaton(bool strip, bool escape) : strip(strip), escape(escape){
+        formatStack.push(INITIAL_FORMAT_MASK);
+        printANSI(formatToAnsi(formatStack.top()));
+    }
 
-        // whitespace trimming
-        if (isspace(c)) {
+    ~FormatterAutomaton() {
+        flushStore();
+        printANSI(formatToAnsi(INITIAL_FORMAT_MASK));
+    }
+
+    void accept(int c) {
+        static size_t found = string::npos;
+
+        // parsing escape
+        if (state == PARSE_ESCAPE_STATE) {
+            switch (c) {
+                case '\\': clearStore(); printf("\\"); break; // backslash
+                case 'a' : clearStore(); printf("\a"); break; // alert (bell)
+                case 'b' : clearStore(); printf("\b"); break; // backspace
+                case 'r' : clearStore(); printf("\r"); break; // carraiage return
+                case 'n' : clearStore(); printf("\n"); break; // newline (line feed)
+                case 'f' : clearStore(); printf("\f"); break; // form feed
+                case 't' : clearStore(); printf("\t"); break; // horizontal tab
+                case 'v' : clearStore(); printf("\v"); break; // vertical tab
+                default:                                      // invalid escape - print as is
+                    storeChar(c);
+                    flushStore();
+                    break;
+            }
+            state = DEFAULT_STATE;
+        } else if (escape == true && c == '\\') {
+            flushStore();
+            storeChar(c); // store = "\"
+            state = PARSE_ESCAPE_STATE;
+        } 
+
+
+        // potential whitespace trimming - increases memory in TRIM mode
+        else if (isspace(c)) {
+            
             if(state != SKIP_LEADING_PADDING_STATE || strip) // skip whitespace if trim mode
                 storeChar(c);
+
+            if(!formatStack.top() & TRIM) // if trimming mode is not currently enabled, we can safely print the whitespace
+                flushStore();
         }
 
 
         // begin bracket parsing
-        else if(c == '{'){
-
+        else if (c == '{') {
             flushStore();
             storeChar(c);
             bracketMask = EMPTY_FORMAT_MASK;
             state = PARSE_OPENING_BRACKET_STATE;
-        } 
+        }
 
 
-        // TODO: everything
+        // parsking end of opening bracket
         else if (c == '-') {
-            
+
             storeChar(c);
             if(state == PARSE_OPENING_BRACKET_STATE){
                 static regex terminatorRegex("--$");
@@ -268,12 +295,11 @@ class FormatterAutomaton {
             } else {
                 state = DEFAULT_STATE; // to exit eventual trailing whitespace removal mode
             }
-        } 
-        
+        }
+
 
         // parsing options of opening bracket; '-' won't be caught anymore so it's good
         else if (state == PARSE_OPENING_BRACKET_STATE && (found = formatChars.find(c)) != string::npos) {
-            // valid formatting has at most one option of each kind
 
             storeChar(c);
 
@@ -282,7 +308,7 @@ class FormatterAutomaton {
                 if (parsedColorParts < 2){           // fg, bg not set
                     bracketMask = WITH_COLOR(bracketMask, isupper(c) ? LIGHTER(found - 11) : found, parsedColorParts);
                     ++parsedColorParts;
-                } else { // to much color parts
+                } else { // too much color parts
                     return cleanAfterBracketParse(false);
                 }
                 
@@ -307,9 +333,9 @@ class FormatterAutomaton {
                 else
                     bracketMask |= opMask;
             }
-        } 
+        }
 
-        
+
         // end the formatting. trippy: {--}
         else if (c == '}') {
 
@@ -333,20 +359,15 @@ class FormatterAutomaton {
                 flushStore();
                 state = DEFAULT_STATE;
             }
-        } 
-              
+        }
 
-        else { // done
+
+        // any normal characters or breaking current context
+        else {
             storeChar(c);
             flushStore();
             state = DEFAULT_STATE;
         }
-
-    }
-
-    ~FormatterAutomaton() {
-        flushStore();
-        printANSI(formatToAnsi(INITIAL_FORMAT_MASK));
     }
 };
 
@@ -358,25 +379,19 @@ class FormatterAutomaton {
 
 int main(int argc, char* argv[]) {
     bool strip     = false;
+    bool escape    = false;
     bool fromStdin = true;
 
     int opt;
-    if ((opt = getopt(argc, argv, "hvsl")) != -1) {
+    if ((opt = getopt(argc, argv, "hvlse")) != -1) {
         switch (opt) {
-            case 'h':
-                printf("%s", HELP + 1);
-                exit(EXIT_SUCCESS);
-            case 'v':
-                printf("@VER\n");
-                exit(EXIT_SUCCESS);
-            case 'l':
-                printf("%s", LEGEND + 1);
-                exit(EXIT_SUCCESS);
-            case 's':
-                strip = true;
-                break;
+            case 'h': printf("%s", HELP + 1);   exit(EXIT_SUCCESS);
+            case 'v': printf("@VER\n");         exit(EXIT_SUCCESS);
+            case 'l': printf("%s", LEGEND + 1); exit(EXIT_SUCCESS);
+            case 's': strip = true;             break;
+            case 'e': escape = true;            break;
             default:
-                fprintf(stderr, "Usage: %s [-h]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [-hvlse] [TEXT ...]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
     }
@@ -389,8 +404,8 @@ int main(int argc, char* argv[]) {
         printf("%s", prefix.c_str());
 
         // parse the argument
-        FormatterAutomaton automaton = FormatterAutomaton(strip);
-        for (char* it = argv[optind]; *it; ++it)
+        FormatterAutomaton automaton = FormatterAutomaton(strip, escape);
+        for (char* it = argv[optind]; *it; ++it) // read null terminated c_string
             automaton.accept(*it);
 
         prefix = " ";
@@ -398,7 +413,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (fromStdin) {
-        FormatterAutomaton automaton = FormatterAutomaton(strip);
+        FormatterAutomaton automaton = FormatterAutomaton(strip, escape);
 
         int c;
         while ((c = getchar()) != EOF)

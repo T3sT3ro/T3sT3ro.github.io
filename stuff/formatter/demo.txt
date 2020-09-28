@@ -26,7 +26,16 @@
       [#] trim text paddings         
                             --}----------┃
 
-┃ {--common formatting stack test ┃
-{--
-normal {*--bold {/--italic {_--underline {.--dim {%--reverse {~--strike {!--blink-BLNK--}-STRK--}-RST--}-DIM--}-UND--}-ITA--}-BLD--}-NORM--}
-{_--+under{_---under{_--+under--}--}--}
+┃ {--common formatting stack test
+┃ {--normal {*--bold {/--italic {_--underline {.--dim {%--reverse {~--crossed {!--blink-BLNK--}-CRS--}-RST--}-DIM--}-UND--}-ITA--}-BLD--}-NORM--}
+┃ {_--+under{_---under{_--+under--}--}--}
+
+┃ escape sequences test. If you see [X] then escape doesn't work - it should be [O] ┃
+┃ \\\\ bracket escape: \\
+┃ \\n newline escape \n^^^^^^^^^^^^^^^^^^^
+┃ \\a alert escape (will be heard on supported terminals) \a
+┃ \\b backspace escape: [X\bO]
+┃ \\r: [X] carriage return test \r┃ \\r: [X]
+┃ \\f: form feed \\\f\ should be continous diagonal line spanning 2 lines
+┃ \\t: horizontal tab: a\tb\tc\td
+┃ \\v: vertical tab \\\v\ should be continous diagnoal line spannig 2 lines
