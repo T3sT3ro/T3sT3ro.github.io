@@ -9,14 +9,15 @@
 #include <cassert>
 
 using namespace std;
-// TODO: options to add reset at the beginning or end
-// TODO: overlined '^' (53), double underline '=' (23)
+// TODO fix positional characters to 
 const char* HELP = R"-(
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Markdown-like Formatter by Tooster v1.1      ┃
+┃ Markdown-like Formatter by Tooster v1.3      ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ Reads stdin, writes to stdout with ANSI      ┃
-┃   usage:  formatter [options]                ┃
+┃ Reads stdin or argument list and writes to   ┃
+┃ stdout with ANSI                             ┃
+┃                                              ┃
+┃   usage:  formatter [options] [formats ...]  ┃
 ┃   options:                                   ┃
 ┃     -h      displays this help               ┃
 ┃     -s      strip off formatting sequences   ┃
@@ -26,29 +27,35 @@ const char* HELP = R"-(
 const char* LEGEND = R"-(
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ ┏━[ANSI format]━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
-┃ ┃  '{options--text--}' e.g. {%Y:*--foo--}  ┃ ┃
+┃ ┃  '{options--text--}' e.g. {%Y*_--foo--}  ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Colors]━━━━━┳━[Options]━━━━━━━━━━━━━━━━━┓ ┃
-┃ ┃  blac[k]     ┃  [%] reversed             ┃ ┃
-┃ ┃  [r]ed       ┃  [!] blink                ┃ ┃
-┃ ┃  [g]reen     ┃  [*] Bold                 ┃ ┃
-┃ ┃  [y]ellow    ┃  [/] Italic               ┃ ┃
-┃ ┃  [b]lue      ┃  [_] Underline            ┃ ┃
-┃ ┃  [m]agenta   ┃  [^] overline             ┃ ┃
-┃ ┃  [c]yan      ┃  [=] double underline     ┃ ┃
-┃ ┃  [w]hite     ┃  [~] Strikethrough        ┃ ┃
-┃ ┃  [:] current ┃  [.] dim                  ┃ ┃
-┃ ┃  [d] default ┃  [fb] set fg/bg colors    ┃ ┃
+┃ ┃  blac[k]     ┃  [c] set color to c       ┃1┃
+┃ ┃  [r]ed       ┃  [%] reversed             ┃ ┃
+┃ ┃  [g]reen     ┃  [!] blink                ┃2┃
+┃ ┃  [y]ellow    ┃  [*] Bold                 ┃ ┃
+┃ ┃  [b]lue      ┃  [/] Italic               ┃ ┃
+┃ ┃  [m]agenta   ┃  [_] Underline            ┃ ┃
+┃ ┃  [c]yan      ┃  [^] overline             ┃2┃
+┃ ┃  [w]hite     ┃  [=] double underline     ┃2┃
+┃ ┃  [;] current ┃  [~] Strikethrough        ┃2┃
+┃ ┃  [d] default ┃  [.] dim                  ┃ ┃
 ┃ ┃              ┃  [#] trim text paddings   ┃ ┃
 ┃ ┃              ┃  [0] reset all formatting ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Control]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
-┃ ┃  options are toggled AKA XORed           ┃ ┃
-┃ ┃  capitalize fg/bg for brighter colors    ┃ ┃
-┃ ┃  color control is 2 characters wide      ┃ ┃
-┃ ┃  current color is last color on stack    ┃ ┃
-┃ ┃  default color is default terminal color ┃ ┃
-┃ ┃  empty options insert reset code (0)     ┃ ┃
+┃1┃  1st encountered color is fg, 2nd is bg  ┃ ┃
+┃1┃  Current color is last color on stack    ┃ ┃
+┃1┃  Capitalize fg/bg for brighter colors    ┃ ┃
+┃1┃  Default color is default terminal color ┃ ┃
+┃ ┃  Options are toggled (XORed) with last   ┃ ┃
+┃ ┃  Empty options ({--) resets format (0)   ┃ ┃
+┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
+┃ ┏━[Remarks]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
+┃ ┃  It's a greedy stream processor:         ┃ ┃
+┃ ┃   - doesn't wait for balanced bracket    ┃ ┃
+┃ ┃   - doesn't crash on invalid format      ┃ ┃
+┃2┃  Terminals may lack support for some ops ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 )-";
@@ -109,7 +116,7 @@ enum Masks {
 const string formatChars =
         "krgybmcw"     // 0-7
         "-"            // 8
-        "d:"           // 9-10
+        "d;"           // 9-10
         "KRGYBMCW"     // 11-18
         "%!*/_^=~.#0"; // 19-29
 
@@ -255,9 +262,7 @@ class FormatterAutomaton {
             
             storeChar(c);
             if(state == PARSE_OPENING_BRACKET_STATE){
-                if (parsedColorParts == 1) {        // color not fully parsed
-                    return cleanAfterBracketParse(false);
-                } else if (storeContains("--$")) {  // success parsing bracket
+                if (storeContains("--$")) {  // success parsing bracket
                     // deal with empty format {--
                     printANSI(pushFormat(bracketMask));
                     return cleanAfterBracketParse(true);
@@ -275,17 +280,15 @@ class FormatterAutomaton {
             storeChar(c);
 
             // dealing with color
-            if (found <= 18) { // a ':' can be passed here
-                if (parsedColorParts < 2)           // fg, bg not set
-                    bracketMask = WITH_COLOR(bracketMask, isupper(c) ? LIGHTER(found - 11) : found, parsedColorParts++);
-                else { 
+            if (found <= 18) { // a ';' can be passed here
+                if (parsedColorParts < 2){           // fg, bg not set
+                    bracketMask = WITH_COLOR(bracketMask, isupper(c) ? LIGHTER(found - 11) : found, parsedColorParts);
+                    ++parsedColorParts;
+                } else { // to much color parts
                     return cleanAfterBracketParse(false);
                 }
                 
             // dealing with symbols
-            } else if(parsedColorParts == 1){       
-                return cleanAfterBracketParse(false);
-
             } else {
                 mask_t opMask;
                 switch (c) {  // todo check if valid
@@ -337,11 +340,6 @@ class FormatterAutomaton {
             state = DEFAULT_STATE;
         }
 
-// when not to flush:
-//  c is {
-//  c is - and store ends in _, _-
-//  c is - and store ends in -  without TRIM mode
-//  c is } and store ends in --
     }
 
     ~FormatterAutomaton() {
@@ -356,44 +354,50 @@ class FormatterAutomaton {
 //   2. introduces stack's top ANSI entry sequence
 // thanks to that we can always reset on exit sequences
 
-void linearProcessText() {
-    
-}
-
 int main(int argc, char* argv[]) {
-    bool strip = false;
-    while(optind < argc){
+    bool strip     = false;
+    bool fromStdin = true;
 
-        int opt;
-        if ((opt = getopt(argc, argv, "hsl")) != -1) {
-            switch (opt) {
-                case 'h': 
-                    printf("%s", HELP + 1); 
-                    exit(EXIT_SUCCESS);
-                case 'l':
-                    printf("%s", LEGEND + 1); 
-                    exit(EXIT_SUCCESS);
-                case 's':
-                    strip = true;
-                    break;
-                default:
-                usage:
-                    fprintf(stderr, "Usage: %s [-h]\n", argv[0]);
-                    exit(EXIT_FAILURE);
-            }
-
-        } else {
-            // regular argument
-            goto usage;
-            optind++;
+    int opt;
+    if ((opt = getopt(argc, argv, "hsl")) != -1) {
+        switch (opt) {
+            case 'h':
+                printf("%s", HELP + 1);
+                exit(EXIT_SUCCESS);
+            case 'l':
+                printf("%s", LEGEND + 1);
+                exit(EXIT_SUCCESS);
+            case 's':
+                strip = true;
+                break;
+            default:
+                fprintf(stderr, "Usage: %s [-h]\n", argv[0]);
+                exit(EXIT_FAILURE);
         }
     }
 
-    FormatterAutomaton automaton = FormatterAutomaton(strip);
+    while (optind < argc) {
+        // regular argument - format it - don't enter stdin mode
+        fromStdin = false;
 
-    int c;
-    while ((c = getchar()) != EOF) 
-        automaton.accept(c);
+        static string prefix = "";  // for 2nd and next argument separate them by spaces
+        printf("%s", prefix.c_str());
+
+        // parse the argument
+        FormatterAutomaton automaton = FormatterAutomaton(strip);
+        for (char* it = argv[optind]; *it; ++it)
+            automaton.accept(*it);
+
+        prefix = " ";
+        optind++;
+    }
+
+    if (fromStdin) {
+        FormatterAutomaton automaton = FormatterAutomaton(strip);
+
+        int c;
+        while ((c = getchar()) != EOF)
+            automaton.accept(c);
+    }
+    exit(EXIT_SUCCESS);
 }
-
-// {::*--testing--}
