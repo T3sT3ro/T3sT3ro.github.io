@@ -29,6 +29,8 @@ run `./formatter -l` after building or look inside the source code of `formatter
 
 ## example usage
 
+{% raw %}
+
 ```
 {#--
 
@@ -46,7 +48,7 @@ run `./formatter -l` after building or look inside the source code of `formatter
 --}
 
 trim trailing whitespace
-
 --}
-
 ```
+
+{% endraw %}
