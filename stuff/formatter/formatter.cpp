@@ -12,7 +12,7 @@ using namespace std;
 // TODO fix positional characters to 
 const char* HELP = R"-(
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Markdown-like Formatter by Tooster v1.3      ┃
+┃ Markdown-like Formatter by Tooster @VER      ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ Reads stdin or argument list and writes to   ┃
 ┃ stdout with ANSI                             ┃
@@ -20,6 +20,7 @@ const char* HELP = R"-(
 ┃   usage:  formatter [options] [formats ...]  ┃
 ┃   options:                                   ┃
 ┃     -h      displays this help               ┃
+┃     -v      get version string (since v1.4)  ┃
 ┃     -s      strip off formatting sequences   ┃
 ┃     -l      show formatting legend           ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -215,10 +216,6 @@ class FormatterAutomaton {
         if (!store.empty()) printf("%s", store.c_str());
         clearStore();
     }
-    bool storeContains(string suffix) {
-        regex suffixRegex = regex(suffix);
-        return regex_search(store, suffixRegex);
-    }
 
 #pragma endregion
 
@@ -262,7 +259,8 @@ class FormatterAutomaton {
             
             storeChar(c);
             if(state == PARSE_OPENING_BRACKET_STATE){
-                if (storeContains("--$")) {  // success parsing bracket
+                static regex terminatorRegex("--$");
+                if (regex_search(store, terminatorRegex)) {  // success parsing bracket
                     // deal with empty format {--
                     printANSI(pushFormat(bracketMask));
                     return cleanAfterBracketParse(true);
@@ -316,10 +314,14 @@ class FormatterAutomaton {
         else if (c == '}') {
 
             storeChar(c);
-            if(storeContains("--}$")) {
+            static regex closingBracket(R"(--}$)");
+            static regex closingPaddingBracket(R"(\s*--}$)");
+            if(regex_search(store, closingBracket)) {
                 if(formatStack.size() > 1) // don't truncate unbalanced pairs
                     store = regex_replace(store,
-                                          regex((formatStack.top() & TRIM) && !strip ? R"(\s*--}$)" : R"(--}$)"),
+                                          (formatStack.top() & TRIM) && !strip
+                                              ? closingPaddingBracket
+                                              : closingBracket,
                                           "");
 
                 flushStore();
@@ -359,10 +361,13 @@ int main(int argc, char* argv[]) {
     bool fromStdin = true;
 
     int opt;
-    if ((opt = getopt(argc, argv, "hsl")) != -1) {
+    if ((opt = getopt(argc, argv, "hvsl")) != -1) {
         switch (opt) {
             case 'h':
                 printf("%s", HELP + 1);
+                exit(EXIT_SUCCESS);
+            case 'v':
+                printf("@VER\n");
                 exit(EXIT_SUCCESS);
             case 'l':
                 printf("%s", LEGEND + 1);
