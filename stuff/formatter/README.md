@@ -21,7 +21,7 @@ Styles propagate through the stack (with few exceptions like RESET=`0` and TRIM=
 
 C++ compilator and make is needed.
 
-1. untar `formatter.tar.gz` and cd into the directory
+1. untar `formatter-*.tar.gz` and cd into the directory
 2. `make` to build the `formatter` executable
 3. `sudo make install` to copy the executable to `/usr/local/bin`
 

@@ -12,10 +12,12 @@ install: formatter
 demo: formatter demo.txt
 	./formatter -e < demo.txt
 
-dist: formatter.cpp demo.txt Makefile README.md
+dist: formatter.cpp Makefile demo.txt README.md
 	tar -czf formatter-$(version).tar.gz --transform 's,^,formatter-$(version)/,' \
 	 formatter.cpp Makefile demo.txt README.md
 
 clean:
 	rm -rf formatter
+
+distclean: clean
 	rm -rf formatter*.tar.gz formatter*/
