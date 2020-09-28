@@ -6,5 +6,8 @@ formattter:
 install: formatter
 	cp -iu formatter /usr/local/bin/
 
+demo: formatter demo.txt
+	./formatter < demo.txt
+
 clean:
 	rm -f formatter

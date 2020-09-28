@@ -30,18 +30,18 @@ const char* LEGEND = R"-(
 ┃ ┃  '{options--text--}' e.g. {%Y*_--foo--}  ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Colors]━━━━━┳━[Options]━━━━━━━━━━━━━━━━━┓ ┃
-┃ ┃  blac[k]     ┃  [c] set color to c       ┃1┃
-┃ ┃  [r]ed       ┃  [%] reversed             ┃ ┃
-┃ ┃  [g]reen     ┃  [!] blink                ┃2┃
+┃ ┃  blac[k]     ┃  [c] Set color to c       ┃1┃
+┃ ┃  [r]ed       ┃  [%] Reversed             ┃ ┃
+┃ ┃  [g]reen     ┃  [!] Blink                ┃2┃
 ┃ ┃  [y]ellow    ┃  [*] Bold                 ┃ ┃
 ┃ ┃  [b]lue      ┃  [/] Italic               ┃ ┃
 ┃ ┃  [m]agenta   ┃  [_] Underline            ┃ ┃
-┃ ┃  [c]yan      ┃  [^] overline             ┃2┃
-┃ ┃  [w]hite     ┃  [=] double underline     ┃2┃
+┃ ┃  [c]yan      ┃  [^] Overline             ┃2┃
+┃ ┃  [w]hite     ┃  [=] Double underline     ┃2┃
 ┃ ┃  [;] current ┃  [~] Strikethrough        ┃2┃
-┃ ┃  [d] default ┃  [.] dim                  ┃ ┃
-┃ ┃              ┃  [#] trim text paddings   ┃ ┃
-┃ ┃              ┃  [0] reset all formatting ┃ ┃
+┃ ┃  [d] default ┃  [.] Dim                  ┃ ┃
+┃ ┃              ┃  [#] Rrim text paddings   ┃ ┃
+┃ ┃              ┃  [0] Reset all formatting ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Control]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
 ┃1┃  1st encountered color is fg, 2nd is bg  ┃ ┃
