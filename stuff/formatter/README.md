@@ -33,8 +33,6 @@ run `./formatter -l` after building or [check the source code of `formatter.cpp`
 
 ## example usage
 
-{% raw %}
-
 ```
 {#--
 
@@ -43,7 +41,7 @@ run `./formatter -l` after building or [check the source code of `formatter.cpp`
 {*yR--
     this will be bold, yellow text on bright red background
 
-    {%/-- this will also be italic and in reversed video - yellow background and bright red foreground --}
+    {/%-- this will also be italic and in reversed video - yellow background and bright red foreground --}
 
     this will again be bold, yellow foreground and red background
 
@@ -52,7 +50,6 @@ run `./formatter -l` after building or [check the source code of `formatter.cpp`
 --}
 
 trim trailing whitespace
+
 --}
 ```
-
-{% endraw %}
