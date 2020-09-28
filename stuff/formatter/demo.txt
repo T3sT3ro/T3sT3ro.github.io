@@ -1,0 +1,32 @@
+┃ {kw--blac[k]     FG--} ┃ {Kw--blac[K]     LFG--} ┃ {;k--blac[k]     BG--} ┃ {;K--blac[K]     LBG--} ┃
+┃ {r;--[r]ed       FG--} ┃ {R;--[R]ed       LFG--} ┃ {kr--[r]ed       BG--} ┃ {kR--[R]ed       LBG--} ┃
+┃ {g;--[g]reen     FG--} ┃ {G;--[G]reen     LFG--} ┃ {kg--[g]reen     BG--} ┃ {kG--[G]reen     LBG--} ┃
+┃ {y;--[y]ellow    FG--} ┃ {Y;--[Y]ellow    LFG--} ┃ {ky--[y]ellow    BG--} ┃ {kY--[Y]ellow    LBG--} ┃
+┃ {b;--[b]lue      FG--} ┃ {B;--[B]lue      LFG--} ┃ {kb--[b]lue      BG--} ┃ {kB--[B]lue      LBG--} ┃
+┃ {m;--[m]agenta   FG--} ┃ {M;--[M]agenta   LFG--} ┃ {km--[m]agenta   BG--} ┃ {kM--[M]agenta   LBG--} ┃
+┃ {c;--[c]yan      FG--} ┃ {C;--[C]yan      LFG--} ┃ {kc--[c]yan      BG--} ┃ {kC--[C]yan      LBG--} ┃
+┃ {w;--[w]hite     FG--} ┃ {W;--[W]hite     LFG--} ┃ {kw--[w]hite     BG--} ┃ {kW--[W]hite     LBG--} ┃
+
+┃ {rk--red context       {;w*--[white BG with current FG color]--}      red context--} ┃
+┃ {rk--red context       {w;*--[current BG with white FG color]--}      red context--} ┃
+
+┃ {ry--red context       {dd--[default FG+BG color]--}       red context--} ┃
+
+┃ {^--[^] overline                   --} ┃
+┃ {_--[_] Underline                  --} ┃
+┃ {*--[*] Bold                       --} ┃
+┃ {/--[/] Italic                     --} ┃
+┃ {.--[.] dim                        --} ┃
+┃ {%--[%] reversed                   --} ┃
+┃ {!--[!] blink                      --} ┃
+┃ {=--[=] double underline           --} ┃
+┃ {~--[~] Strikethrough              --} ┃
+┃ {0--[0] reset all formatting       --} ┃
+┃-{#--
+      [#] trim text paddings         
+                            --}----------┃
+
+┃ {--common formatting stack test ┃
+{--
+normal {*--bold {/--italic {_--underline {.--dim {%--reverse {~--strike {!--blink-BLNK--}-STRK--}-RST--}-DIM--}-UND--}-ITA--}-BLD--}-NORM--}
+{_--+under{_---under{_--+under--}--}--}
