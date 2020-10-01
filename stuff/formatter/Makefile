@@ -1,9 +1,10 @@
-version = v1.5
+version = 1.5.1
+versionString = $(shell printf '%9s' v$(version))
 
 all: formatter
 
 formatter: formatter.cpp
-	sed s/@VER/$(version)/ $^ |\
+	sed 's/@SVERSION/$(versionString)/; s/@VER/$(version)/' $^ |\
 	 g++ -xc++ -std=c++11 -o $@ -
 
 install: formatter

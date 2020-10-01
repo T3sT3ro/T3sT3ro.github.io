@@ -12,7 +12,7 @@ using namespace std;
 // TODO fix positional characters to 
 const char* HELP = R"-(
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Markdown-like Formatter by Tooster @VER      ┃
+┃ Markdown-like Formatter by Tooster @SVERSION ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃ Reads stdin or argument list and writes to   ┃
 ┃ stdout with ANSI                             ┃
@@ -47,13 +47,14 @@ const char* LEGEND = R"-(
 ┃ ┗━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Control]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
 ┃1┃  1st encountered color is fg, 2nd is bg  ┃ ┃
-┃1┃  Current color is last color on stack    ┃ ┃
+┃1┃  Current(;) color is last color on stack ┃ ┃
 ┃1┃  Capitalize fg/bg for brighter colors    ┃ ┃
-┃1┃  Default color is default terminal color ┃ ┃
-┃ ┃  Options are toggled (XORed) with last   ┃ ┃
+┃1┃  Default color(d) is terminal's default  ┃ ┃
+┃ ┃  Options are toggled (XOR) with last     ┃ ┃
 ┃ ┃  Empty options ({--) resets format (0)   ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Remarks]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
+┃ ┃  Formats are stored on a stack           ┃ ┃
 ┃ ┃  It's a greedy stream processor:         ┃ ┃
 ┃ ┃   - doesn't wait for balanced bracket    ┃ ┃
 ┃ ┃   - doesn't crash on invalid format      ┃ ┃
