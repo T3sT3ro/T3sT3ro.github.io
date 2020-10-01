@@ -1,25 +1,27 @@
-# Markdown-like formatter for terminal by Tooster
+# Markdown-like formatter for terminal
 
-This tool is a simple stream processor, that parses text with simple liquid-like tags (`{--` and `--}`) to text formatted using ANSI escapes. Formatted text can be rendered in terminal with colrs and styles. Formatting codes use easy to remember mnemonics.
+I like colors. I like markdown. I like mnemonics. I love how modern terminals support colors and formatting. But I hate writing cryptic `^[[1;31mSTUFF^[[0m` everytime I want something to render in bold red. Sooo... I created a tool to do that for me.
 
-At any point remember : `./formatter -h` to display help.
+It's a simple stream processor, that parses simple liquid-like tags (`{--` and `--}`) to insert ANSI escapes into code. It makes printf-debugging a lot easier, and makes fancy bash scripts even fancier.
+
+At any point remember : `./formatter -h` to become a sage.
 
 ## Modus Operandi
 
 Formatter can operate in two modes: either reading from standard input until EOF (`<CTRL>+D`) or from passed arguments. It processes characters on the fly, so it doesn't need to read the whole file first*.
 
-Active styles are kept on a stack. To push new style onto stack write `{<format>--` sequence, where each operator occurs at most once  (aside from selection operator - at most 2 can occur - 1st for foreground color, 2nd for background color). Use `--}` to pop the formatting. Being a stream editor, it doesn't find balanced brackets - it greadily matchex the bracket and pushes an ANSI escapes.
+Styles are added to the stack with `{<style>--` and popped with `--}`. Style mnemonics may occur only once in the bracket, and color at most twice (1st for foreground, 2nd for background). Being a stream editor, it doesn't find balanced brackets - it greadily matches the bracket and pushes an ANSI escapes. The main adventage is that we can pipe an interactive process to it and it will work.
 
-Popping more states than stack has results in `--}` being written to output AKA fail silently. This program should never fail if input is supplied. It works on best-effort principle - if a sequence can be parse, it is parsed, but if it can't, it is simply printed as-is.
+Pushing unbalanced `--}` fails visibly by rendering on screen. This program should never fail, only don't parse the brackets in case of error.
 
-Styles propagate through the stack (with few exceptions like RESET=`0` and TRIM=`#`), so we stack formattings. Everything is explained in the legend - simply use `./formatter -l` to display see and learn what it can do. You can also examine the source code of `formatter.cpp` to see minimal manual.
+Styles (aside from RESET=`0` and TRIM=`#`) propagate through the stack - they are active until disabled. To enable a style, lets say BOLD, write `{*--`. To disable bold when it currently active write `{*--` again. Everything is briefly explained in the legend - simply use `./formatter -l` to become a wizard. You can also examine the source code of `formatter.cpp` to see manual.
 
 ----
-\*  memory size is proportional to the number of pushed formattings and the length of longest whitespaces sequence in text in TRIM block (because we have to store whitespace padding and either print it or discard if it's, in fact, the leading padding)
+\*  memory size is proportional to the number of pushed formattings on a stack and the length of the longest whitespace sequence in text in TRIM block (because we have to store whitespace padding and either print it or discard if it's, in fact, the leading padding)
 
 ## Installation
 
-C++ compilator and make is needed.
+C++ compiler and make is required.
 
 1. untar `formatter-*.tar.gz` and cd into the directory
 2. `make` to build the `formatter` executable
