@@ -1,6 +1,6 @@
 # Markdown-like formatter for terminal
 
-I like colors. I like markdown. I like mnemonics. I love how modern terminals support colors and formatting. But I hate writing cryptic `^[[1;31mSTUFF^[[0m` everytime I want something to render in bold red. Sooo... I created a tool to do that for me.
+I like colors. I like markdown. I like mnemonics. I love how modern terminals support colors and formatting. But I hate writing cryptic `^[[1;31mSTUFF^[[0m` every time I want something to render in bold red. Sooo... I created a tool to do that for me.
 
 It's a simple stream processor, that parses simple liquid-like tags (`{--` and `--}`) to insert ANSI escapes into code. It makes printf-debugging a lot easier, and makes fancy bash scripts even fancier.
 
@@ -10,16 +10,16 @@ At any point remember : `./formatter -h` to become a sage.
 
 Formatter can operate in two modes: either reading from standard input until EOF (`<CTRL>+D`) or from passed arguments. It processes characters on the fly, so it doesn't need to read the whole file first*.
 
-Styles are added to the stack with `{<style>--` and popped with `--}`. Style mnemonics may occur only once in the bracket, and color at most twice (1st for foreground, 2nd for background). Being a stream editor, it doesn't find balanced brackets - it greadily matches the bracket and pushes an ANSI escapes. The main adventage is that we can pipe an interactive process to it and it will work.
+Styles are added to the stack with `{<style>--` and popped with `--}`. Style mnemonics may occur only once in the bracket, and color at most twice (1st for foreground, 2nd for background). Being a stream editor, it doesn't find balanced brackets — it greedily matches the bracket and pushes an ANSI escapes. The main advantage is that we can pipe an interactive process to it and it will work.
 
 Pushing unbalanced `--}` fails visibly by rendering on screen. This program should never fail, only don't parse the brackets in case of error.
 
-Styles (aside from RESET=`0` and TRIM=`#`) propagate through the stack - they are active until disabled. To enable a style, lets say BOLD, write `{*--`. To disable bold when it currently active write `{*--` again. Everything is briefly explained in the legend - simply use `./formatter -l` to become a wizard. You can also examine the source code of `formatter.cpp` to see manual.
+Styles (aside from RESET=`0` and TRIM=`#`) propagate through the stack — they are active until disabled. To enable a style, lets say BOLD, write `{*--`. To disable bold when it's currently active write `{*--` again. Everything is briefly explained in the legend — simply use `./formatter -l` to become a wizard. You can also examine the source code of `formatter.cpp` to see manual.
 
-Strip mode (option `-s`) strips valid formatting off the input (valid, meaning any formatting that would normally parse). It's useful when we want both neat formatting inside terminal but raw data written to file. It can be easily achieved with `tee` as `cat file.in | tee >(f -s >file.out) | f` in bash. Same effect can probably be achieved when with some ANSI stripping, but ths method is tested by me and it works.
+Strip mode (option `-s`) strips valid formatting off the input (valid, meaning any formatting that would normally parse). It's useful when we want both neat formatting inside terminal but raw data written to file. It can be easily achieved with `tee` as `cat file.in | tee >(f -s >file.out) | f` in bash. The same effect can probably be achieved with piping through formatter first, then teeing with additional ANSI stripping, but when using `formatter -s` you can be sure that it works only on intended escapes.
 
 ----
-\*  memory size is proportional to the number of pushed formattings on a stack and the length of the longest whitespace sequence in text in TRIM block (because we have to store whitespace padding and either print it or discard if it's, in fact, the leading padding).
+\* memory size is proportional to the number of formattings pushed onto the stack and the length of the longest whitespace sequence in text in TRIM block (because we have to store whitespace padding and either print it or discard if it's, in fact, the leading padding).
 
 ## Installation
 
@@ -33,7 +33,7 @@ At this point you can run `make demo` to see examples and clean with `make clean
 
 ## Available styles
 
-run `./formatter -l` after building or [check the source code of `formatter.cpp`](formatter.cpp). Remember - not all styles may be supported in your terminal. It's best to run `make demo` first to see what works and what doesn't work in your terminal.
+Run `./formatter -l` after building or [check the source code of `formatter.cpp`](formatter.cpp). Remember — not all styles may be supported in your terminal. It's best to run `make demo` first to see what works and what doesn't work in your terminal.
 
 ## example usage
 
@@ -49,7 +49,7 @@ run `./formatter -l` after building or [check the source code of `formatter.cpp`
 
     this will again be bold, yellow foreground and red background
 
-    {*_--this will have bold turned off and undeerline on--}
+    {*_--this will have bold turned off and underline on--}
     {0--here all the formatting is reset {g--and this is green--}--}
 --}
 
