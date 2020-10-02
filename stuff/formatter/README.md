@@ -16,8 +16,10 @@ Pushing unbalanced `--}` fails visibly by rendering on screen. This program shou
 
 Styles (aside from RESET=`0` and TRIM=`#`) propagate through the stack - they are active until disabled. To enable a style, lets say BOLD, write `{*--`. To disable bold when it currently active write `{*--` again. Everything is briefly explained in the legend - simply use `./formatter -l` to become a wizard. You can also examine the source code of `formatter.cpp` to see manual.
 
+Strip mode (option `-s`) strips valid formatting off the input (valid, meaning any formatting that would normally parse). It's useful when we want both neat formatting inside terminal but raw data written to file. It can be easily achieved with `tee` as `cat file.in | tee >(f -s >file.out) | f` in bash. Same effect can probably be achieved when with some ANSI stripping, but ths method is tested by me and it works.
+
 ----
-\*  memory size is proportional to the number of pushed formattings on a stack and the length of the longest whitespace sequence in text in TRIM block (because we have to store whitespace padding and either print it or discard if it's, in fact, the leading padding)
+\*  memory size is proportional to the number of pushed formattings on a stack and the length of the longest whitespace sequence in text in TRIM block (because we have to store whitespace padding and either print it or discard if it's, in fact, the leading padding).
 
 ## Installation
 
