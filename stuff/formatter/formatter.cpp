@@ -401,7 +401,6 @@ int main(int argc, char* argv[]) {
             case 'l': printf("%s", LEGEND + 1); exit(EXIT_SUCCESS);
             case 's': strip = true; break;
             case 'e': escape = true; break;
-            case '?': printf("Unknown option: %c\n", optopt); break;
             default:
                 fprintf(stderr, "Usage: %s [-hvlse] [TEXT ...]\n", argv[0]);
                 exit(EXIT_FAILURE);
