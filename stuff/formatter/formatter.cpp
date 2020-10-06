@@ -43,7 +43,7 @@ const char* LEGEND = R"-(
 ┃ ┃  [w]hite     ┃  [=] Double underline     ┃2┃
 ┃ ┃  [;] current ┃  [~] Strikethrough        ┃2┃
 ┃ ┃  [d] default ┃  [.] Dim                  ┃ ┃
-┃ ┃              ┃  [#] Rrim text paddings   ┃ ┃
+┃ ┃              ┃  [#] Trim text paddings   ┃ ┃
 ┃ ┃              ┃  [0] Reset all formatting ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Control]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
