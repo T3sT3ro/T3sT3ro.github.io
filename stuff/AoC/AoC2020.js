@@ -81,3 +81,18 @@ function day13(){
     // 1. modulo each and minimum 
     // 2. chinese remainder theorem + wolfram: 
 }
+
+function day15(){
+    t = [2,0,6,12,1,3];
+    at = {2:1, 0:2, 6:3, 12:4, 1:5};
+    let [last, i] = [3, 6]
+    // d = t.slice(0, -1);
+    for(;i<30000000;++i){
+    //     d = [...d, last]
+        let seenAt = at[last];
+        at[last] = i;
+        last = seenAt ? i - seenAt : 0;
+    }
+    // d
+    [i, last]
+}
