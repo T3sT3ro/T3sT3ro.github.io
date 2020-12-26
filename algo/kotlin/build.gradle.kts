@@ -12,7 +12,7 @@ plugins {
 
 }
 
-val agent: Configuration by configurations.creating
+//val agent: Configuration by configurations.creating
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
@@ -29,7 +29,7 @@ tasks.withType<KotlinCompile> {
 val test by tasks.getting(Test::class) {
     useJUnitPlatform()
 
-    doFirst {
-        jvmArgs("-javaagent:${agent.singleFile}")
-    }
+//    doFirst {
+//        jvmArgs("-javaagent:${agent.singleFile}")
+//    }
 }
