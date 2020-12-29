@@ -9,6 +9,7 @@
 //   ; - [op, mem[rsp]] := [mem[rsp], op] - swap op and memory
 //   ? - goto absolute - rip := mem[rsp]
 //   [0-9a-f] - write hexadecimal constant to mem[rsp]
+//   =_*/ - math operators - mem[rsp] := mem[rsp] +-*/ [op]
 //   $ - [op] := mem[rsp] 
 //   ! - mem[rsp] := [op]
 
@@ -115,6 +116,9 @@ context: ... ${[-4, -3, -2, -1, 0, 1, 2, 3, -4].map(d => this.instr[this.rip+d])
     }
 }
 
-console.log((new BFF({ instr: ",[>,]&;_:X", io: { i: ">>&;0_:[.>]" } })).eval().io.o); // self printer
+console.log((new BFF({ instr: ",[>,]&;_:X", io: { i: ">>&;0_:[.>]" } })).eval().io.o); // self printer with IO
 
 console.log((new BFF({ instr: "0>1[<$>>=<$>=]" })).eval().pretty);
+
+// working quine
+console.log((new BFF({ instr: "f;4*;2=> f;4*;2=> f;3*;3=> f;3*;e=> f;2*;8=> f;3*;e=> f;6*;5=> f;3*;d=> f;6*;1=> f;3*;1=> f;4*;2=> f;6*;3=> f;4*;4=> >0;&;_:X"})).eval().io.o);
