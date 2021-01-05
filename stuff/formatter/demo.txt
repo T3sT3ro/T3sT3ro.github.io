@@ -12,16 +12,16 @@
 
 ┃ {ry--red context       {dd--[default FG+BG color]--}       red context--} ┃
 
-┃ {^--[^] overline                   --} ┃
-┃ {_--[_] Underline                  --} ┃
-┃ {*--[*] Bold                       --} ┃
-┃ {/--[/] Italic                     --} ┃
-┃ {.--[.] dim                        --} ┃
-┃ {%--[%] reversed                   --} ┃
-┃ {!--[!] blink                      --} ┃
-┃ {=--[=] double underline           --} ┃
-┃ {~--[~] Strikethrough              --} ┃
-┃ {0--[0] reset all formatting       --} ┃
+┃ [^] {^--overline                   --} ┃
+┃ [_] {_--Underline                  --} ┃
+┃ [*] {*--Bold                       --} ┃
+┃ [/] {/--Italic                     --} ┃
+┃ [.] {.--dim                        --} ┃
+┃ [%] {%--reversed                   --} ┃
+┃ [!] {!--blink                      --} ┃
+┃ [=] {=--double underline           --} ┃
+┃ [~] {~--Strikethrough              --} ┃
+┃ [0] {0--reset all formatting       --} ┃
 ┃-{#--
       [#] trim text paddings         
                             --}----------┃
@@ -34,8 +34,8 @@
 ┃ \\\\ bracket escape: \\
 ┃ \\n newline escape \n^^^^^^^^^^^^^^^^^^^
 ┃ \\a alert escape (will be heard on supported terminals) \a
-┃ \\b backspace escape: [X\bO]
-┃ \\r: [X] carriage return test \r┃ \\r: [X]
+┃ \\b backspace escape (moves cursor back 1 char): [X\bO]
+┃ \\r: [X] carriage return test (moves cursor back to col 0)\r┃ \\r: [O]
 ┃ \\f: form feed \\\f\ should be continous diagonal line spanning 2 lines
 ┃ \\t: horizontal tab: a\tb\tc\td
 ┃ \\v: vertical tab \\\v\ should be continous diagnoal line spannig 2 lines
