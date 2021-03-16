@@ -1,10 +1,15 @@
-version = 1.5.7
+VERINFO = formatter.ver
+CPP = formatter.cpp
+TARFILES = $(CPP) Makefile demo.txt README.md $(VERINFO)
+
+version = $(file < ${VERINFO})
 versionString = $(shell printf '%9s' v$(version))
+
 
 all: formatter
 
-formatter: formatter.cpp
-	sed 's/@SVERSION/$(versionString)/; s/@VER/$(version)/' $^ |\
+formatter: $(CPP) $(VERINFO)
+	sed 's/@SVERSION/$(versionString)/; s/@VER/$(version)/' $(CPP) |\
 	 g++ -xc++ -std=c++11 -o $@ -
 
 install: formatter
@@ -19,9 +24,7 @@ clean:
 distclean: clean
 	rm -rf formatter*.tar.gz formatter*/
 
-TARFILES = formatter.cpp Makefile demo.txt README.md
 
 dist: distclean $(TARFILES)
-	make distclean
 	tar -czf formatter-$(version).tar.gz --transform 's,^,formatter-$(version)/,' \
 	 $(TARFILES)
