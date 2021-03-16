@@ -20,7 +20,7 @@ const char* HELP   = R"-(
 ┃                                                   ┃
 ┃   usage:  formatter [options] [formats ...]       ┃
 ┃   options:                                        ┃
-┃     -h --help     displays this help              ┃
+┃     -h --help -?  displays this help              ┃
 ┃     -v --version  get version string (since v1.4) ┃
 ┃     -l --legend   show formatting legend          ┃
 ┃     -s --strip    strip off formatting sequences  ┃
@@ -396,8 +396,9 @@ int main(int argc, char* argv[]) {
     int optIdx; // index in long_options of parsed option
 
     // parse all options
-    while ((opt = getopt_long(argc, argv, "hvlse", longOptions, &optIdx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "hvlse?", longOptions, &optIdx)) != -1) {
         switch (opt) {
+            case '?':
             case 'h': printf("%s", HELP + 1);   exit(EXIT_SUCCESS);
             case 'v': printf("@VER\n");         exit(EXIT_SUCCESS);
             case 'l': printf("%s", LEGEND + 1); exit(EXIT_SUCCESS);
