@@ -1,4 +1,4 @@
-version = 1.5.5
+version = 1.5.6
 versionString = $(shell printf '%9s' v$(version))
 
 all: formatter
@@ -13,12 +13,15 @@ install: formatter
 demo: formatter demo.txt
 	./formatter -e < demo.txt
 
-dist: formatter.cpp Makefile demo.txt README.md
-	tar -czf formatter-$(version).tar.gz --transform 's,^,formatter-$(version)/,' \
-	 $^
-
 clean:
 	rm -rf formatter
 
 distclean: clean
 	rm -rf formatter*.tar.gz formatter*/
+
+TARFILES = formatter.cpp Makefile demo.txt README.md
+
+dist: distclean $(TARFILES)
+	make distclean
+	tar -czf formatter-$(version).tar.gz --transform 's,^,formatter-$(version)/,' \
+	 $(TARFILES)

@@ -60,6 +60,8 @@ const char* LEGEND = R"-(
 ┃ ┃   - doesn't wait for balanced bracket    ┃ ┃
 ┃ ┃   - doesn't crash on invalid format      ┃ ┃
 ┃2┃  Terminals may lack support for some ops ┃ ┃
+┃ ┃  Buffering may break interactiveness     ┃ ┃
+┃ ┃   - `stdbuf -i0 -o0 formatter` may help  ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 )-";
