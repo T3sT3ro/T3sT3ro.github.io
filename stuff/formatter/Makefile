@@ -1,4 +1,4 @@
-version = 1.5.6
+version = 1.5.7
 versionString = $(shell printf '%9s' v$(version))
 
 all: formatter
