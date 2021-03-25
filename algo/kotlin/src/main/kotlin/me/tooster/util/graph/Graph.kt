@@ -24,6 +24,7 @@ class Graph : HashMap<Vertex, List<Edge>> {
 
     /**
      * Parses the graph that matches the following formats:
+     *
      * legacy format:
      * ```
      * (verts edges? )?             // summary, arrows show if graph is directed

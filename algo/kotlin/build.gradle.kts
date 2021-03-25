@@ -16,10 +16,14 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation("org.junit.jupiter:junit-jupiter:5.4.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
     implementation(kotlin("script-runtime"))
     implementation("org.jgrapht:jgrapht-core:1.5.0")
+    implementation("org.apache.commons:commons-lang3:3.11")
+    implementation("org.apache.commons:commons-collections4:4.4")
+    implementation("org.apache.commons:commons-text:1.9")
 }
 
 tasks.withType<KotlinCompile> {
