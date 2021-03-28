@@ -52,3 +52,4 @@ check prog test c: | stdbuf -i0 -o0 formatter
 
 - [ ] Add support for validator instead of `*.out` files
 - [ ] Support timeout to exec function in some `tests.lim` file as map `testName: time limit for timeout` or make each file start with some header specifying test parameters
+- [ ] Better differentiation of tests ending in runetime error / non zero exit code vs those that just diff differently (RE vs WA)

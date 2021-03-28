@@ -103,7 +103,9 @@ tests = [...tests.filter(t => !t.match(/\d+/)), ...tests.filter(t => t.match(/\d
 if (requestedTests.length > 0)
     tests = requestedTests.filter(test => tests.includes(test));
 
-let failedTests = []
+let failedTests = [];
+let longestTestName = Math.max(...tests.map(t => t.length));
+
 for (const test of tests) {
 
     let testFile = path.join(testDir, test);
@@ -113,7 +115,7 @@ for (const test of tests) {
     // sed is used to append missing newlines to input - because for example bash can't handle with while read files without NL
     let cmd = `cat ${escapeWS(testFile)}.in | sed '$a\\' | ./${escapeWS(program)} ${teeCmd} ${diffCmd}`;
 
-    process.stdout.write(`${fmt("b*", "RUNNING")}: ${test}... `);
+    process.stdout.write(`${fmt("b*", "RUNNING")}: ${test.padEnd(longestTestName+3, '.')} `);
     try {
         status = proc.execSync(cmd, { stdio: 'pipe' });
         process.stdout.write(fmt("g", ("OK" + (opts.noCheck ? "(NOCHECK)" : "")).padEnd(14)) + (opts.showCmd ? `$ ${cmd}\n` : "\n"));
@@ -127,7 +129,7 @@ for (const test of tests) {
             let diff = String.fromCharCode.apply(null, err.stdout)
                 .replace(/^(.*)/, fmt("/c", "$1"))
                 .replace(/^< (.*)$/gm, fmt("r/", `RETURNED: ${fmt("/%", "$1")}`))
-                .replace(/^> (.*)$/gm, fmt("g/", `EXPEXTED: ${fmt("/%", "$1")}`))
+                .replace(/^> (.*)$/gm, fmt("g/", `EXPECTED: ${fmt("/%", "$1")}`))
                 .replace(/^/gm, ' ')
             console.log(diff);
         }
@@ -139,7 +141,7 @@ let exitCode = 0
 if (failedTests.length == 0) {
     console.log(fmt("*g", `ALL ${tests.length}/${tests.length} TESTS PASSED` + (opts.noCheck ? " (NOCHECK MODE)" : "")))
 } else {
-    console.log(fmt("*r", `${failedTests.length}/${tests.length} TESTS PASSED. TESTS THAT FAILED:\n` +
+    console.log(fmt("*r", `${tests.length - failedTests.length}/${tests.length} TESTS PASSED. TESTS THAT FAILED:\n` +
         failedTests.map(t => escapeWS(t)).join(" ")))
 }
 
