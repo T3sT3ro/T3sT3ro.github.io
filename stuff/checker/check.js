@@ -2,6 +2,7 @@ const fs = require('fs');
 const proc = require('child_process');
 const path = require('path');
 
+const VERSION = "1.1"
 
 let usage = `
 usage: node checker.js [opts...] <program> <test_dir> [tests...]
@@ -23,7 +24,7 @@ optional arguments: (opt:* means that opt accepts value)
             program:*   - explicit program name - positional argument ignored
             tests:*     - explicit directory with tests - positional argument ignored
             tee:*       - generates *.out.tee files from *.in files to specified directory (by default same as tests).
-            gen:*       - same as combination 'tee:* noCheck:' - used to generate outputs
+            gen:*       - implies 'tee:* noCheck:' - used to generate outputs. Doesn't require *.out files to exist
 `
 
 { // argument line parsing
@@ -96,7 +97,7 @@ let outsNames = outs.map(it => it.replace('.out', ''));
 
 // orded tests by named first, numbered later
 let tests = insNames
-    .filter(it => outsNames.includes(it))
+    .filter(it => opts.gen ? true : outsNames.includes(it))
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 tests = [...tests.filter(t => !t.match(/\d+/)), ...tests.filter(t => t.match(/\d+/))];
 
