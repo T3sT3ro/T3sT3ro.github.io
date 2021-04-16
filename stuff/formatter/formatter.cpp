@@ -62,6 +62,7 @@ const char* LEGEND = R"-(
 ┃2┃  Terminals may lack support for some ops ┃ ┃
 ┃ ┃  Buffering may break interactiveness     ┃ ┃
 ┃ ┃   - `stdbuf -i0 -o0 formatter` may help  ┃ ┃
+┃ ┃  Visit https://bit.ly/2QuLgNo for README ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 )-";
