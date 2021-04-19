@@ -30,19 +30,19 @@ check prog test c: | stdbuf -i0 -o0 formatter
     node check showDiff: prog tests A B 
     ```
 
-4. Generate outputs `solutions/*.out.tee` for bruteforce program `brute` for all inputs `*.in` in directory `tests`
+4. Test program `prog` against all tests in directory `tests` and additionaly store program's output to files `tests/*.out.tee`
 
     ```
-    node check noCheck: tee:solutions brute tests
+    node check tee: prog tests
     ```
 
-    or
+5. Generate `solutions/*.out.tee` files for each `*.in` file in directory `tests` for program `brute`
 
     ```
     node check gen:solutions brute tests
     ```
 
-5. Test program `prog` for `*.in` files agains `*.out` in directory `tests`, show colorful status report in terminal with `c:` and piping to `formatter`, show command used to launch each test case with `showCmd:`, store outputs from program to `*.out.tee` files in the same directory `tests` with `tee:` and `diff` only with `-b` flag for tests (assuming that my custom `formatter` is installed)
+6. Test program `prog` for `*.in` files agains `*.out` in directory `tests`, show colorful status report in terminal with `c:` and piping to `formatter`, show command used to launch each test case with `showCmd:`, store outputs from program to `*.out.tee` files in the same directory `tests` with `tee:` and `diff` only with `-b` flag for tests (assuming that my custom `formatter` is installed)
 
     ```
     node check color: tee: showCmd: diff: diffFlags:b prog tests | stdbuf -i0 -o0 formatter
@@ -52,4 +52,4 @@ check prog test c: | stdbuf -i0 -o0 formatter
 
 - [ ] Add support for validator instead of `*.out` files
 - [ ] Support timeout to exec function in some `tests.lim` file as map `testName: time limit for timeout` or make each file start with some header specifying test parameters
-- [ ] Better differentiation of tests ending in runetime error / non zero exit code vs those that just diff differently (RE vs WA)
+- [ ] Better differentiation of tests ending in runtime error / non zero exit code vs those that just diff differently (RE vs WA) - return error message on crash

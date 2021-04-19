@@ -9,22 +9,26 @@ usage: node checker.js [opts...] <program> <test_dir> [tests...]
     use '?' or 'help:' for more help
 `.trim()
 let help = `
-- tests' filename format is '*.in' and '*.out'
-- optional arguments are in format 'optName:optVal'
-- to run only selected tests list them by their basename e.g. A B C
-- it's good to run 'find <testDir> -type f -exec sed -i -e '$a\\' {} \\; -print' for generated tests to append newlines
+author: Tooster
+README: https://bit.ly/3gsIL9D
+
+- Valid test is a pair of files in format '*.in' and '*.out'. Only 'gen:' option doesn't require *.out files to exist.
+- Optional arguments are in format 'optName:optVal'
+- To run only selected tests list them by their basename e.g. A B C
+- It's good to run 'find <testDir> -type f -exec sed -i -e '$a\\' {} \\; -print' for generated tests to append newlines
+- Color tags are custom string literals interpreted by my other tool: https://bit.ly/2QuLgNo.
 
 optional arguments: (opt:* means that opt accepts value)
-    ?       help:       - prints this help
-    c:      color:      - wrap in formatter coloring codes (piping to formatter via 'stdbuf -i0 -o0 formatter' is best)
-    nc:     noCheck:    - don't validate outputs agains *.out files just run the program
-    d:      showDiff:   - when test ends with ERROR show additional diff log.
-    df:*    diffFlags:* - provide custom flags for diff - by default only 'Z' is used. leave empty to disable Z
-    sc:     showCmd:    - print commands used for each test case
-            program:*   - explicit program name - positional argument ignored
-            tests:*     - explicit directory with tests - positional argument ignored
-            tee:*       - generates *.out.tee files from *.in files to specified directory (by default same as tests).
-            gen:*       - implies 'tee:* noCheck:' - used to generate outputs. Doesn't require *.out files to exist
+    ?       help:       - Prints this help
+    c:      color:      - Wrap in formatter coloring codes (pipe later manually to formatter via 'stdbuf -i0 -o0 formatter')
+    nc:     noCheck:    - Don't validate outputs agains *.out files just run the program
+    d:      showDiff:   - When test ends with ERROR show additional diff log.
+    df:*    diffFlags:* - Provide custom flags for diff - by default only 'Z' is used. leave empty to disable Z
+    sc:     showCmd:    - Print commands used for each test case - usefull for debugging executable
+            program:*   - Explicit program name - positional argument will be ignored
+            tests:*     - Explicit directory with tests - positional argument will be ignored
+            tee:*       - Generates '*.out.tee' files from '*.in' files to specified directory (by default tests directory).
+            gen:*       - Implies 'tee:* noCheck:'. Runs on all '*.in' files, even if '*.out' doesn't exist.
 `
 
 { // argument line parsing
