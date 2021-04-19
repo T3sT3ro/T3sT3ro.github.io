@@ -12,7 +12,7 @@ let help = `
 - tests' filename format is '*.in' and '*.out'
 - optional arguments are in format 'optName:optVal'
 - to run only selected tests list them by their basename e.g. A B C
-- it's good to run 'find . -type f -exec sed -i -e '$a\' {} \; -print' for generated tests to append newlines
+- it's good to run 'find <testDir> -type f -exec sed -i -e '$a\\' {} \\; -print' for generated tests to append newlines
 
 optional arguments: (opt:* means that opt accepts value)
     ?       help:       - prints this help
