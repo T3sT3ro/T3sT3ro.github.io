@@ -9,7 +9,7 @@ repositories {
 plugins {
     kotlin("jvm") version "1.4.10"
     idea
-
+    id("org.sonarqube") version "3.0"
 }
 
 //val agent: Configuration by configurations.creating
