@@ -4,9 +4,9 @@ const path = require('path');
 const https = require('https');
 const semver = require('semver');
 
-const VERSION = '1.2.0';
-const href ='https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/checker';
-const versionFile = 'https://raw.githubusercontent.com/T3sT3ro/T3sT3ro.github.io/master/stuff/checker/check.js';
+const VERSION = '1.2.1';
+const HREF ='https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/checker';
+const VERSION_FILE = 'https://raw.githubusercontent.com/T3sT3ro/T3sT3ro.github.io/master/stuff/checker/check.js';
 
 let usage = `
 usage: node checker.js [opts...] <program> <test_dir> [tests...]
@@ -58,7 +58,7 @@ function escapeWS(path) { return path.replace(/(\s+)/g, '\\$1') }
         process.stdout.write("Checking update... ");
         try {
             let result = await checkUpdates();
-            process.stdout.write(result);
+            console.log(result);
             process.exit(0);
         } catch(error) {
             console.error(error);
@@ -174,10 +174,11 @@ process.exit(exitCode);
 
 })();
 
+// creates http get request to hardcoded github link and look at VERSION string in the file
 async function checkUpdates(){
     return new Promise((resolve, reject) => {
         https.get(
-            versionFile,
+            VERSION_FILE,
             { headers: {'Range': 'bytes=0-2048'} },
             (res) => {
                 let content = ""
@@ -192,9 +193,11 @@ async function checkUpdates(){
                     if (!semver.valid(VERSION))
                         reject(`Local version number is fucked up: ${VERSION}. Should be MAJOR.MINOR.RELEASE[-SUFFIX]`);
                     else if (!semver.valid(remoteVersion))
-                        reject(`Remote version number is fucked up: ${remoteVersion}\n at ${versionFile}`);
-                    else if (semver.gte(remoteVersion, VERSION))
-                        resolve(`new version available ${VERSION} => ${remoteVersion}\n at ${href}`);
+                        reject(`Remote version number is fucked up: ${remoteVersion}\n at ${VERSION_FILE}`);
+                    else if (semver.gt(remoteVersion, VERSION))
+                        resolve(`new version available ${VERSION} => ${remoteVersion}\n at ${HREF}`);
+                    else if (semver.lt(remoteVersion, VERSION))
+                        resolve(`! your version is newer than remote ${VERSION} > ${remoteVersion} !\n at ${HREF}`);
                     else
                         resolve(`up to date.`)
                 });
