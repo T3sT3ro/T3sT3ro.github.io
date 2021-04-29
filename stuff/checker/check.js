@@ -1,8 +1,12 @@
 const fs = require('fs');
 const proc = require('child_process');
 const path = require('path');
+const https = require('https');
+const semver = require('semver');
 
-const VERSION = "1.1"
+const VERSION = '1.2.0';
+const href ='https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/checker';
+const versionFile = 'https://raw.githubusercontent.com/T3sT3ro/T3sT3ro.github.io/master/stuff/checker/check.js';
 
 let usage = `
 usage: node checker.js [opts...] <program> <test_dir> [tests...]
@@ -20,6 +24,7 @@ README: https://bit.ly/3gsIL9D
 
 optional arguments: (opt:* means that opt accepts value)
     ?       help:       - Prints this help
+            update:     - check for update 
     c:      color:      - Wrap in formatter coloring codes (pipe later manually to formatter via 'stdbuf -i0 -o0 formatter')
     nc:     noCheck:    - Don't validate outputs agains *.out files just run the program
     d:      showDiff:   - When test ends with ERROR show additional diff log.
@@ -46,7 +51,22 @@ optional arguments: (opt:* means that opt accepts value)
 // escapes whitespace in path name with '\ '
 function escapeWS(path) { return path.replace(/(\s+)/g, '\\$1') }
 
+(async function() {
+
 { // bad args and usage 
+    if (opts.update){
+        process.stdout.write("Checking update... ");
+        try {
+            let result = await checkUpdates();
+            process.stdout.write(result);
+            process.exit(0);
+        } catch(error) {
+            console.error(error);
+            process.exit(1);
+
+        }
+    }
+
     let programExists = fs.existsSync(program);
     let testsExist = fs.existsSync(testDir);
     let printHelp = args.find(it => it.match(/\?/)) || opts.help;
@@ -58,7 +78,7 @@ function escapeWS(path) { return path.replace(/(\s+)/g, '\\$1') }
         if (printHelp) console.error(help);
         process.exit(printHelp ? 0 : 1);
     }
-}
+};
 
 { // option acronym expansion
     let expand = (acronym, long) => { opts[long] = opts[long] || opts[acronym]; delete opts[acronym] };
@@ -150,4 +170,35 @@ if (failedTests.length == 0) {
         failedTests.map(t => escapeWS(t)).join(" ")))
 }
 
-process.exit(exitCode)
+process.exit(exitCode);
+
+})();
+
+async function checkUpdates(){
+    return new Promise((resolve, reject) => {
+        https.get(
+            versionFile,
+            { headers: {'Range': 'bytes=0-2048'} },
+            (res) => {
+                let content = ""
+                res.on('data', (chunk) => content += chunk);
+                res.on('end', () => {
+                    let lines = content.split('\n');
+                    let versionLine = lines.filter(it=>it.includes("VERSION"))[0] || lines[0];
+                    let remoteVersion = versionLine.match(/\d+\.?(?:\d+\.)?(?:\d+(?:-[a-zA-Z_-]*)?)/)[0];
+
+                    // version number should be "MAJOR.MINOR.RELEASE[-SUFFIX]" and in the first 1kb of file - either
+                    // the first line, or in the line with "VERSION" token
+                    if (!semver.valid(VERSION))
+                        reject(`Local version number is fucked up: ${VERSION}. Should be MAJOR.MINOR.RELEASE[-SUFFIX]`);
+                    else if (!semver.valid(remoteVersion))
+                        reject(`Remote version number is fucked up: ${remoteVersion}\n at ${versionFile}`);
+                    else if (semver.gte(remoteVersion, VERSION))
+                        resolve(`new version available ${VERSION} => ${remoteVersion}\n at ${href}`);
+                    else
+                        resolve(`up to date.`)
+                });
+            }
+        ).on('error', e => reject(`shit happened while connecting to remote:\n${e}`));
+    });
+}
