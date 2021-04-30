@@ -4,7 +4,7 @@ const path = require('path');
 const https = require('https');
 const semver = require('semver');
 
-const VERSION = '1.2.2';
+const VERSION = '1.2.3';
 const HREF ='https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/checker';
 const VERSION_FILE = 'https://raw.githubusercontent.com/T3sT3ro/T3sT3ro.github.io/master/stuff/checker/check.js';
 
@@ -89,17 +89,27 @@ function escapeWS(path) { return path.replace(/(\s+)/g, '\\$1') }
             console.log(VERSION);
             process.exit(0);
         }
+        
+        if (!program || !testDir) {
+            if(!program) console.error(`Program not specified.`);
+            if(!testDir) console.error(`Tests directory not specified.`);
+            console.error(usage);
+            process.exit(1);
+        }
 
         let programExists = fs.existsSync(program);
         let testsExist = fs.existsSync(testDir);
         let printHelp = args.find(it => it.match(/\?/)) || opts.help;
+        
+        if (printHelp) { 
+            console.error(help);
+            process.exit(0);
+        }
 
-        if (!programExists || !testsExist || printHelp) {
-            if (!printHelp && !programExists) console.error(`can't find program '${program}' in cwd: '${__dirname}'`);
-            if (!printHelp && !testsExist) console.error(`can't find tests directory '${testDir}' in cwd: '${__dirname}'`);
-            console.error(usage);
-            if (printHelp) console.error(help);
-            process.exit(printHelp ? 0 : 1);
+        if (!programExists || !testsExist) {
+            if (!programExists) console.error(`Can't find program '${program}' in cwd: '${__dirname}'`);
+            if (!testsExist) console.error(`Can't find tests directory '${testDir}' in cwd: '${__dirname}'`);
+            process.exit(1);
         }
     };
 
