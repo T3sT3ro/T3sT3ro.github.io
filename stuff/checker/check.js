@@ -4,14 +4,14 @@ const path = require('path');
 const https = require('https');
 const semver = require('semver');
 
-const VERSION = '1.2.1';
+const VERSION = '1.2.2';
 const HREF ='https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/checker';
 const VERSION_FILE = 'https://raw.githubusercontent.com/T3sT3ro/T3sT3ro.github.io/master/stuff/checker/check.js';
 
 let usage = `
 usage: node checker.js [opts...] <program> <test_dir> [tests...]
     use '?' or 'help:' for more help
-`.trim()
+`.trim();
 let help = `
 author: Tooster
 README: https://bit.ly/3gsIL9D
@@ -23,18 +23,20 @@ README: https://bit.ly/3gsIL9D
 - Color tags are custom string literals interpreted by my other tool: https://bit.ly/2QuLgNo.
 
 optional arguments: (opt:* means that opt accepts value)
-    ?       help:       - Prints this help
-            update:     - check for update 
-    c:      color:      - Wrap in formatter coloring codes (pipe later manually to formatter via 'stdbuf -i0 -o0 formatter')
-    nc:     noCheck:    - Don't validate outputs agains *.out files just run the program
-    d:      showDiff:   - When test ends with ERROR show additional diff log.
-    df:*    diffFlags:* - Provide custom flags for diff - by default only 'Z' is used. leave empty to disable Z
-    sc:     showCmd:    - Print commands used for each test case - usefull for debugging executable
-            program:*   - Explicit program name - positional argument will be ignored
-            tests:*     - Explicit directory with tests - positional argument will be ignored
+    ?       help:       - Displays this help.
+    v:      version:    - Displays current version string.
+            update:*    - Checkfor update. If argument is upgrade, it also downloads and replaces current file with updated.
+
+    c:      color:      - Wrap in formatter coloring codes (pipe later manually to formatter via 'stdbuf -i0 -o0 formatter').
+    nc:     noCheck:    - Don't validate outputs agains *.out files, just run the program.
+    d:      diff:       - When test ends with ERROR show additional diff log.
+    df:*    diffFlags:* - Provide custom flags for diff - by default only 'Z' is used. leave empty to disable 'Z'.
+    cmd:    showCmd:    - Print commands used for each test case - usefull for debugging executable by hand.
+            program:*   - Explicit program name - positional argument will be ignored.
+            tests:*     - Explicit directory with tests - positional argument will be ignored.
             tee:*       - Generates '*.out.tee' files from '*.in' files to specified directory (by default tests directory).
             gen:*       - Implies 'tee:* noCheck:'. Runs on all '*.in' files, even if '*.out' doesn't exist.
-`
+`;
 
 { // argument line parsing
     var args = process.argv.slice(2);
@@ -53,124 +55,135 @@ function escapeWS(path) { return path.replace(/(\s+)/g, '\\$1') }
 
 (async function() {
 
-{ // bad args and usage 
-    if (opts.update){
-        process.stdout.write("Checking update... ");
-        try {
-            let result = await checkUpdates();
-            console.log(result);
+    { // option acronym expansion
+        let expand = (acronym, long) => { opts[long] = opts[long] || opts[acronym]; delete opts[acronym] };
+        expand("v", "version");
+        expand("c", "color");
+        expand("nc", "noCheck");
+        expand("d", "diff");
+        expand("df", "diffFlags");
+        expand("cmd", "showCmd");
+    }
+
+
+    // meta functionality
+    { // help, bad args and usage, update, upgrade, version
+        if (opts.update){
+            process.stdout.write("Checking update... ");
+            try {
+                let [result, upgraded] = await checkUpdates();
+                console.log(result);
+                if(upgraded){
+                    console.log("Upgrading...");
+                    fs.writeFileSync(__filename, upgraded);
+                }
+                process.exit(0);
+            } catch(error) {
+                console.error(error);
+                process.exit(1);
+
+            }
+        }
+
+        if (opts.version){
+            console.log(VERSION);
             process.exit(0);
-        } catch(error) {
-            console.error(error);
-            process.exit(1);
-
         }
-    }
 
-    let programExists = fs.existsSync(program);
-    let testsExist = fs.existsSync(testDir);
-    let printHelp = args.find(it => it.match(/\?/)) || opts.help;
+        let programExists = fs.existsSync(program);
+        let testsExist = fs.existsSync(testDir);
+        let printHelp = args.find(it => it.match(/\?/)) || opts.help;
 
-    if (!programExists || !testsExist || printHelp) {
-        if (!printHelp && !programExists) console.error(`can't find program '${program}' in cwd: '${__dirname}'`);
-        if (!printHelp && !testsExist) console.error(`can't find tests directory '${testDir}' in cwd: '${__dirname}'`);
-        console.error(usage);
-        if (printHelp) console.error(help);
-        process.exit(printHelp ? 0 : 1);
-    }
-};
-
-{ // option acronym expansion
-    let expand = (acronym, long) => { opts[long] = opts[long] || opts[acronym]; delete opts[acronym] };
-    expand("c", "color");
-    expand("nc", "noCheck");
-    expand("d", "showDiff");
-    expand("df", "diffFlags");
-    expand("sc", "showCmd");
-}
-
-{ // default arguments
-    if (opts.gen) {
-        opts.tee = opts.gen;
-        opts.noCheck = true;
-    }
-    if (opts.diffFlags === true) opts.diffFlags = '' // flags zeroed by `diff:`
-    else if (!opts.diffFlags) opts.diffFlags = '-Z' // default diff flag set to -Z (ignore trailing whitespaces)
-    else opts.diffFlags = "-" + opts.diffFlags
-
-    if (opts.tee === true) opts.tee = testDir
-    if (opts.tee)
-        fs.mkdirSync(escapeWS(opts.tee), { recursive: true });
-}
-
-
-// wraps string in format if opts.color is specified 
-// for my formatter see https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/formatter
-function fmt(format, str) { return opts.color ? `{${format}--${str}--}` : str }
-
-console.log(fmt("*y", "PROGRAM: ") + fmt("Y/", program));
-console.log(fmt("*y", "TESTDIR: ") + fmt("Y/", testDir));
-
-let files = fs.readdirSync(testDir);
-
-let ins = files.filter(f => f.match(/.*\.in$/));
-let outs = files.filter(f => f.match(/.*\.out$/));
-
-let insNames = ins.map(it => it.replace('.in', ''));
-let outsNames = outs.map(it => it.replace('.out', ''));
-
-// orded tests by named first, numbered later
-let tests = insNames
-    .filter(it => opts.gen ? true : outsNames.includes(it))
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-tests = [...tests.filter(t => !t.match(/\d+/)), ...tests.filter(t => t.match(/\d+/))];
-
-if (requestedTests.length > 0)
-    tests = requestedTests.filter(test => tests.includes(test));
-
-let failedTests = [];
-let longestTestName = Math.max(...tests.map(t => t.length));
-
-for (const test of tests) {
-
-    let testFile = path.join(testDir, test);
-    let teeCmd = opts.tee ? `| tee ${escapeWS(path.join(opts.tee, `${test}.out.tee`))}` : "";
-    let diffCmd = opts.noCheck ? "" : `| diff ${opts.diffFlags} - ${escapeWS(testFile)}.out`
-
-    // sed is used to append missing newlines to input - because for example bash can't handle with while read files without NL
-    let cmd = `cat ${escapeWS(testFile)}.in | sed '$a\\' | ./${escapeWS(program)} ${teeCmd} ${diffCmd}`;
-
-    process.stdout.write(`${fmt("b*", "RUNNING")}: ${test.padEnd(longestTestName+3, '.')} `);
-    try {
-        status = proc.execSync(cmd, { stdio: 'pipe' });
-        process.stdout.write(fmt("g", ("OK" + (opts.noCheck ? "(NOCHECK)" : "")).padEnd(14)) + (opts.showCmd ? `$ ${cmd}\n` : "\n"));
-    } catch (err) {
-        failedTests.push(test);
-        process.stdout.write(fmt("r", "ERROR".padEnd(14)) + (opts.showCmd || err.stderr.length > 0 ? `$ ${cmd}\n` : "\n"));
-        if (err.stderr.length > 0) {
-            process.stdout.write(String.fromCharCode.apply(null, err.stderr));
+        if (!programExists || !testsExist || printHelp) {
+            if (!printHelp && !programExists) console.error(`can't find program '${program}' in cwd: '${__dirname}'`);
+            if (!printHelp && !testsExist) console.error(`can't find tests directory '${testDir}' in cwd: '${__dirname}'`);
+            console.error(usage);
+            if (printHelp) console.error(help);
+            process.exit(printHelp ? 0 : 1);
         }
-        if (opts.showDiff) {
-            let diff = String.fromCharCode.apply(null, err.stdout)
-                .replace(/^(.*)/, fmt("/c", "$1"))
-                .replace(/^< (.*)$/gm, fmt("r/", `RETURNED: ${fmt("/%", "$1")}`))
-                .replace(/^> (.*)$/gm, fmt("g/", `EXPECTED: ${fmt("/%", "$1")}`))
-                .replace(/^/gm, ' ')
-            console.log(diff);
+    };
+
+    { // default arguments
+        if (opts.gen) {
+            opts.tee = opts.gen;
+            opts.noCheck = true;
         }
+        if (opts.diffFlags === true) opts.diffFlags = '' // flags zeroed by `diff:`
+        else if (!opts.diffFlags) opts.diffFlags = '-Z' // default diff flag set to -Z (ignore trailing whitespaces)
+        else opts.diffFlags = "-" + opts.diffFlags;
+
+        if (opts.tee === true) opts.tee = testDir;
+        if (opts.tee)
+            fs.mkdirSync(escapeWS(opts.tee), { recursive: true });
     }
 
-}
 
-let exitCode = 0
-if (failedTests.length == 0) {
-    console.log(fmt("*g", `ALL ${tests.length}/${tests.length} TESTS PASSED` + (opts.noCheck ? " (NOCHECK MODE)" : "")))
-} else {
-    console.log(fmt("*r", `${tests.length - failedTests.length}/${tests.length} TESTS PASSED. TESTS THAT FAILED:\n` +
-        failedTests.map(t => escapeWS(t)).join(" ")))
-}
+    // wraps string in format if opts.color is specified 
+    // for my formatter see https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/formatter
+    function fmt(format, str) { return opts.color ? `{${format}--${str}--}` : str }
 
-process.exit(exitCode);
+    console.log(fmt("*y", "PROGRAM: ") + fmt("Y/", program));
+    console.log(fmt("*y", "TESTDIR: ") + fmt("Y/", testDir));
+
+    let files = fs.readdirSync(testDir);
+
+    let ins = files.filter(f => f.match(/.*\.in$/));
+    let outs = files.filter(f => f.match(/.*\.out$/));
+
+    let insNames = ins.map(it => it.replace('.in', ''));
+    let outsNames = outs.map(it => it.replace('.out', ''));
+
+    // orded tests by named first, numbered later
+    let tests = insNames
+        .filter(it => opts.gen ? true : outsNames.includes(it))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    tests = [...tests.filter(t => !t.match(/\d+/)), ...tests.filter(t => t.match(/\d+/))];
+
+    if (requestedTests.length > 0)
+        tests = requestedTests.filter(test => tests.includes(test));
+
+    let failedTests = [];
+    let longestTestName = Math.max(...tests.map(t => t.length));
+
+    for (const test of tests) {
+
+        let testFile = path.join(testDir, test);
+        let teeCmd = opts.tee ? `| tee ${escapeWS(path.join(opts.tee, `${test}.out.tee`))}` : "";
+        let diffCmd = opts.noCheck ? "" : `| diff ${opts.diffFlags} - ${escapeWS(testFile)}.out`;
+
+        // sed is used to append missing newlines to input - because for example bash can't handle with while read files without NL
+        let cmd = `cat ${escapeWS(testFile)}.in | sed '$a\\' | ./${escapeWS(program)} ${teeCmd} ${diffCmd}`;
+
+        process.stdout.write(`${fmt("b*", "RUNNING")}: ${test.padEnd(longestTestName+3, '.')} `);
+        try {
+            status = proc.execSync(cmd, { stdio: 'pipe' });
+            process.stdout.write(fmt("g", ("OK" + (opts.noCheck ? "(NOCHECK)" : "")).padEnd(14)) + (opts.showCmd ? `$ ${cmd}\n` : "\n"));
+        } catch (err) {
+            failedTests.push(test);
+            process.stdout.write(fmt("r", "ERROR".padEnd(14)) + (opts.showCmd || err.stderr.length > 0 ? `$ ${cmd}\n` : "\n"));
+            if (err.stderr.length > 0) {
+                process.stdout.write(String.fromCharCode.apply(null, err.stderr));
+            }
+            if (opts.diff) {
+                let diff = String.fromCharCode.apply(null, err.stdout)
+                    .replace(/^(.*)/, fmt("/c", "$1"))
+                    .replace(/^< (.*)$/gm, fmt("r/", `RETURNED: ${fmt("/%", "$1")}`))
+                    .replace(/^> (.*)$/gm, fmt("g/", `EXPECTED: ${fmt("/%", "$1")}`))
+                    .replace(/^/gm, ' ');
+                console.log(diff);
+            }
+        }
+
+    }
+
+    if (failedTests.length == 0) {
+        console.log(fmt("*g", `ALL ${tests.length}/${tests.length} TESTS PASSED` + (opts.noCheck ? " (NOCHECK MODE)" : "")))
+    } else {
+        console.log(fmt("*r", `${tests.length - failedTests.length}/${tests.length} TESTS PASSED. TESTS THAT FAILED:\n` +
+            failedTests.map(t => escapeWS(t)).join(" ")))
+    }
+
+    process.exit((failedTests.length == 0 || opts.noCheck) ? 0 : 1);
 
 })();
 
@@ -179,7 +192,7 @@ async function checkUpdates(){
     return new Promise((resolve, reject) => {
         https.get(
             VERSION_FILE,
-            { headers: {'Range': 'bytes=0-2048'} },
+            opts.update == "upgrade" ? {} : { headers: {'Range': 'bytes=0-2048'} },
             (res) => {
                 let content = ""
                 res.on('data', (chunk) => content += chunk);
@@ -195,11 +208,12 @@ async function checkUpdates(){
                     else if (!semver.valid(remoteVersion))
                         reject(`Remote version number is fucked up: ${remoteVersion}\n at ${VERSION_FILE}`);
                     else if (semver.gt(remoteVersion, VERSION))
-                        resolve(`new version available ${VERSION} => ${remoteVersion}\n at ${HREF}`);
+                        resolve([`new version available ${VERSION} => ${remoteVersion}\n at ${HREF}`, 
+                            opts.update == "upgrade" ? content : null]);
                     else if (semver.lt(remoteVersion, VERSION))
-                        resolve(`! your version is newer than remote ${VERSION} > ${remoteVersion} !\n at ${HREF}`);
+                        resolve([`! your version is newer than remote ${VERSION} > ${remoteVersion} !\n at ${HREF}`, null]);
                     else
-                        resolve(`up to date.`)
+                        resolve([`up to date.`, null]);
                 });
             }
         ).on('error', e => reject(`shit happened while connecting to remote:\n${e}`));
