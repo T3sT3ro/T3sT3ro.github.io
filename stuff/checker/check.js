@@ -4,7 +4,7 @@ const path = require('path');
 const https = require('https');
 const semver = require('semver');
 
-const VERSION = '1.2.3';
+const VERSION = '1.2.4';
 const HREF ='https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/checker';
 const VERSION_FILE = 'https://raw.githubusercontent.com/T3sT3ro/T3sT3ro.github.io/master/stuff/checker/check.js';
 
@@ -18,7 +18,7 @@ README: https://bit.ly/3gsIL9D
 
 - Valid test is a pair of files in format '*.in' and '*.out'. Only 'gen:' option doesn't require *.out files to exist.
 - Optional arguments are in format 'optName:optVal'
-- To run only selected tests list them by their basename e.g. A B C
+- To run only selected tests list them by their basename e.g. A B C. To exclude a test prefix it with '-' ie. "-TEST_A".
 - It's good to run 'find <testDir> -type f -exec sed -i -e '$a\\' {} \\; -print' for generated tests to append newlines
 - Color tags are custom string literals interpreted by my other tool: https://bit.ly/2QuLgNo.
 
@@ -47,7 +47,7 @@ optional arguments: (opt:* means that opt accepts value)
     let pos = 0 // current positional - to allow mixing positional and arguments
     var program = opts.program || positional[pos++];
     var testDir = opts.tests || positional[pos++];
-    var requestedTests = positional.slice(pos);
+    var testFilter = positional.slice(pos);
 }
 
 // escapes whitespace in path name with '\ '
@@ -149,8 +149,20 @@ function escapeWS(path) { return path.replace(/(\s+)/g, '\\$1') }
         .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
     tests = [...tests.filter(t => !t.match(/\d+/)), ...tests.filter(t => t.match(/\d+/))];
 
-    if (requestedTests.length > 0)
-        tests = requestedTests.filter(test => tests.includes(test));
+    if (testFilter.length > 0){
+        let includeFilter = testFilter.filter(t => !t.startsWith('-'));
+        let excludeFilter = testFilter.filter(t => t.startsWith('-')).map(s => s.substring(1));
+
+        if(includeFilter.length > 0)
+            tests = tests.filter(test => includeFilter.includes(test));
+        if(excludeFilter.length > 0)
+            tests = tests.filter(test => !excludeFilter.includes(test));
+    }
+
+    if(tests.length == 0){
+        console.log(fmt("b*", "NO TESTS TO RUN"));
+        process.exit(0);
+    }
 
     let failedTests = [];
     let longestTestName = Math.max(...tests.map(t => t.length));
