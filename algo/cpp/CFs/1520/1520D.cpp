@@ -1,39 +1,26 @@
 #include <bits/stdc++.h>
-
+ 
 using namespace std;
-
+ 
 void doTest() {
     int n;
     cin >> n;
-    vector<int> t;
     vector<int> a;
-    {
-        int ai;
-        cin >> ai;
-        a.push_back(ai);
-        t.push_back(0);
-    }
-
-    for (int i = 1, ai; i < n; i++) {
-        cin >> ai;
-        a.push_back(ai);
-        int val = 0;
-        for (int d = 1; d<=i; d++) {
-            if(a[i-d] == ai-d) {
-                val = t[i-d] + 1;
-                break;
-            }
-        }
-        t.push_back(val);
-    }
-
+    map<long long, int> M;
+ 
     long long pairs = 0;
-    for (int i = 0; i < t.size(); i++)
-        pairs += t[i];
+ 
+    for (int i = 0, ai; i < n; i++){
+        cin >> ai;
+        long long line = ai - i; // ax+b
+        int size = (M.find(line) == M.end() ? 0 : M[line]);
+        M[line] = size + 1;
+        pairs += size;
+    }
+ 
     cout << pairs << "\n";
-    
 }
-
+ 
 int main() {
     int t;
     cin >> t;
