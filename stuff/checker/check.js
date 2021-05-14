@@ -242,6 +242,7 @@ function streamToString(stream) {
                     break;
                 case 'DONE':
                     console.log(fmt('%*c', ` DONE (GENERATED) `), `~${elapsed}s`);
+                    passedTests.push(test);
                     break;
                 case 'TLE':
                     console.log(fmt('%*y', ` TL `), `~${elapsed}s`);
@@ -326,12 +327,13 @@ async function runProgramOnTest(test) {
         // Tried doing this "cleverly" by reading streams line by line... 
         // but it's a fucking pain in the ass and diff looks like a turd...
         let programOutput = await streamToString(programOut);
-        let outFileOutput = await streamToString(fs.createReadStream(testFileBase + '.out'));
 
         if (opts.gen) {
             resolve(["DONE", timer.elapsed]);
             return;
         }
+
+        let outFileOutput = await streamToString(fs.createReadStream(testFileBase + '.out'));
         let changes = Diff.diffTrimmedLines(programOutput.trim(), outFileOutput.trim());
         if (changes.some(diff => diff.added || diff.removed))
             resolve(["WA", timer.elapsed, changes]);
