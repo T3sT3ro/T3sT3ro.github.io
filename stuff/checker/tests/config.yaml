@@ -1,13 +1,14 @@
 ---
+schemaVersion: 1.0.0
 
-# default timeout for tests
-timeout: 3s
-# test-specific config
-tests:
-    PASSING:
-        timeout: 1mss
-    TIMEOUT:
-        timeout: 1s
-    # all tests matching this regex
-    /.*ING/:
-        timeout: 2s
+default: 3s 128M
+limits:
+    NON_EXISTENT: 1s 2MB
+    PASSING: 1s 128MB
+    OTHER: 1s
+    /.*ING/: 2s
+
+order:
+    - /PASSING/
+    - /OTHER/
+    - /FAILING/
