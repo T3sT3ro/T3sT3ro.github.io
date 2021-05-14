@@ -1,0 +1,17 @@
+#!/bin/bash
+1>&2 echo "prog started";
+
+# reading this way won't miss the last line of input if no line break is present
+DONE=false
+until $DONE ;do
+    read line || DONE=true
+
+    if [[ "$line" = "crash" ]]; then 
+        echo "some data in output stream";
+        1>&2 echo "crash reason in error stream"; 
+        exit 1; 
+    elif [[ "$line" = "sleep" ]];    then 
+        sleep 2;    
+    fi;
+    echo "$line ";
+done

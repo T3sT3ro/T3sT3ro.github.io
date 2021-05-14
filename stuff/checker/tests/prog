@@ -1,8 +1,0 @@
-#!/bin/bash
-
-while read line
-do
-    if [[ $line -eq -1 ]]; then exit 1; fi;
-    if [[ $line -eq "sleep" ]]; then sleep 2; fi;
-    echo "1 2 3 4 $line ";
-done

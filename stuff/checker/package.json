@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "diff": "^5.0.0",
+    "glob": "^7.1.7",
     "jsonschema": "^1.4.0",
     "semver": "^7.3.5",
     "yaml": "^1.10.2"
