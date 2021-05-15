@@ -1,7 +1,7 @@
 ---
 schemaVersion: 1.0.0
+defaultLimit: 3s 128M
 
-default: 3s 128M
 limits:
     NON_EXISTENT: 1s 2MB
     PASSING: 1s 128MB

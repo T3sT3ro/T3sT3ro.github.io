@@ -7,7 +7,6 @@ const validator = new Validator();
 function toMiliseconds(durationString) {
     let milis = durationString.match(/^((?:\d*\.)?\d+)\s*(?:ms|milis|milisecs?|miliseconds?)?$/i);
     let seconds = durationString.match(/^((?:\d*\.)?\d+)\s*(s|secs?|seconds?)$/i);
-    console.log("DUPA");
     if (milis) return +milis[1];
     if (seconds) return +seconds[1] * 1000.0;
     return false;
