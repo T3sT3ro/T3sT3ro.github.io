@@ -1,4 +1,4 @@
-const VERSION = '2.0.0';
+const VERSION = '2.1.0';
 const VERSION_HREF = 'https://raw.githubusercontent.com/T3sT3ro/T3sT3ro.github.io/master/stuff/checker/check.js';
 const HREF = 'https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/checker';
 const HREF_SHORT = 'https://bit.ly/3gsIL9D';
@@ -14,7 +14,6 @@ const path = require('path');
 const proc = require('child_process');
 const semver = require('semver');
 const stream = require('stream');
-const Diff = require('diff');
 const YAML = require('yaml');
 const glob = require('glob'); // todo: remove dependency
 
@@ -47,8 +46,6 @@ Optional arguments: (opt:* means that opt accepts optional value)
     -t:*    --tee:*         - Write program's stdout to '*.tee' files [to given dir - by default test dir].
     -g:*    --gen:*         - Implies '--tee:*'. Runs for each '*.in' file, even if '*.out' doesn't exist.
             --log:*         - Same as '--tee:' but to '*.log' files and for stderr. Without it stderr is piped to process' stderr.
-            --legacy        - Use old bash mechanism for running processes and diffing. TODO: obsolete and remove.
-            --showCmd       - Print commands used for each test case - useful for debugging executable by hand (only in legacy).
 
 Notes:
     - Valid test is a pair of files '*.in' and '*.out'. Only 'gen:' option doesn't require '*.out' files to exist.
@@ -84,6 +81,21 @@ var config = {};
     });
 }
 
+{ // option acronym expansion
+    let expand = (acronym, long) => { opts[long] = opts[long] || opts[acronym]; delete opts[acronym] };
+    expand("?", "help");
+    expand("v", "version");
+    expand("c", "color");
+    expand("d", "diff");
+    expand("t", "tee");
+    expand("g", "gen");
+    expand("cfg", "config");
+}
+
+// wraps string in format if opts.color is specified 
+// for my formatter see https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/formatter
+function fmt(format, str) { return opts.color ? `{${format}--${str}--}` : str }
+
 function streamToString(stream) {
     const chunks = [];
     return new Promise((resolve, reject) => {
@@ -93,18 +105,12 @@ function streamToString(stream) {
     })
 }
 
+function unregexify(s) {
+    return s.match(/^\/.*\/$/) ? s.substring(1, s.length - 1) : s;
+}
+
 (async function () {
 
-    { // option acronym expansion
-        let expand = (acronym, long) => { opts[long] = opts[long] || opts[acronym]; delete opts[acronym] };
-        expand("?", "help");
-        expand("v", "version");
-        expand("c", "color");
-        expand("d", "diff");
-        expand("t", "tee");
-        expand("g", "gen");
-        expand("cfg", "config");
-    }
 
 
     // meta functionality
@@ -168,10 +174,6 @@ function streamToString(stream) {
         }
     };
 
-    // wraps string in format if opts.color is specified 
-    // for my formatter see https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/formatter
-    function fmt(format, str) { return opts.color ? `{${format}--${str}--}` : str }
-
     console.log(fmt("*y", "PROGRAM: ") + fmt("Y/", program));
     console.log(fmt("*y", "TESTDIR: ") + fmt("Y/", testDir));
     if (fs.existsSync(configPath))
@@ -202,8 +204,6 @@ function streamToString(stream) {
             let includeFilters = filters.filter(f => !f.startsWith('!'));
             let excludeFilters = filters.filter(f => f.startsWith('!')).map(s => s.substring(1));
 
-            let unregexify = (s) => s.match(/^\/.*\/$/) ? s.substring(1, s.length - 1) : s;
-
             includeFilters = includeFilters.map(unregexify).map(it => RegExp(it));
             excludeFilters = excludeFilters.map(unregexify).map(it => RegExp(it));
 
@@ -227,11 +227,6 @@ function streamToString(stream) {
 
         process.stdout.write(`${fmt("b*", "RUNNING")}: ${test.padEnd(longestTestName + 3, '.')} `);
 
-        if (opts.legacy) { // using bash - better opt-out of it and use fully node-ish solution
-            legacyTestProgram(test);
-            continue;
-        }
-
         try {
             let [status, elapsed, details] = await runProgramOnTest(test);
             elapsed /= 1000.0;
@@ -253,16 +248,11 @@ function streamToString(stream) {
                 case 'WA':
                     console.log(fmt('%*r', ` WA `), `~${elapsed}s`);
                     if (!opts.diff) break;
-                    for (let diff of details) {
-                        let s = diff.value.trim();
-                        if (diff.added) s = s.replace(/^(.*)$/gm, fmt("G", `+ $1`));
-                        else if (diff.removed) s = s.replace(/^(.*)$/gm, fmt("R", `- $1`));
-                        elses = `| ${fmt("d", `...${diff.count}...`)}`;
-                        console.log(s);
-                    }
+                    console.log(fmt("R", `${details.line} - ${details.actual}`));
+                    console.log(fmt("G", `${details.line} + ${details.expected}`));
             }
         } catch (e) {
-            console.log(fmt('R%*', "!!") + fmt('r', ` spawning program failed:\n${e}`)); break;
+            console.log(fmt('R%*', " !! ") + fmt('r', ` spawning program failed:\n${e}`)); break;
         }
         // normalize tests, timeout pipe, tee stdout/stderr, diff
 
@@ -270,7 +260,7 @@ function streamToString(stream) {
     console.log(fmt('b*', '------------------------------------------------',));
 
     if (opts.diff)
-        console.log("diff format: ", fmt("G_", `(+ expected)`), fmt('_', "(| common)"), fmt("R_", "(- actual)"));
+        console.log("diff format: ", fmt("G_", `(line+ expected)`), /* fmt('_', "(| common)"), */ fmt("R_", "(line- actual)"));
     let failedTests = tests.filter(t => !passedTests.includes(t));
     let runInfo = opts.gen ? "OUTS GENERATED" : "TESTS PASSED";
     if (passedTests.length == tests.length) {
@@ -301,6 +291,7 @@ async function runProgramOnTest(test) {
             else if (code != 0) {
                 let error = await streamToString(programErr);
                 resolve(["RE", timer.elapsed, error]); // TODO: CRASH log file 
+                // return;
             }
         });
 
@@ -321,54 +312,41 @@ async function runProgramOnTest(test) {
         programProc.stderr.pipe(programErr);
 
         // start the program by implicitly unpausing the input pipe via piping
+
         timer.started = Date.now();
         fs.createReadStream(testFileBase + '.in').pipe(programProc.stdin);
-
-        // Tried doing this "cleverly" by reading streams line by line... 
-        // but it's a fucking pain in the ass and diff looks like a turd...
-        let programOutput = await streamToString(programOut);
 
         if (opts.gen) {
             resolve(["DONE", timer.elapsed]);
             return;
         }
 
-        let outFileOutput = await streamToString(fs.createReadStream(testFileBase + '.out'));
-        let changes = Diff.diffTrimmedLines(programOutput.trim(), outFileOutput.trim());
-        if (changes.some(diff => diff.added || diff.removed))
-            resolve(["WA", timer.elapsed, changes]);
-        else
-            resolve(["OK", timer.elapsed]);
+        // Tried doing this "cleverly" by reading streams line by line... 
+        // but it's a fucking pain in the ass and diff looks like a turd...
+        let programOutputText = await streamToString(programOut);
+        let outFileOutputText = await streamToString(fs.createReadStream(testFileBase + '.out'));
+
+        let diff = [programOutputText, outFileOutputText];
+
+        // normalize whitespaces, remove blank lines etc
+        diff = diff.map(it =>
+            it.trim().split(/\r?\n/).map(l =>
+                l.trim().replace(/\s+/, ' ')
+            ).filter(l => l != '')
+        );
+
+        let [actual, expected] = diff;
+        let maxLine = Math.max(actual.length, expected.length);
+
+        for (let i = 0; i < maxLine; ++i) {
+            if (actual[i] == expected[i]) continue;
+            resolve(["WA", timer.elapsed, { line: i + 1, actual: actual[i] ?? "<EOF>", expected: expected[i] ?? "<EOF>" }]);
+            return;
+        }
+
+        resolve(["OK", timer.elapsed]);
+        return;
     })
-}
-
-function legacyTestProgram(test) {
-    let testBaseFile = path.resolve(path.join(testDir, test));
-
-    let teeCmd = opts.tee ? `| tee "${path.join(opts.tee, `${test}.tee`)}"` : "";
-    let diffCmd = opts.gen ? "" : `| diff -Z - "${testBaseFile}.out"`;
-
-    // sed is used to append missing newlines to input - because for example bash can't handle with while read files without NL
-    let cmd = `cat "${testBaseFile}.in" | sed '$a\\' | "${path.resolve(program)}" ${teeCmd} ${diffCmd}`;
-
-    try {
-        status = proc.execSync(cmd, { stdio: 'pipe' });
-        process.stdout.write(fmt("g", ("OK" + (opts.gen ? "(GEN)" : "")).padEnd(14)) + (opts.showCmd ? `$ ${cmd}\n` : "\n"));
-    } catch (err) {
-        failedTests.push(test);
-        process.stdout.write(fmt("r", "ERROR".padEnd(14)) + (opts.showCmd || err.stderr.length > 0 ? `$ ${cmd}\n` : "\n"));
-        if (err.stderr.length > 0) {
-            process.stdout.write(String.fromCharCode.apply(null, err.stderr));
-        }
-        if (opts.diff) {
-            let diff = String.fromCharCode.apply(null, err.stdout)
-                .replace(/^(.*)/, fmt("/c", "$1"))
-                .replace(/^< (.*)$/gm, fmt("r/", `RETURNED: ${fmt("/%", "$1")}`))
-                .replace(/^> (.*)$/gm, fmt("g/", `EXPECTED: ${fmt("/%", "$1")}`))
-                .replace(/^/gm, ' ');
-            console.log(diff);
-        }
-    }
 }
 
 // creates http get request to hardcoded github link and look at VERSION string in the file
@@ -403,3 +381,18 @@ async function checkUpdates() {
         ).on('error', e => reject(`shit happened while connecting to remote:\n${e}`));
     });
 }
+
+// function parseConfig(config) {
+//     let toMiliseconds = (durationString) => {
+//         let milis = durationString.match(/^((?:\d*\.)?\d+)\s*(?:ms|milis|milisecs?|miliseconds?)?$/i);
+//         let seconds = durationString.match(/^((?:\d*\.)?\d+)\s*(s|secs?|seconds?)$/i);
+//         if (milis) return +milis[1];
+//         if (seconds) return +seconds[1] * 1000.0;
+//         return false;
+//     }
+
+//     let limitParse = (limitString) => {
+//         unregexify()
+//     }
+
+// }

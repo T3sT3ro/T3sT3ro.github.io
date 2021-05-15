@@ -54,3 +54,7 @@ check prog test c: | stdbuf -i0 -o0 formatter
 - [ ] ~~Support timeout to exec function in some `tests.lim` file as map `testName: time limit for timeout` or make each file start with some header specifying test parameters.~~ Config loading and schema validation.
 - [X] Better differentiation of tests ending in runtime error / non zero exit code vs those that just diff differently (RE vs WA) - return error message on crash.
 - [ ] Column diff in new Node checker
+- [ ] package into one file with easy install
+- [ ] depend on some other updater package
+- [X] fix line endings diff error
+- [ ] error on unsupported options and values
