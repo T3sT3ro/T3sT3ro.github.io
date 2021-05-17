@@ -1,4 +1,4 @@
-const VERSION = '2.1.0';
+const VERSION = '2.1.1';
 const VERSION_HREF = 'https://raw.githubusercontent.com/T3sT3ro/T3sT3ro.github.io/master/stuff/checker/check.js';
 const HREF = 'https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/checker';
 const HREF_SHORT = 'https://bit.ly/3gsIL9D';
@@ -361,18 +361,19 @@ async function checkUpdates() {
                 res.on('end', () => {
                     let lines = content.split('\n');
                     let versionLine = lines.filter(it => it.includes("VERSION"))[0] || lines[0];
-                    let remoteVersion = versionLine.match(/\d+\.?(?:\d+\.)?(?:\d+(?:-[a-zA-Z_-]*)?)/)[0];
+                    let remoteVersion = semver.coerce(versionLine.match(/\d+\.?(?:\d+\.)?(?:\d+(?:-[a-zA-Z_-]*)?)/)[0]);
+                    let localVersion = semver.coerce(VERSION);
 
                     // version number should be "MAJOR.MINOR.RELEASE[-SUFFIX]" and in the first 1kb of file - either
                     // the first line, or in the line with "VERSION" token
-                    if (!semver.valid(VERSION))
+                    if (!localVersion)
                         reject(`Local version number is fucked up: ${VERSION}. Should be MAJOR.MINOR.RELEASE[-SUFFIX]`);
-                    else if (!semver.valid(remoteVersion))
+                    else if (!remoteVersion)
                         reject(`Remote version number is fucked up: ${remoteVersion}\n at ${VERSION_FILE}`);
-                    else if (semver.gt(remoteVersion, VERSION))
+                    else if (semver.gt(remoteVersion, localVersion))
                         resolve([`new version available ${VERSION} => ${remoteVersion}\n at ${HREF}`,
                         opts.update == "upgrade" ? content : null]);
-                    else if (semver.lt(remoteVersion, VERSION))
+                    else if (semver.lt(remoteVersion, localVersion))
                         resolve([`! your version is newer than remote ${VERSION} > ${remoteVersion} !\n at ${HREF}`, null]);
                     else
                         resolve([`up to date.`, null]);
