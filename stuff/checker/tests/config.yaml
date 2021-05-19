@@ -1,14 +1,25 @@
 ---
+# Don't touch this line
 schemaVersion: 1.0.0
-defaultLimit: 3s 128M
 
-limits:
-    NON_EXISTENT: 1s 2MB
-    PASSING: 1s 128MB
-    OTHER: 1s
-    /.*ING/: 2s
+# proper config starts below
 
+# All names are matched as regex. Effective is last most-specific regex
+# i.e. the last one among all matching pattern the most
+# for example "PASSING" fits all ".*", "ING" and "PASSING" rules, but
+
+timeouts:
+    # .*: 5s       #default - matches all tests
+    NON_EXISTENT: 3ms
+    FAILING: 2ms
+    PASSING: 1ms
+    OTHER: 1ms
+    OTHER/SLEEP: 1ms
+
+# order of tests to run
+# PLAIN_TEXT to match all files CONTAINING keyword
+# /REGEX/ to match file against regex
 order:
-    - /PASSING/
-    - /OTHER/
-    - /FAILING/
+    - ^PASSING
+    - ^OTHER
+    - ^FAILING
