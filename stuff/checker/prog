@@ -1,5 +1,5 @@
 #!/bin/bash
-1>&2 echo "prog started";
+1>&2 echo "[stderr] prog started";
 
 # reading this way won't miss the last line of input if no line break is present
 DONE=false
