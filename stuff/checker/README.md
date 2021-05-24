@@ -88,4 +88,4 @@ Currently supported values are:
 - [ ] depend on some other updater package
 - [X] fix line endings diff error
 - [X] error on unsupported options ~~and values~~
-- [ ] detect why sometimes not all output is written and process crashes with errno 13 without visible cause.
+- [ ] detect why sometimes not all output is written and process crashes with errno 13 ~~without visible cause~~ [found some explanation](https://stackoverflow.com/questions/46914025/node-exits-without-error-and-doesnt-await-promise-event-callback/46916601#46916601).
