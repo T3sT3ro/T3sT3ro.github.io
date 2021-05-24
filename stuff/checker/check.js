@@ -8,14 +8,14 @@ const REQUIRED_CONFIG_VERSION = "1.0.0";
 
 //= //= //= //= //= //= //= //= //= //= //=
 
-import fs from 'fs';
-import https from 'https';
-import path from 'path';
-import proc from 'child_process';
-import semver from 'semver';
-import stream from 'stream';
-import YAML from 'yaml';
-import glob from 'glob'; // todo: remove dependency
+const fs = require('fs');
+const https = require('https');
+const path = require('path');
+const proc = require('child_process');
+const semver = require('semver');
+const stream = require('stream');
+const YAML = require('yaml');
+const glob = require('glob'); // todo: remove dependency
 
 let USAGE_TEXT = `
 usage: node checker.js [opts...] [program [test_dir [config]]] [-- filters...]
@@ -68,6 +68,10 @@ var args = [];
 var positional = [];
 var opts = {};
 var filters = [];
+var program = 'prog';
+var testDir = 'tests';
+var cfg = {};
+var tests = [];
 
 { // argument line parsing
     args = process.argv.slice(2);
@@ -82,25 +86,25 @@ var filters = [];
             else positional.push(arg);
         }
     });
-}
 
-{ // option acronym expansion
-    let expand = (acronym, long) => { opts[long] = opts[long] || opts[acronym]; delete opts[acronym] };
-    expand("?", "help");
-    expand("v", "version");
-    expand("c", "color");
-    expand("d", "diff");
-    expand("t", "tee");
-    expand("g", "gen");
-}
+    { // option acronym expansion
+        let expand = (acronym, long) => { opts[long] = opts[long] || opts[acronym]; delete opts[acronym] };
+        expand("?", "help");
+        expand("v", "version");
+        expand("c", "color");
+        expand("d", "diff");
+        expand("t", "tee");
+        expand("g", "gen");
+    }
 
-{ // options validation
-    let acceptedOptions = ["help", "version", "update", "color", "diff", "tee", "gen", "log", "showConfigRules"];
-    let invalidOptions = Object.keys(opts).filter(k => !acceptedOptions.includes(k));
-    if (invalidOptions.length > 0) {
-        console.error("Unrecognized options: " + invalidOptions);
-        console.error(USAGE_TEXT);
-        process.exit(1);
+    { // options validation
+        let acceptedOptions = ["help", "version", "update", "color", "diff", "tee", "gen", "log", "showConfigRules"];
+        let invalidOptions = Object.keys(opts).filter(k => !acceptedOptions.includes(k));
+        if (invalidOptions.length > 0) {
+            console.error("Unrecognized options: " + invalidOptions);
+            console.error(USAGE_TEXT);
+            process.exit(1);
+        }
     }
 }
 
@@ -124,15 +128,28 @@ function getFuzzy(object, key) {
     return matchings.reverse().find(e => e.match?.length == bestLen);
 }
 
+function createAnimation(frames, loop = true) {
+    return function* () {
+        while (loop) for (const f of frames) yield (f + '\b'.repeat(f.length));
+    }
+}
+
+function animatePromise(promise, animation) {
+
+    let animate = true;
+    promise.then(() => animate = false);
+    let prompter = setInterval()
+    while (!result) {
+        setInterval(() => {
+
+        }, 100);
+        process.stdout.write(animation);
+    }
+}
 
 
 // meta functionality
 { // help, bad args and usage, update, upgrade, version
-
-    var program = 'prog';
-    var testDir = 'tests';
-    var cfg = {};
-    var tests = [];
 
     if (opts.help) {
         console.log(HELP_TEXT);
@@ -170,8 +187,8 @@ function getFuzzy(object, key) {
     configFile = glob.sync(configFile + '.y?(a)ml', { nocase: true })[0];
     let programExists = fs.existsSync(program);
     let testsExist = fs.existsSync(testDir);
-    
-    
+
+
     if (!programExists || !testsExist || !configFile) {
         if (!programExists) console.error(`Can't find program '${program}' in cwd: '${__dirname}'`);
         if (!testsExist) console.error(`Can't find tests directory '${testDir}' in cwd: '${__dirname}'`);
@@ -265,7 +282,7 @@ console.log(fmt('b*', '------------------------------------------------',));
     }
     tests = [];
     for (const bucket of cfg.order)
-        if(ordered.buckets[bucket]) 
+        if (ordered.buckets[bucket])
             tests.push(...ordered.buckets[bucket]);
     tests.push(...ordered.default);
 }
@@ -315,6 +332,7 @@ for (const test of tests) {
     // normalize tests, timeout pipe, tee stdout/stderr, diff
 
 }
+
 console.log(fmt('b*', '------------------------------------------------',));
 
 if (opts.diff)
@@ -330,6 +348,7 @@ if (passedTests.length == tests.length) {
 
 process.exit((failedTests.length == 0 || opts.gen) ? 0 : 1);
 
+}) ();
 
 
 async function runProgramOnTest(test, rules) {
@@ -338,16 +357,27 @@ async function runProgramOnTest(test, rules) {
         let timer = { started: 0, elapsed: 0 };
 
         let programProc = proc.execFile(path.resolve(program), { timeout: rules.timeout });
-        let programOut = new stream.PassThrough();
-        let programErr = new stream.PassThrough();
-        programProc.on("error", e => { console.error("! ERROR " + e); reject(e) }); // cannot run process
+
+        let programOutPassThrough = new stream.PassThrough();
+        let programErrPassThrough = new stream.PassThrough();
+        let testInReadStream = fs.createReadStream(testFileBase + '.in');
+        let testOutReadStream = fs.createReadStream(testFileBase + '.out');
+
+        testInReadStream.on('error', e => console.log('\n# IN--> # TEST-IN ERROR: ') + e);
+        programProc.stdin.on('error', e => console.log('\n# --->P # PROG-STDIN ERROR: ') + e);
+        programProc.stdout.on('error', e => console.log('\n# P---> # PROG-STDOUT ERROR: ') + e);
+        programProc.stderr.on('error', e => console.log('\n# P===> # PROG-STDERR ERROR: ') + e);
+        programOutPassThrough.on('error', e => console.log('\n# P-T-> # PROG-OUT-THROUGH ERROR: ') + e);
+        programErrPassThrough.on('error', e => console.log('\n# P=T=> # PROG-ERR-THROUGH ERROR: ') + e);
+        testOutReadStream.on('error', e => console.log('\n# OUT-> # TEST-OUT ERROR: ') + e);
+
+        programProc.on("error", e => reject(e)); // cannot run process
         programProc.on("exit", async (code, signal) => {
-            console.error("! exit");
             timer.elapsed = Date.now() - timer.started;
             if (signal == 'SIGTERM')
                 resolve([`TLE`, timer.elapsed]);
             else if (code != 0) {
-                let error = await streamToString(programErr);
+                let error = await streamToString(programErrPassThrough);
                 resolve(["RE", timer.elapsed, error]); // TODO: CRASH log file 
                 // return;
             }
@@ -366,13 +396,13 @@ async function runProgramOnTest(test, rules) {
             programProc.stderr.pipe(fs.createWriteStream(logFile));
         }
 
-        programProc.stdout.pipe(programOut);
-        programProc.stderr.pipe(programErr);
+        programProc.stdout.pipe(programOutPassThrough);
+        programProc.stderr.pipe(programErrPassThrough);
 
         // start the program by implicitly unpausing the input pipe via piping
 
         timer.started = Date.now();
-        fs.createReadStream(testFileBase + '.in').pipe(programProc.stdin);
+        testInReadStream.pipe(programProc.stdin);
 
         if (opts.gen) {
             resolve(["DONE", timer.elapsed]);
@@ -381,8 +411,8 @@ async function runProgramOnTest(test, rules) {
 
         // Tried doing this "cleverly" by reading streams line by line... 
         // but it's a fucking pain in the ass and diff looks like a turd...
-        let programOutputText = await streamToString(programOut);
-        let outFileOutputText = await streamToString(fs.createReadStream(testFileBase + '.out'));
+        let programOutputText = await streamToString(programOutPassThrough);
+        let outFileOutputText = await streamToString(testOutReadStream);
 
         let diff = [programOutputText, outFileOutputText];
 
@@ -408,35 +438,28 @@ async function runProgramOnTest(test, rules) {
 }
 
 // creates http get request to hardcoded github link and look at VERSION string in the file
-async function checkUpdates() {
+async function fetchUpdate() {
     return new Promise((resolve, reject) => {
+        let responseHandler = (res) => {
+            let content = ""
+            res.on('data', chunk => content += chunk);
+            res.on('end', _ => {
+                let lines = content.split('\n');
+                let versionLine = lines.filter(it => it.includes("VERSION"))[0] || lines[0];
+                let remoteVersion = semver.coerce(versionLine.match(/\d+\.?(?:\d+\.)?(?:\d+(?:-[a-zA-Z_-]*)?)/)[0]);
+
+                if (!remoteVersion)
+                    reject([undefined, remoteVersion]);
+                else
+                    resolve([remoteVersion, opts.update == "upgrade" ? content : null]);
+            });
+            res.on('error', e => reject([undefined, e]))
+        };
+
         https.get(
             opts.update == "upgrade" ? BUNDLE_HREF : VERSION_HREF,
             opts.update == "upgrade" ? {} : { headers: { 'Range': 'bytes=0-1024' } },
-            (res) => {
-                let content = ""
-                res.on('data', (chunk) => content += chunk);
-                res.on('end', () => {
-                    let lines = content.split('\n');
-                    let versionLine = lines.filter(it => it.includes("VERSION"))[0] || lines[0];
-                    let remoteVersion = semver.coerce(versionLine.match(/\d+\.?(?:\d+\.)?(?:\d+(?:-[a-zA-Z_-]*)?)/)[0]);
-                    let localVersion = semver.coerce(VERSION);
-
-                    // version number should be "MAJOR.MINOR.RELEASE[-SUFFIX]" and in the first 1kb of file - either
-                    // the first line, or in the line with "VERSION" token
-                    if (!localVersion)
-                        reject(`Local version number is fucked up: ${VERSION}. Should be MAJOR.MINOR.RELEASE[-SUFFIX]`);
-                    else if (!remoteVersion)
-                        reject(`Remote version number is fucked up: ${remoteVersion}\n at ${VERSION_FILE}`);
-                    else if (semver.gt(remoteVersion, localVersion))
-                        resolve([`new version available ${VERSION} => ${remoteVersion}\n at ${HREF}`,
-                        opts.update == "upgrade" ? content : null]);
-                    else if (semver.lt(remoteVersion, localVersion))
-                        resolve([`! your version is newer than remote ${VERSION} > ${remoteVersion} !\n at ${HREF}`, null]);
-                    else
-                        resolve([`up to date.`, null]);
-                });
-            }
-        ).on('error', e => reject(`shit happened while connecting to remote:\n${e}`));
+            responseHandler
+        )
     });
 }
