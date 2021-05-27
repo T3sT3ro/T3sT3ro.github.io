@@ -1,0 +1,3 @@
+[submodule "algo/Tree-Generator"]
+	path = algo/Tree-Generator
+	url = git@github.com:ouuan/Tree-Generator.git
