@@ -5,20 +5,20 @@ function key(T) { return T?.key ?? +Infinity; }
 function join(T1, T2){
     if(T1 == null) return T2;
     if(T2 == null) return T1;
-    // zamieniamy, żeby T1.key <= T2.key + kontrola nulli
+    // swap, so that T1.key <= T2.key, and T1 is not null
     if(key(T1) > key(T2)) [T1, T2] = [T2, T1];
     
-    let [TL, TR] = [T1?.L, join(T1?.R, T2)];
-    // zachowujemy niezmiennik
+    let [TL, TR] = [T1.L, join(T1.R, T2)];
+    // keep the invariant
     if(h(TL) < h(TR)) [TL, TR] = [TR, TL];
-    return Tree(TL, key(T1), h(TR)+1, TR); // prawa dziura o 1 w dół
+    return Tree(TL, key(T1), h(TR)+1, TR); // right hole goes 1 down
 }
 
-function deleteMin(T){ // zwraca usunięty element i wynikowe drzewo
+function deleteMin(T){ // returns deleted element and resulting tree
     return [T.key, join(T.L, T.R)];
 }
 
-function insert(T, k){ // zwraca wynikowe drzewo
+function insert(T, k){ // returns resulting tree
     let unit = Tree(null, k, 1, null);
     return join(T, unit);
 }
