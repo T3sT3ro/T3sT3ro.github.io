@@ -12,12 +12,12 @@ inline int UF_rank(int x) { return -UF[x]; }  // valid only for set representati
 
 int UF_find(int v) { return UF[v] < 0 ? v : (UF[v] = UF_find(UF[v])); }
 
-// rank as tree size heuristic
-void UF_union(int a, int b) {
-    if ((a = UF_find(a)) == (b = UF_find(b))) return;
+//returns root, rank as tree size heuristic
+int UF_union(int a, int b) {
+    if ((a = UF_find(a)) == (b = UF_find(b))) return a;
     if (UF_rank(a) < UF_rank(b)) swap(a, b);
     UF[a] += UF[b];
-    UF[b] = a;
+    return UF[b] = a;
 }
 
 int main() {
