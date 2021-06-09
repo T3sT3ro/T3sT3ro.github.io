@@ -11,7 +11,7 @@ function idx2d(d, [x, y]) {return [x/d, y/d].map(Math.floor);}
 for (let p of points) {
     let [d, cell] = [dMin, idx2d(dMin, p)];
 
-    for (let delta of dxy) { // znajdź punkty
+    for (let delta of dxy) { // for all candidate buckets
         let nextCell = [cell[0] + delta[0], cell[1] + delta[1]];
         for (let other of getCell(nextCell))
             d = Math.min(dMin, dist(p, other));
