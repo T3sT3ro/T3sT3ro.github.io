@@ -1,0 +1,13 @@
+---
+
+# default timeout for tests
+timeout: 3s
+# test-specific config
+tests:
+    PASSING:
+        timeout: 1mss
+    TIMEOUT:
+        timeout: 1s
+    # all tests matching this regex
+    /.*ING/:
+        timeout: 2s
