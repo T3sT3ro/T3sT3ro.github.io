@@ -2,7 +2,7 @@
 
 ## What's that ?
 
-This small Node.JS script is used to test a program against test cases. Program is supplied by `*.in` files to the `stdin` and it's `stdout` is compared agains `*.out` files. It automates and presents nicely the results of running the tests.
+This small Node.JS script is used to test a program against test cases. Program is supplied by `*.in` files to the `stdin` and it's `stdout` is compared against `*.out` files. It automates and presents nicely the results of running the tests.
 
 To have even nicer output I recommend using [my formatter](https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/formatter) by piping the checker to interactive formatter process without buffering:
 
@@ -28,10 +28,10 @@ All RegExps checks should by design be ignoring case. If they don't then file an
     node check
     ```
 
-3. Test program `keppler` against tests `A` and `B` in directory `planetes` and show diff for tests that differ
+3. Test program `kepler` against tests `A` and `B` in directory `planets` and show diff for tests that differ
 
     ```
-    node check -d keppler planetes ^A$ ^B$ 
+    node check -d kepler planets ^A$ ^B$ 
     ```
 
 4. Test program `slow` on all tests in directory `tests` except tests matching `BIG` regex
@@ -80,6 +80,7 @@ Currently supported values are:
 
 ## TODO
 
+- [ ] Add support for generator instead of `*.in` files
 - [ ] Add support for interactive validator program instead of `*.out` files.
 - [X] ~~Support timeout to exec function in some `tests.lim` file as map `testName: time limit for timeout` or make each file start with some header specifying test parameters.~~ Config loading and schema validation (primitive by hand, no schema validator).
 - [X] Better differentiation of tests ending in runtime error / non zero exit code vs those that just diff differently (RE vs WA) - return error message on crash.
