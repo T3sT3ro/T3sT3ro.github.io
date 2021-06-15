@@ -1,3 +1,4 @@
+// union find structure with path compression and rank statistic in the root node
 class UF {
     #uf = new Proxy([], { get: (uf, v) => uf.hasOwnProperty(v) ? uf[v] : -1 });
     rank(v) { return -this.#uf[this.find(v)]; }

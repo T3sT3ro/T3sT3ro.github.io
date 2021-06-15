@@ -1,3 +1,5 @@
+// Gives distance of closest points using spatial hashing (has to be put into sensible function first)
+
 let points = [/*[x1, y1], ...*/];    
 let dxy = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,0],[0,1],[1,-1],[1,0],[1,1]];
 let _grid = {}; // hash table where bucket index is 2d cell

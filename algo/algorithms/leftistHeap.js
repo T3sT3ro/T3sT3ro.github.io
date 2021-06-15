@@ -1,3 +1,5 @@
+// leftist heap as amortized implementation of joinable priority queue
+
 function Tree(L, key, h, R) { return {L:L, key:key, h:h, R:R}; }
 function h(T) { return T?.h ?? 0; }
 function key(T) { return T?.key ?? +Infinity; }
