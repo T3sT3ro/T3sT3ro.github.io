@@ -1,3 +1,4 @@
+// finds centroids (up to 2) of graph represented as dictionary of {vertex_1 -> [children], ...}
 function centroid(G) { // G is graph
     let n = G.size;
     let [centroids, sz] = [[], []]; // sz = sizes of subtrees
