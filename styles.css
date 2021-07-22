@@ -64,6 +64,10 @@ p {
     color: var(--theme-grey-2)
 }
 
+ul li {
+    margin-bottom: 15px;
+}
+
 a.boxlink {
     opacity: .75;
     padding: 5px 20px;
@@ -79,6 +83,21 @@ a.boxlink {
 }
 
 a.boxlink:hover {
+    opacity: 1;
+    cursor: pointer;
+}
+
+a.red {
+    opacity: .75;
+    padding: 5px 20px;
+    width: 100%;
+    display: block;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--theme-accent);
+}
+
+a.red:hover {
     opacity: 1;
     cursor: pointer;
 }
