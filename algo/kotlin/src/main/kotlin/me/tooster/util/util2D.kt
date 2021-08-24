@@ -1,7 +1,7 @@
-package me.tooster.common
+package me.tooster.util
 
-import me.tooster.common.AXIS.COLS
-import me.tooster.common.AXIS.ROWS
+import me.tooster.util.AXIS.COLS
+import me.tooster.util.AXIS.ROWS
 import java.lang.Integer.max
 import java.util.*
 import kotlin.math.abs
@@ -55,8 +55,8 @@ enum class Direction {
 
     fun get(relative: Relative): Direction = getRose(this.ordinal + cwOffset[relative.ordinal])
 
-    val deltaX get() = Direction.deltaX[this.ordinal]
-    val deltaY get() = Direction.deltaY[this.ordinal]
+    val deltaX get() = Companion.deltaX[this.ordinal]
+    val deltaY get() = Companion.deltaY[this.ordinal]
     val delta get() = Vec2Int(deltaX, deltaY)
 }
 

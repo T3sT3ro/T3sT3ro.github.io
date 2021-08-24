@@ -7,7 +7,7 @@ repositories {
 }
 
 plugins {
-    kotlin("jvm") version "1.4.10"
+    kotlin("jvm") version "1.5.21"
     idea
     id("org.sonarqube") version "3.0"
 }
@@ -16,9 +16,8 @@ plugins {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.junit.jupiter:junit-jupiter:5.4.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
     implementation(kotlin("script-runtime"))
     implementation("org.jgrapht:jgrapht-core:1.5.0")
     implementation("org.apache.commons:commons-lang3:3.11")

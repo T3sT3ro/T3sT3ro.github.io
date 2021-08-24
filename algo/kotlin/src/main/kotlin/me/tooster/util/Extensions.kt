@@ -1,4 +1,4 @@
-package me.tooster.common
+package me.tooster.util
 
 infix fun <T> List<T>.cartesianProduct(other: List<T>) =
     this.flatMap { first -> other.map { second -> first to second } }
@@ -9,3 +9,5 @@ infix fun <K, T : Iterable<K>> T.cartesianProduct(other: T) = sequence {
 }
 
 fun Pair<Int, Int>.toVec2Int(): Vec2Int = Vec2Int(first, second)
+
+infix fun IntRange.cross(other: IntRange): IntRange2D = IntRange2D(this, other)
