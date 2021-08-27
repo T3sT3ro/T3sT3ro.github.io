@@ -1,0 +1,42 @@
+{
+  "name": "checker",
+  "version": "2.0.0",
+  "description": "utility for automating test validation for competitive programming",
+  "main": "checker.js",
+  "scripts": {
+    "test": "node checker program tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/T3sT3ro/T3sT3ro.github.io.git"
+  },
+  "keywords": [
+    "checker",
+    "competitive",
+    "testing",
+    "automation"
+  ],
+  "author": "Tooster",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/T3sT3ro/T3sT3ro.github.io/issues"
+  },
+  "homepage": "https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/checker#readme",
+  "dependencies": {
+    "ansi-color": "^0.2.1",
+    "async": "^3.2.1",
+    "execa": "^5.1.1",
+    "fs": "^0.0.1-security",
+    "glob": "^7.1.7",
+    "listr": "^0.14.3",
+    "meow": "^10.1.1",
+    "minimist": "^1.2.5",
+    "path": "^0.12.7",
+    "semver": "^7.3.5",
+    "stream": "^0.0.2",
+    "yaml": "^1.10.2"
+  },
+  "tooster": {
+    "formatter": "https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/formatter#readme"
+  }
+}

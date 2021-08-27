@@ -1,0 +1,25 @@
+---
+# Don't touch this line
+schemaVersion: 1.0.0
+
+# proper config starts below
+
+# All names are matched as regex. Effective is last most-specific regex
+# i.e. the last one among all matching pattern the most
+# for example "PASSING" fits all ".*", "ING" and "PASSING" rules, but
+
+timeouts:
+    # .*: 5s       #default - matches all tests
+    NON_EXISTENT: 3s
+    FAILING: 2s
+    PASSING: 1s
+    OTHER: 1s
+    OTHER/SLEEP: 1s
+
+# order of tests to run
+# PLAIN_TEXT to match all files CONTAINING keyword
+# /REGEX/ to match file against regex
+order:
+    - ^PASSING
+    - ^OTHER
+    - ^FAILING
