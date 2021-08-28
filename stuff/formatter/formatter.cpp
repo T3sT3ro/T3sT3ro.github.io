@@ -10,49 +10,115 @@
 #include <vector>
 
 using namespace std;
-// TODO fix positional characters to
-const char* HELP   = R"-(
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Markdown-like Formatter by Tooster      @SVERSION ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃ Reads stdin or argument list and writes to        ┃
-┃ stdout with ANSI                                  ┃
-┃                                                   ┃
-┃   usage:  formatter [options] [formats ...]       ┃
-┃   options:                                        ┃
-┃     -h --help -?  displays this help              ┃
-┃     -v --version  get version string (since v1.4) ┃
-┃     -l --legend   show formatting legend          ┃
-┃     -s --strip    strip off formatting sequences  ┃
-┃     -e --escape   escape sequences (\[\abrnftv])  ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+const char* USAGE  = R"-(
+Usage: %s [options] [strings...]
 )-";
+
+const char* HELP   = R"-(
+Markdown-like Formatter by Tooster, @SVERSION
+
+Description:
+    Translate liquid-like tags '{<format>--' and '--}' to ANSI formattings.
+    When no arguments are passed it reads input from STDIN. Otherwise args
+    are translated. Remember to quote arguments if used in args.
+
+Options:
+    -v --version            get version string (since v1.4)
+    -l --legend             show formatting legend
+    -s --strip              strip off formatting sequences (tags)
+    -e --escape             escape sequences (\[\abrnftv])
+    -S --no-sanitize        don't insert format-reset on EOF
+    -h --help               displays this help
+
+Overview:
+    Formats use a stack but they don't have to balance. Formatting is greedy,
+    so whenever a tag is encountered it is translated to ANSI. This basically
+    means, that it's possible to have leftover formats in terminal if closing
+    tags were missing due to unexpected data end or simply unbalanced tags.
+
+    Formatter follows 'best efford' ideology -- parses whatever it can and
+    never crashes. Unrecognized format is returned as string.
+
+    This program is meant to be used in pipes of programs that don't want to
+    depend on any fancy formatting libraries. It's meant to be simple to use
+    in existing codebase - you just have to edit strings printed by program
+    to include '{--' '--}' tags.
+
+    Strip option is useful when you have to preserve a file that you want to
+    display later with colors, but also need to get rid of all formatting
+    characters. For now tags are hardcoded, which poses danger to files that
+    have {-- and --} as content. In the future there will be an option to
+    provide custom tags
+
+Formatting and examples:
+    TL;DR legend of formats and how it works is available under '-l' option.
+
+    (Below 'f' is used as an alias for 'formatter')
+
+    To select foreground use single color letter. Use capitalized letter for
+    bright* version:
+     $ f "{r--red--} {R--BRIGHT RED--}"
+
+    First letter sets the foreground, second sets the background:
+     $ f "{RB*--BRIGHT RED on BRIGHT BLUE and bold--}"
+    They don't have to next to each other:
+     $ f "{R*_B--works as well--}"
+
+    To set background color alone use [;] (current top color) as foreground:
+     $ f "{r--red text {;y--on yellow--} and more red--}"
+
+    While [;] current is a meta-color refering to the last one on the stack,
+    the [d] deafult color referes to terminal's default color, which often is
+    different than white color (sometimes equals BRIGHT WHITE [W] color).
+
+    Formatting options work a little bit differently than colors. They are
+    xored against current formatting and toggle it. You can thing about it
+    like that: odd-numbered formats on stack are active, even numbred are not:
+     $ f "{/*--bold, italic {*--bold toggled off--} bold, italic again--}"
+
+    The [#] trim all paddings option removes all leading and trailing
+    whitespaces inside the matched balanced pairs:
+     $ f "{#--   <no paddings before {r--red--} and no paddings after>    --}"
+
+Remars:
+    - Some terminals may lack suport for bright colors (ANSI codes >= 90).
+    - Be wary about using non-standard formattings, such as blink, overline,
+      double underline and strikethrough.
+    - Remember that programs in pipes have system-default buffering, which
+      can cause interactive process seem to "freeze" when piped to formatter.
+      You can use 'stdbuf' or 'unbuffer' commands to prevent that behavior.
+    - The main use case for this program was for pipes and printf-debugging,
+      but optional syntax with string arguments was added for convenience.
+      Just remember to quote arguments with whitespaces.
+)-";
+
 const char* LEGEND = R"-(
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ ┏━[ANSI format]━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
-┃ ┃  '{options--text--}' e.g. {%Y*_--foo--}  ┃ ┃
+┃ ┃  '{format--text--}' e.g. {%Yc*_--foo--}  ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Colors]━━━━━┳━[Options]━━━━━━━━━━━━━━━━━┓ ┃
-┃ ┃  blac[k]     ┃  [c] Set color to c       ┃1┃
-┃ ┃  [r]ed       ┃  [%] Reversed             ┃ ┃
-┃ ┃  [g]reen     ┃  [!] Blink                ┃2┃
-┃ ┃  [y]ellow    ┃  [*] Bold                 ┃ ┃
-┃ ┃  [b]lue      ┃  [/] Italic               ┃ ┃
-┃ ┃  [m]agenta   ┃  [_] Underline            ┃ ┃
-┃ ┃  [c]yan      ┃  [^] Overline             ┃2┃
-┃ ┃  [w]hite     ┃  [=] Double underline     ┃2┃
-┃ ┃  [;] current ┃  [~] Strikethrough        ┃2┃
-┃ ┃  [d] default ┃  [.] Dim                  ┃ ┃
-┃ ┃              ┃  [#] Trim text paddings   ┃ ┃
+┃ ┃              ┃  [c]olor (CAPS == BRIGHT) ┃1┃
+┃ ┃  blac[k]     ┃  [%] Reversed             ┃ ┃
+┃ ┃  [r]ed       ┃  [!] Blink                ┃2┃
+┃ ┃  [g]reen     ┃  [*] Bold                 ┃ ┃
+┃ ┃  [y]ellow    ┃  [/] Italic               ┃ ┃
+┃ ┃  [b]lue      ┃  [_] Underline            ┃ ┃
+┃ ┃  [m]agenta   ┃  [^] Overline             ┃2┃
+┃ ┃  [c]yan      ┃  [=] Double underline     ┃2┃
+┃ ┃  [w]hite     ┃  [~] Strikethrough        ┃2┃
+┃ ┃  [;] current ┃  [.] Dim                  ┃ ┃
+┃ ┃  [d] default ┃  [#] Trim text paddings   ┃ ┃
 ┃ ┃              ┃  [0] Reset all formatting ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Control]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
 ┃1┃  1st encountered color is fg, 2nd is bg  ┃ ┃
-┃1┃  Current(;) color is last color on stack ┃ ┃
+┃1┃  Current color [;] is top color on stack ┃ ┃
 ┃1┃  Capitalize fg/bg for brighter colors    ┃ ┃
-┃1┃  Default color(d) is terminal's default  ┃ ┃
-┃ ┃  Options are toggled (XOR) with last     ┃ ┃
-┃ ┃  Empty options ({--) resets format (0)   ┃ ┃
+┃1┃  Default color [d] is terminal's default ┃ ┃
+┃ ┃  Options are toggled (XORed) with last   ┃ ┃
+┃ ┃  Empty options '{--' == [0] reset format ┃ ┃
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┃ ┏━[Remarks]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ┃
 ┃ ┃  Formats are stored on a stack           ┃ ┃
@@ -139,8 +205,9 @@ inline mask_t WITH_COLOR(mask_t mask, int color, int part) {
 }
 
 class FormatterAutomaton {
-    const bool strip  = false;  // should strip instead of printing ANSI
-    const bool escape = false;  // should escape special characters
+    const bool strip    = false;    // should strip instead of printing ANSI
+    const bool escape   = false;    // should escape special characters
+    const bool sanitize = true;     // should print format reset in destructor
 
     enum STATE {
         DEFAULT_STATE,
@@ -229,14 +296,16 @@ class FormatterAutomaton {
 
    public:
     // strip: should formatting be parsed to ANSI or stripped off
-    FormatterAutomaton(bool strip, bool escape) : strip(strip), escape(escape) {
+    FormatterAutomaton(bool strip, bool escape, bool sanitize) 
+        : strip(strip), escape(escape), sanitize(sanitize) {
         formatStack.push(INITIAL_FORMAT_MASK);
         printANSI(formatToAnsi(formatStack.top()));
     }
 
     ~FormatterAutomaton() {
         flushStore();
-        printANSI(formatToAnsi(INITIAL_FORMAT_MASK));
+        if(sanitize)
+            printANSI(formatToAnsi(INITIAL_FORMAT_MASK));
     }
 
     void accept(int c) {
@@ -379,60 +448,70 @@ class FormatterAutomaton {
 //   2. introduces stack's top ANSI entry sequence
 // thanks to that we can always reset on exit sequences
 
+static int f_strip;
+static int f_escape;
+static int f_no_sanitize;
+
 static struct option longOptions[] = {
-    {"help",    no_argument, NULL,  'h'},
-    {"version", no_argument, NULL,  'v'},
-    {"legend",  no_argument, NULL,  'l'},
-    {"strip",   no_argument, NULL,  's'},
-    {"escape",  no_argument, NULL,  'e'},
+    {"help",        no_argument, NULL,  'h'},
+    {"version",     no_argument, NULL,  'v'},
+    {"legend",      no_argument, NULL,  'l'},
+    {"strip",       no_argument, &f_strip,          's'},
+    {"escape",      no_argument, &f_escape,         'e'},
+    {"no-sanitize", no_argument, &f_no_sanitize,    'S'},
     {NULL,      0,           NULL,   0 },
 };
 
 int main(int argc, char* argv[]) {
 
-    static int strip;
-    static int escape;
-
     int opt;    // returned char
     int optIdx; // index in long_options of parsed option
 
     // parse all options
-    while ((opt = getopt_long(argc, argv, "hvlse?", longOptions, &optIdx)) != -1) {
+    // https://azrael.digipen.edu/~mmead/www/Courses/CS180/getopt.html
+    while ((opt = getopt_long(argc, argv, "?hvlseS", longOptions, &optIdx)) != -1) {
         switch (opt) {
-            case '?':
-            case 'h': printf("%s", HELP + 1);   exit(EXIT_SUCCESS);
-            case 'v': printf("@VER\n");         exit(EXIT_SUCCESS);
-            case 'l': printf("%s", LEGEND + 1); exit(EXIT_SUCCESS);
-            case 's': strip = true; break;
-            case 'e': escape = true; break;
-            default:
-                fprintf(stderr, "Usage: %s [-hvlse] [TEXT ...]\n", argv[0]);
+            // case 0:
+            //   fprintf(stderr, "long option: %s\n", longOptions[optIdx].name); break; 
+            case 'h': 
+               printf(USAGE+1, argv[0]);
+               printf("\n%s", HELP + 1);
+               exit(EXIT_SUCCESS);
+            case 'v': puts("@VER");                             exit(EXIT_SUCCESS);
+            case 'l': printf("%s", LEGEND + 1);                 exit(EXIT_SUCCESS);
+            case 'e': f_escape = 1; break;
+            case 's': f_strip = 1; break;
+            case 'S': f_no_sanitize = 1; break;
+            case '?': 
+                fprintf(stderr, USAGE + 1, argv[0]);
+                fprintf(stderr, "(try using -h or --help for more info)\n");
                 exit(EXIT_FAILURE);
         }
     }
 
-    // non-option arguments
+    // read from positional arguments
     if(optind < argc) {
         while (optind < argc) {
             static string separator = "";  // to print arguments separated with spaces
             printf("%s", separator.c_str());
 
             // parse the argument
-            FormatterAutomaton automaton = FormatterAutomaton(strip, escape);
+            FormatterAutomaton automaton = FormatterAutomaton(f_strip, f_escape, !f_no_sanitize);
             for (char* it = argv[optind]; *it; ++it)  // read null terminated c_string
                 automaton.accept(*it);
 
             separator = " ";
             optind++;
         }
+    // read from STDIN
     } else {
 
-        FormatterAutomaton automaton = FormatterAutomaton(strip, escape);
+        FormatterAutomaton automaton = FormatterAutomaton(f_strip, f_escape, !f_no_sanitize);
 
         int c;
         while ((c = getchar()) != EOF)
             automaton.accept(c);
     }
-    
+
     exit(EXIT_SUCCESS);
 }
