@@ -3,7 +3,7 @@ CPP = formatter.cpp
 TARFILES = $(CPP) Makefile demo.txt README.md $(VERINFO)
 
 version = $(file < ${VERINFO})
-versionString = $(shell printf '%9s' v$(version))
+versionString = v$(version)
 
 
 all: formatter
