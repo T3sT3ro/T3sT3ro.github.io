@@ -2,19 +2,35 @@
   "name": "checker",
   "version": "2.0.0",
   "description": "utility for automating test validation for competitive programming",
-  "main": "checker.js",
+  "main": "./cli.js",
+  "type": "module",
   "scripts": {
-    "test": "node checker program tests"
+    "lint": "eslint .",
+    "smoke-implicit-subdir": "cd test && check program",
+    "smoke-explicit-testdir": "cd test && check program tests",
+    "smoke-implicit-root": "cd test && check program tests"
   },
+  "bin": {
+    "check": "./cli.js"
+  },
+  "files": [
+    "/cli.js",
+    "/config.js",
+    "/dispatcher.js",
+    "/R.js",
+    "/resources"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/T3sT3ro/T3sT3ro.github.io.git"
   },
+  "private": true,
   "keywords": [
     "checker",
     "competitive",
+    "CP",
     "testing",
-    "automation"
+    "codeforces"
   ],
   "author": "Tooster",
   "license": "MIT",
@@ -23,20 +39,27 @@
   },
   "homepage": "https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/checker#readme",
   "dependencies": {
-    "ansi-color": "^0.2.1",
+    "ajv": "^8.6.3",
+    "ansi-colors": "^4.1.1",
     "async": "^3.2.1",
+    "commander": "^8.1.0",
     "execa": "^5.1.1",
-    "fs": "^0.0.1-security",
     "glob": "^7.1.7",
+    "js-yaml": "^4.1.0",
     "listr": "^0.14.3",
-    "meow": "^10.1.1",
-    "minimist": "^1.2.5",
+    "lodash": "^4.17.21",
+    "micromatch": "^4.0.4",
     "path": "^0.12.7",
-    "semver": "^7.3.5",
-    "stream": "^0.0.2",
-    "yaml": "^1.10.2"
+    "yaml": "^1.10.2",
+    "yesno": "^0.3.1"
   },
   "tooster": {
     "formatter": "https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/stuff/formatter#readme"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0"
+  },
+  "engines": {
+    "node": ">= 16.0.0"
   }
 }

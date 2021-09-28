@@ -1,0 +1,5 @@
+%YAML 1.2
+# yaml-language-server: $schema=./schema-1.0.0.json
+---
+# run all tests in the detected directory without any limits
+- '**' 

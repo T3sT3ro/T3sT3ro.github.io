@@ -1,3 +1,6 @@
+---
+lastmod: '2021-09-02T22:32:37.773Z'
+---
 # Checker2.0
 
 This is a tool to help in competitive programming and various programming tasks. It runs a compiled program, pipes the contents of `*.in` files to it's standard input and compares the output with the `*.out` files.
@@ -23,25 +26,42 @@ Why 2.0? because some duc-taped things have been/are going to be properly implem
 - add more fine-grained control and status logging over tests using the `config.yaml`
 - reduce mental effort to 0 when using the checker
 - add proper installation instructions
+- maybe add proper-lockfile or async test detection
 
 ## Immeddiate TODO - what to do NOW, ordered
 
 - [x] Use existing argument parsing library instead of writing my own
-- [ ] test detection
-- [ ] test filtering
+- [X] test detection
+- [ ] globbing expressions in profiles instead of regex (use minimatch library)
 - [ ] config loading
+- [ ] config apply
+
+## Intended config schema
+
+```yaml
+version: <schemaVersion>
+
+timeouts:
+    3ms: [/.*SMALL/, /.*MEDIUM/]
+    10ms: /.*/
+
+order:
+    
+```
 
 ## TODO
 
 There are still things to do:
 
+- [ ] Add automatic matching of multiple programs to their corresponding tests: so that programs `{a,b,c}` can be matched to `tests/{a,b,c}/<tests>`
 - [ ] Use existing colors library instead of piping to formatter
 - [ ] Use some interactive CLI printing, maybe `listr` package
 - [ ] Make use of `execa` and `async` packages to decouple cli printing and test running
 - [ ] Add proper time counting for a process
-- [ ] add `--no-timeout` option to suppress killing process on timeout
+- [ ] Add `--no-timeout` option to suppress killing process on timeout
 - [ ] Add schema check for the config file
-- [ ] Add automatic matching of multiple programs to their corresponding tests: so that programs `{a,b,c}` can be matched to `tests/{a,b,c}/<tests>`
+- [ ] [Add regex schema to yaml](https://github.com/nodeca/js-yaml-js-types)
+- [ ] Add config profiles - any `<profile>.yaml` file in tests subdirectory is a profile to run tests with
 - [ ] Add support for validator/arbiter - an interactive program that talks with program to be checked
 - [ ] Add more diffing options - comparing float values with epsilon, whitespace-sensitive matching and others on demand
 

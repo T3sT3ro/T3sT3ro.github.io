@@ -1,25 +1,46 @@
+%YAML 1.2
+# yaml-language-server: $schema=../../lib/resources/schema-1.0.0.json
 ---
-# Don't touch this line
-schemaVersion: 1.0.0
+# intentions:
+#   - simple way to set limits
+#   - simple way to order
+#   - simply set profiles to run
+#   - minimal syntax needed
+#   - copy-paste summary from generator and have a mostly working config
+#   - match by glob -- I see no real advantage for regex
 
-# proper config starts below
+# Default configuration runs named tests first and numbered tests last
+# By default all tests are included
+# default:
+#  - '**' : 1m
 
-# All names are matched as regex. Effective is last most-specific regex
-# i.e. the last one among all matching pattern the most
-# for example "PASSING" fits all ".*", "ING" and "PASSING" rules, but
+failing: &failing
+  - FAILING/**: 2ms 2kb
 
-timeouts:
-    # .*: 5s       #default - matches all tests
-    NON_EXISTENT: 3ms
-    FAILING: 2ms
-    PASSING: 1ms
-    OTHER: 1ms
-    OTHER/SLEEP: 1ms
+auto: &auto
+  - program/**: 10ms 10kb
 
-# order of tests to run
-# PLAIN_TEXT to match all files CONTAINING keyword
-# /REGEX/ to match file against regex
-order:
-    - ^PASSING
-    - ^OTHER
-    - ^FAILING
+generate: &generate
+  - "**/*GEN*"
+
+# Profiles. 'default' is applied if no profile was present in command line
+# A profile is a name with ordered list of tests filters with limits
+default:
+  # limit as <num>{m}?s for time and <num>{kmg}?b for memory
+  # Match tests by globbing expression (see https://github.com/isaacs/minimatch)
+  # To run all tests use <**> glob
+  # Only matching tests will be run
+  # Tests are matched top to bottom
+  - PASSING: 3ms 2kb
+  - OTHER: 1ms 10kb
+  - OTHER/SLEEP: 1ms 20kb
+    OTHER/HALT: 1ms 20kb
+  # unordered collection of patterns for this step, without
+  # simple string without timing
+  # merge key with nested order. Useful for common parts
+  # - .**: #           5s          # this will match all other tests
+  - *auto
+  - *failing
+  - *generate
+  - [GROUP, OF, EXPRESSIONS]: 5ms 2kb
+  - { NON_EXISTENT_0, NON_EXISTENT_1 }: 2ms 2kb

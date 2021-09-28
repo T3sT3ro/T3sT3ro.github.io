@@ -1,0 +1,66 @@
+%YAML 1.2
+---
+# TODO update MAN with filters etc
+USAGE: |
+  [program] [options...]
+  `.trim();
+
+MORE_HELP_TIP: |
+  (add --help for additional information)
+
+DESCRIPTION: |
+  Check a program against tests, i.e. pairs of '*.in' and '*.out' files. 
+  Compare outputs line by line, ignoring whitespace differences.
+  Future versions will support validator and better diff.
+  It supports ordering and limits specified in the '<testDir>/config.yaml' file.
+  
+
+DETAILS: | # TODO: YEET regexps in favor of globs
+  Quick Filters: 
+    - Meant to be a quick way to run selected tests without using config files
+    - Filter is a JS RegExp matching file without extension relative to testsDir
+    - By default all tests are enabled (equivalent to -e .*)
+    - Exclude filters start with '~' and tell checker to skip matching tests
+    - Order follows test filters
+
+  Report legend:
+    TL  - Time Limit Exceeded
+    RE  - Runtime Exception aka program exited with non-zero code
+    WA  - Wrong Answer
+    OK  - Correct Answer
+    !!  - Internal Checker error when trying to spawn program process
+
+  Notes:
+    - Prefer using SCREAMING_SNAKE_CASE as test names.
+    - Without explicit testDir argument, the checker tries following directories
+      in that exact order: 'tests/<program>' and later 'tests/'.
+    - You can quickly disable applying config with -C option.
+    - It's good practice to end files with a blank line. It prevents bugs when 
+      trying to pipe *.in files manually to (C, bash, ...) programs that have 
+      weird/unexpected for newbies line handling. You can normalize all with:
+      $ find <testDir> -type f -exec sed -i -e '$a\\' {} \\; -print.
+
+  Examples:
+    Run all programs over whole 'tests' directory in default profile (if present):
+      $ node check
+
+    Run 'prog' for all 'tests/prog/.*in' with quick-timeout profile
+      $ node check prog --profile quick-timeout
+
+    Run 'brute' on 'tests/*.in' and generate outputs to 'answers' directory:
+      $ node check brute -g answers
+
+    Run 'testProg' and store it's stdout in '*.tee' and stderr in '*.log' files:
+      $ node check testProg --tee --log
+
+    Run 'astar' against 'custom/*.in' and show differing lines for failed tests:
+      $ node check astar custom --diff
+
+    Run '3sat' program against 'tests' but run only tests with '-BIG' suffix:
+      $ node 3sat -e ".*-BIG$"
+
+    Run 'MAZE.*' tests but exclude ('~') 'MAZE-LOOPS' tests:
+      $ node turnRight -e .*MAZE.* ~.*MAZE-LOOPS.*
+
+    Test 'brute' using 'long' profile (no timeouts) and store logs in 'debug'
+      $ node brute long -l debug

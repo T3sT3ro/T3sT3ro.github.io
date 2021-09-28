@@ -1,6 +1,6 @@
 
 const stream = require('stream');
-const semver = require('semver');
+const fs = require('fs');
 
 module.exports = {
 
@@ -57,5 +57,7 @@ module.exports = {
     }
     ,
 
-    
+    // TODO use this
+    readline: require('readline')
+    ,
 }

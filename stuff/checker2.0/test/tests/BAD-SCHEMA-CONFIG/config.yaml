@@ -1,0 +1,6 @@
+---
+THIS IS:
+    A BAD:
+        SCHEMA: [
+          AND: SHOULD NOT PARSE
+        ]

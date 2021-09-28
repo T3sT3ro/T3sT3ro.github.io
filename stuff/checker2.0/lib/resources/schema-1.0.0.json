@@ -1,0 +1,61 @@
+{
+    "$ref": "#/$defs/Root",
+    "$defs": {
+        "Root": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/Filter",
+                    "description": "Filter defining default profile"
+                },
+                {
+                    "type": "object",
+                    "minProperties": 1,
+                    "additionalProperties": {
+                        "$ref": "#/$defs/Filter"
+                    },
+                    "description": "Mapping of profile name to profile"
+                }
+            ],
+            "title": "Root config file"
+        },
+        "Filter": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "$ref": "#/$defs/Rule"
+            },
+            "title": "Ordered list of filters"
+        },
+        "Rule": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Filter",
+                    "description": "Nested list, often result of YAML merge key"
+                },
+                {
+                    "type": ["string", "number"],
+                    "minLength": 1,
+                    "description": "Simple glob pattern without limits"
+                },
+                {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/$defs/LimitString"
+                    },
+                    "description": "Unordered mapping from glob pattern to it's limit"
+                }
+            ],
+            "title": "Rule"
+        },
+        "LimitString": {
+            "type": ["string", "null"],
+            "description": "Time and memory limits in any order",
+            "examples": [
+                "200ms",
+                "1s 200kb",
+                "512MB 10s",
+                "1gb"
+            ]
+        }
+    }
+}
