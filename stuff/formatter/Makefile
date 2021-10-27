@@ -1,8 +1,9 @@
 VERINFO = formatter.ver
 CPP = formatter.cpp
-TARFILES = $(CPP) Makefile demo.txt README.md $(VERINFO)
+TARFILES = $(CPP) Makefile README.md $(VERINFO)
 
 version = $(file < ${VERINFO})
+nextversion = $(shell semver -i ${version})
 versionString = v$(version)
 
 
@@ -13,10 +14,9 @@ formatter: $(CPP) $(VERINFO)
 	 g++ -xc++ -std=c++11 -o $@ -
 
 install: formatter
-	cp -iu $^ /usr/local/bin/
+	sudo cp -iu $^ /usr/local/bin/
 
-demo: formatter demo.txt
-	./formatter -e < demo.txt
+install-clean: install clean
 
 clean:
 	rm -rf formatter
@@ -28,3 +28,8 @@ distclean: clean
 dist: distclean $(TARFILES)
 	tar -czf formatter-$(version).tar.gz --transform 's,^,formatter-$(version)/,' \
 	 $(TARFILES)
+
+.PHONY: bump
+bump: formatter.ver
+	echo $(nextversion) > $(VERINFO)
+	@echo "BUMPED $(version) --> $(nextversion)"
