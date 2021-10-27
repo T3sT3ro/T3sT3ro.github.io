@@ -29,6 +29,7 @@ Options:
     -s --strip              strip off formatting sequences (tags)
     -e --escape             escape sequences (\[\abrnftv])
     -S --no-sanitize        don't insert format-reset on EOF
+       --demo               show demo
     -h --help               displays this help
 
 Overview:
@@ -132,6 +133,58 @@ const char* LEGEND = R"-(
 ┃ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 )-";
+const char* DEMO = R"-(
+┃ {kw--blac[k]     FG--} ┃ {Kw--blac[K]     LFG--} ┃ {;k--blac[k]     BG--} ┃ {;K--blac[K]     LBG--} ┃
+┃ {r;--[r]ed       FG--} ┃ {R;--[R]ed       LFG--} ┃ {kr--[r]ed       BG--} ┃ {kR--[R]ed       LBG--} ┃
+┃ {g;--[g]reen     FG--} ┃ {G;--[G]reen     LFG--} ┃ {kg--[g]reen     BG--} ┃ {kG--[G]reen     LBG--} ┃
+┃ {y;--[y]ellow    FG--} ┃ {Y;--[Y]ellow    LFG--} ┃ {ky--[y]ellow    BG--} ┃ {kY--[Y]ellow    LBG--} ┃
+┃ {b;--[b]lue      FG--} ┃ {B;--[B]lue      LFG--} ┃ {kb--[b]lue      BG--} ┃ {kB--[B]lue      LBG--} ┃
+┃ {m;--[m]agenta   FG--} ┃ {M;--[M]agenta   LFG--} ┃ {km--[m]agenta   BG--} ┃ {kM--[M]agenta   LBG--} ┃
+┃ {c;--[c]yan      FG--} ┃ {C;--[C]yan      LFG--} ┃ {kc--[c]yan      BG--} ┃ {kC--[C]yan      LBG--} ┃
+┃ {w;--[w]hite     FG--} ┃ {W;--[W]hite     LFG--} ┃ {kw--[w]hite     BG--} ┃ {kW--[W]hite     LBG--} ┃
+
+┃ {rk--red context       {;w*--[white BG with current FG color and bold]--}      red context--} ┃
+┃ {rk--red context       {w;*--[current BG with white FG color and bold]--}      red context--} ┃
+
+┃ {ry--red context       {dd--[default FG+BG color]--}       red context--} ┃
+
+┃ [^] {^--overline                   --} ┃
+┃ [_] {_--Underline                  --} ┃
+┃ [*] {*--Bold                       --} ┃
+┃ [/] {/--Italic                     --} ┃
+┃ [.] {.--dim                        --} ┃
+┃ [%] {%--reversed                   --} ┃
+┃ [!] {!--blink                      --} ┃
+┃ [=] {=--double underline           --} ┃
+┃ [~] {~--Strikethrough              --} ┃
+┃ [0] {0--reset all formatting       --} ┃
+┃-{#--
+      [#] trim text paddings         
+                            --}----------┃
+
+┃ {--common formatting stack test
+┃ {--normal {*--bold {/--italic {_--underline {.--dim {%--reverse {~--crossed {!--blink-BLNK--}-CRS--}-RST--}-DIM--}-UND--}-ITA--}-BLD--}-NORM--}
+┃ {_--+under{_---under{_--+under--}--}--}
+
+┃ SOME UTF-8:
+┃ 你好，世界 
+  {%--你好，{*--世界--}--}
+┃ ∮ E⋅da = Q,  n → ∞, ∑ f(i) = ∏ g(i), ∀x∈ ℝ : ⌈x⌉ = −⌊−x⌋, α ∧ ¬β = ¬(¬α ∨ β)
+  {r--∮ E⋅da = Q,  {b--n → ∞--}, ∑ f(i) = ∏ g(i), {g--∀x∈ ℝ :--} ⌈x⌉ = −⌊−x⌋, α ∧ ¬β = {y--¬({r--¬α ∨ β--})--}--}
+
+┃ -- BELOW IS ONLY RELEVANT WITH -e OPTION --
+┃ escape sequences test. If you see [X] then escape doesn't work - it should be [O] ┃
+┃ IF YOU SEE THIS MESSAGE, THIS SECTION IS IRRELEVANT\r                                                      
+┃ \\\\ bracket escape: \\
+┃ \\n newline escape \n^^^^^^^^^^^^^^^^^^^
+┃ \\a alert escape (will be heard on supported terminals) \a
+┃ \\b backspace escape (moves cursor back 1 char): [X\bO]
+┃ \\r: [X] carriage return test (moves cursor back to col 0)\r┃ \\r: [O]
+┃ \\f: form feed \\\f\ should be continous diagonal line spanning 2 lines
+┃ \\t: horizontal tab: a\tb\tc\td
+┃ \\v: vertical tab \\\v\ should be continous diagnoal line spannig 2 lines
+)-";
+
 
 /*
 format bitmask:     ┃ valid|0|# ┃ .|~|=|^|_|/|*|!|% ┃          ┃ light bg|bg ┃ light fg|fg ┃
@@ -453,36 +506,42 @@ static int f_escape;
 static int f_no_sanitize;
 
 static struct option longOptions[] = {
-    {"help",        no_argument, NULL,  'h'},
-    {"version",     no_argument, NULL,  'v'},
-    {"legend",      no_argument, NULL,  'l'},
+    {"help",        no_argument, NULL,              'h'},
+    {"version",     no_argument, NULL,              'v'},
+    {"legend",      no_argument, NULL,              'l'},
     {"strip",       no_argument, &f_strip,          's'},
     {"escape",      no_argument, &f_escape,         'e'},
     {"no-sanitize", no_argument, &f_no_sanitize,    'S'},
-    {NULL,      0,           NULL,   0 },
+    {"demo"       , no_argument, NULL,               0 },
+    {NULL,          0,           NULL,               0 },
 };
 
 int main(int argc, char* argv[]) {
 
     int opt;    // returned char
     int optIdx; // index in long_options of parsed option
-
+    
+    FILE* istream = stdin;
     // parse all options
     // https://azrael.digipen.edu/~mmead/www/Courses/CS180/getopt.html
     while ((opt = getopt_long(argc, argv, "?hvlseS", longOptions, &optIdx)) != -1) {
         switch (opt) {
-            // case 0:
-            //   fprintf(stderr, "long option: %s\n", longOptions[optIdx].name); break; 
+            case 0:
+                if (strcmp(longOptions[optIdx].name, "demo") == 0) {
+                    istream = fmemopen((void*)DEMO, strlen(DEMO), "r");   
+                    break;
+                } else goto unrecognizedLong;
             case 'h': 
-               printf(USAGE+1, argv[0]);
-               printf("\n%s", HELP + 1);
-               exit(EXIT_SUCCESS);
+                printf(USAGE+1, argv[0]);
+                printf("\n%s", HELP + 1);
+                exit(EXIT_SUCCESS);
             case 'v': puts("@VER");                             exit(EXIT_SUCCESS);
             case 'l': printf("%s", LEGEND + 1);                 exit(EXIT_SUCCESS);
             case 'e': f_escape = 1; break;
             case 's': f_strip = 1; break;
             case 'S': f_no_sanitize = 1; break;
             case '?': 
+                unrecognizedLong:
                 fprintf(stderr, USAGE + 1, argv[0]);
                 fprintf(stderr, "(try using -h or --help for more info)\n");
                 exit(EXIT_FAILURE);
@@ -509,7 +568,7 @@ int main(int argc, char* argv[]) {
         FormatterAutomaton automaton = FormatterAutomaton(f_strip, f_escape, !f_no_sanitize);
 
         int c;
-        while ((c = getchar()) != EOF)
+        while ((c = getc(istream)) != EOF)
             automaton.accept(c);
     }
 
