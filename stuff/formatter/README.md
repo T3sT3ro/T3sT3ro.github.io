@@ -32,7 +32,7 @@ At this point you can run `make demo` to see examples and clean with `make clean
 
 ## Available styles
 
-Run `./formatter -l` after building or [check the source code of `formatter.cpp`](formatter.cpp). Remember — not all styles may be supported in your terminal. It's advised to run `make demo` first to see what works and what doesn't work in your terminal.
+Run `./formatter -l` after building or [check the source code of `formatter.cpp`](https://github.com/T3sT3ro/T3sT3ro.github.io/blob/master/stuff/formatter/formatter.cpp). Remember — not all styles may be supported in your terminal. It's advised to run `make demo` first to see what works and what doesn't work in your terminal.
 
 ## TODO
 
