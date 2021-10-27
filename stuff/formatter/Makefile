@@ -1,22 +1,18 @@
-VERINFO = formatter.ver
+VERFILE = VERSION
 CPP = formatter.cpp
-TARFILES = $(CPP) Makefile README.md $(VERINFO)
+TARFILES = $(CPP) Makefile README.md $(VERFILE)
 
-version = $(file < ${VERINFO})
-nextversion = $(shell semver -i ${version})
-versionString = v$(version)
+VER_CURRENT = $(file < ${VERFILE})
+VER_NEXT = $(shell semver -i ${VER_CURRENT})
+VER_STR = v$(VER_CURRENT)
 
 
-all: formatter
-
-formatter: $(CPP) $(VERINFO)
-	sed 's/@SVERSION/$(versionString)/; s/@VER/$(version)/' $(CPP) |\
+formatter: $(CPP) $(VERFILE)
+	sed 's/@SVERSION/$(VER_STR)/; s/@VER/$(VER_CURRENT)/' $(CPP) |\
 	 g++ -xc++ -std=c++11 -o $@ -
 
 install: formatter
-	sudo cp -iu $^ /usr/local/bin/
-
-install-clean: install clean
+	sudo cp -u $^ /usr/local/bin/
 
 clean:
 	rm -rf formatter
@@ -24,12 +20,14 @@ clean:
 distclean: clean
 	rm -rf formatter*.tar.gz formatter*/
 
-
-dist: distclean $(TARFILES)
-	tar -czf formatter-$(version).tar.gz --transform 's,^,formatter-$(version)/,' \
+.dist: distclean $(TARFILES)
+	tar -czf formatter-$(VER_CURRENT).tar.gz --transform 's,^,formatter-$(VER_CURRENT)/,' \
 	 $(TARFILES)
 
-.PHONY: bump
-bump: formatter.ver
-	echo $(nextversion) > $(VERINFO)
-	@echo "BUMPED $(version) --> $(nextversion)"
+.PHONY: .bump
+.bump: $(VERFILE)
+	echo $(VER_NEXT) > $(VERFILE)
+	@echo "BUMPED $(VER_CURRENT) --> $(VER_NEXT)"
+
+
+publish: .bump install .dist
