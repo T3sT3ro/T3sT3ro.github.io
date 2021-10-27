@@ -17,7 +17,7 @@ Usage: %s [options] [strings...]
 
 const char* HELP   = R"-(
 Markdown-like Formatter by Tooster, @SVERSION
-Homepage: https://t3st3ro.github.io/packages/formatter/
+Homepage: @HOMEPAGE
 
 Description:
     Translate liquid-like tags '{<format>--' and '--}' to ANSI formattings.
