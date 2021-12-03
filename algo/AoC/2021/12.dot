@@ -1,0 +1,30 @@
+# Some helpers are here:
+
+## Day 12
+
+graph T{
+    start -- gx
+    pf -- pk
+    ZQ -- iz
+    iz -- NY
+    ZQ -- end
+    pf -- gx
+    pk -- ZQ
+    ZQ -- dc
+    NY -- start
+    NY -- pf
+    NY -- gx
+    ag -- ZQ
+    pf -- start
+    BN -- ag
+    iz -- pf
+    ag -- FD
+    pk -- NY
+    gx -- pk
+    ag -- pf
+    iz -- pk
+    pk -- ag
+    iz -- end
+    iz -- BN
+    end -- BN
+}
