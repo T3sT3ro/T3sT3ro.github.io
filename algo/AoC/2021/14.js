@@ -7,6 +7,7 @@ const R = Object.fromEntries(T.slice(2).map(x => x.split(' -> ')).map(([p, i]) =
 const pairs = _(P).keys().slice(1).map(i => P.substr(i - 1, 2)).countBy().value();
 
 let polymer = _.cloneDeep(pairs);
+let ans = [];
 for (let it = 1; it <= 40; it++) {
     let nextPoly = {};
     _(polymer).entries().forEach(([p, n]) => R[p].forEach(prod => nextPoly[prod] = (nextPoly[prod] || 0) + n));
@@ -25,5 +26,8 @@ for (let it = 1; it <= 40; it++) {
     let min = _(counts).entries().minBy(([p, x]) => x);
     let max = _(counts).entries().maxBy(([p, x]) => x);
 
-    console.log(it, min, max, max[1] - min[1]);
+    if(it == 10 || it == 40) ans.push(max[1]-min[1]);
+    console.error(it, min, max, max[1] - min[1]);
 }
+
+console.log(ans[0], ans[1]);

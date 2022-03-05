@@ -5,10 +5,10 @@ T = $('IN/13').textContent.trim().split('\n');
 t = T.slice(0, 881).map(r => r.split(',').map(x => +x));
 f = T.slice(882).map(x => x.match(/fold along (?:x=(\d+))?(?:y=(\d+))?/).slice(1, 3)).map(([a, b]) => [a ? +a : a, b ? +b : b])
 
-folded = f.reduce((p, [xM, yM]) => {
+folded = f.reduce((p, [xM, yM],i) => {
     let ret = p.filter(([x, y]) => x != xM && y != yM)
         .map(([x, y], i) => [(xM && x > xM) ? 2 * xM - x : x, (yM && y > yM) ? 2 * yM - y : y]);
-    console.log(_.uniq(ret.map(x => x.toString())).length);
+    if(i==0) console.log(_.uniq(ret.map(x => x.toString())).length);
     return ret;
 }, t);
 points = {};

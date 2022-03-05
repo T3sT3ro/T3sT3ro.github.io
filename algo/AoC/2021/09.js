@@ -16,7 +16,7 @@ for (let r = 0; r < t.length; r++) {
     };
 }
 
-console.log(t.map(r => r.map(h => `{${"KBcCgGYyRr"[h]}--${h}--}`).join('')).join('\n'));
+console.error(t.map(r => r.map(h => `{${"KBcCgGYyRr"[h]}--${h}--}`).join('')).join('\n'));
 
 let d = _.cloneDeep(t);
 function basinFind(r, c, d) {

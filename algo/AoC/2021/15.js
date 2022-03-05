@@ -1,7 +1,6 @@
 $ = require('./in.js');
 const _ = require('lodash');
 const FPQ = require('fastpriorityqueue');
-const { map } = require('lodash');
 
 t = $('IN/15').textContent.trim().split('\n').map(r => r.split('').map(x => +x));
 

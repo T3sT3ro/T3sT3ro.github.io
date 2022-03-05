@@ -7,7 +7,7 @@ repositories {
 }
 
 plugins {
-    kotlin("jvm") version "1.5.21"
+    kotlin("jvm") version "1.6.10"
     idea
     id("org.sonarqube") version "3.0"
 }
