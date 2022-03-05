@@ -7,4 +7,4 @@ fn main(){
         x.iter().tuple_windows::<(_, _)>().filter ( |(a, b)| a < b ).count(),
         x.iter().tuple_windows::<(_,_,_)>().map (|(a, b, c)| a + b + c ).tuple_windows::<(_, _)>().filter (|(a, b)| a < b ).count()
     );
-}   
+}

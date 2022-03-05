@@ -2,7 +2,9 @@ $ = require('./in.js');
 const _ = require('lodash');
 t = $('IN/11').textContent.trim().split('\n').map(r => r.split('').map(x => +x));
 
-function dbg(t, step) {console.log(step+'\n'+t.map(r => r.map(x => `{${"y;;;;;;;;;g"[Math.min(x, 10)]}--${x > 9 ? 'X' : x}--}` ).join('')).join('\n'));}
+function dbg(t, step) {
+    console.error(step+'\n'+t.map(r => r.map(x => `{${"y;;;;;;;;;g"[Math.min(x, 10)]}--${x > 9 ? 'X' : x}--}` ).join('')).join('\n'));
+}
 function safeget(r, c, t) {return r < 0 || r >= t.length || c < 0 || c >= t[0].length ? 0 : t[r][c];}
 function safeset(r, c, t, x) {return r < 0 || r >= t.length || c < 0 || c >= t[0].length ? 0 : t[r][c] = x;}
 function increasePotential(r, c, d) {

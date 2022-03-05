@@ -7,3 +7,5 @@ vendor
 .vscode/
 
 **/node_modules/
+
+**/target/

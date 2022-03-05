@@ -23,8 +23,8 @@ email: your-email@example.com
 discord: Tooster#3471
 description: >- # this means to ignore newlines until "baseurl:"
   TODO: Add some clever and funny description
-baseurl: "https://t3st3ro.github.io/" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://T3sT3ro.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  T3sT3ro
 
 # Build settings

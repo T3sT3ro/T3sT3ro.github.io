@@ -7,7 +7,7 @@ for (let [a, b] of t) {
     G[a] = (G[a] || []).concat(b);
     G[b] = (G[b] || []).concat(a);
 }
-console.log(G);
+console.error(G);
 
 function countPaths(v = 'start', visited = []) { // set or array hmmmmm???
     if (v == 'end') return 1;
@@ -16,7 +16,7 @@ function countPaths(v = 'start', visited = []) { // set or array hmmmmm???
         .reduce((paths, w) => paths + countPaths(w, v.match(/[A-Z]+/) ? visited : [...visited, v]), 0);
 }
 
-console.log(countPaths());
+// console.log(countPaths());
 
 t.flat().filter(x => x.match(/[a-z]/) && !['start', 'end'].includes(x));
 
