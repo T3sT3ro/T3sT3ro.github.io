@@ -1,6 +1,5 @@
 package me.tooster.algorithms
 
-import Dijkstra
 import org.junit.jupiter.api.Test
 
 internal class DijkstraTest {

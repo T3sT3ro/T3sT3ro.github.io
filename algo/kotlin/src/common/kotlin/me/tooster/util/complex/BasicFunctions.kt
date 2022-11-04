@@ -8,7 +8,7 @@ import kotlin.math.*
 var exp : (Complex) -> Complex = { z ->
     when (z) {
         NaN, INF -> NaN
-        else -> {
+        else     -> {
             val r: Double = kotlin.math.exp(z.re)
             complex(r * kotlin.math.cos(z.im), r * kotlin.math.sin(z.im))
         }
@@ -28,7 +28,7 @@ fun exp(z: Number) = exp(complex(z.toDouble(), 0))
 var ln :(Complex) -> Complex = { z ->
     when (z) {
         ZERO, INF, NaN -> NaN
-        else -> complex(kotlin.math.ln(z.mod), atan2(z.im, z.re))
+        else           -> complex(kotlin.math.ln(z.mod), atan2(z.im, z.re))
     }
 }
 
@@ -45,7 +45,7 @@ fun ln(z: Number) = ln(complex(z.toDouble(), 0))
 var sin : (Complex) -> Complex = { z ->
     when (z) {
         NaN, INF -> NaN
-        else -> {
+        else     -> {
             complex(
                     kotlin.math.sin(z.re) * cosh(z.im),
                     kotlin.math.cos(z.re) * sinh(z.im))
@@ -66,7 +66,7 @@ fun sin(z: Number) = sin(complex(z.toDouble(), 0))
 var cos : (Complex) -> Complex = { z ->
     when (z) {
         NaN, INF -> NaN
-        else -> {
+        else     -> {
             complex(
                     kotlin.math.cos(z.re) * cosh(z.im),
                     -kotlin.math.sin(z.re) * sinh(z.im))

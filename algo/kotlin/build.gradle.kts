@@ -7,22 +7,45 @@ repositories {
 }
 
 plugins {
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "1.7.20"
     idea
     id("org.sonarqube") version "3.0"
 }
 
-//val agent: Configuration by configurations.creating
+val sandbox = sourceSets.create("sandbox")
+val common = sourceSets.create("common")
+
+sourceSets {
+    main {
+        compileClasspath += common.output
+        runtimeClasspath += common.output
+    }
+
+    test {
+        compileClasspath += common.output
+        runtimeClasspath += common.output
+    }
+}
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
     implementation(kotlin("script-runtime"))
-    implementation("org.jgrapht:jgrapht-core:1.5.0")
-    implementation("org.apache.commons:commons-lang3:3.11")
-    implementation("org.apache.commons:commons-collections4:4.4")
-    implementation("org.apache.commons:commons-text:1.9")
+
+    testImplementation(libs.junit.implementation)
+    testRuntimeOnly(libs.junit.runtime)
+
+
+    val commonImplementation by configurations
+    val sandboxImplementation by configurations
+
+    commonImplementation("org.jgrapht:jgrapht-core:1.5.0")
+    commonImplementation(kotlin("script-runtime"))
+
+
+    sandboxImplementation(libs.bundles.apache)
+    sandboxImplementation(kotlin("script-runtime"))
+
+
 }
 
 tasks.withType<KotlinCompile> {

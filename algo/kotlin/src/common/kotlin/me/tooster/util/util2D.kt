@@ -123,7 +123,7 @@ class TreePath<T>() {
     fun toList(): List<T> = generateSequence(head) { it.prev }.map { it.data }.toList().asReversed()
 }
 
-// This would would normally be implemented on Long, but Longs don't support shifts, which makes them less robust
+// This would normally be implemented on Long, but Longs don't support shifts, which makes them less robust
 // Instead, this one uses Longs to store 64bits of data and truncates bits that are outside of bounds
 data class BitMap2D(val rows: Int, val cols: Int) {
     // lazy cache for operations - to postpone looping through all perpendicular axes when setting bitset

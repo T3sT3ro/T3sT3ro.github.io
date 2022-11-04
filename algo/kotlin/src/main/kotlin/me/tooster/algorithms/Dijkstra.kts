@@ -1,34 +1,34 @@
-
 import Dijkstra.Tile
+import me.tooster.util.IntRange2D
 import java.io.File
 import java.util.*
-//
+import kotlin.random.Random
+
 typealias Tile = Pair<Int, Int>
-//
 operator fun Tile.plus(other: Tile): Tile = first + other.first to second + other.second
-//
-//open class Tilemap(val width: Int, val height: Int, val weights: Map<Tile, Int>) {
-//    val rowRange get() = 1..height
-//    val colRange get() = 1..width
-//    val range2D get() = IntRange2D(rowRange, colRange)
-//
-//    /** Create tilemap with random positive weights. */ // Not the best spot to generate random map but whatevs
-//    constructor(width: Int, height: Int) : this(width, height, mutableMapOf<Tile, Int>()) {
-//        weights as MutableMap
-//        for (r in rowRange) for (c in colRange) weights[r to c] = Random.nextInt(1, 100)
-//    }
-//
-//    // to check `tile in tilemap` -- if a tile is in bounds of the map
-//    operator fun contains(tile: Tile) = tile.first in 1..height && tile.second in 1..width
-//    override fun toString(): String {
-//        val sb = StringBuilder()
-//        for ((r, c) in range2D) {
-//            sb.append("[%02d]".format(weights[r to c]!!))
-//            if (c == colRange.last) sb.append('\n')
-//        }
-//        return sb.toString()
-//    }
-//}
+
+open class Tilemap(val width: Int, val height: Int, val weights: Map<Tile, Int>) {
+    val rowRange get() = 1..height
+    val colRange get() = 1..width
+    val range2D get() = IntRange2D(rowRange, colRange)
+
+    /** Create tilemap with random positive weights. */ // Not the best spot to generate random map but whatevs
+    constructor(width: Int, height: Int) : this(width, height, mutableMapOf<Tile, Int>()) {
+        weights as MutableMap
+        for (r in rowRange) for (c in colRange) weights[r to c] = Random.nextInt(1, 100)
+    }
+
+    // to check `tile in tilemap` -- if a tile is in bounds of the map
+    operator fun contains(tile: Tile) = tile.first in 1..height && tile.second in 1..width
+    override fun toString(): String {
+        val sb = StringBuilder()
+        for ((r, c) in range2D) {
+            sb.append("[%02d]".format(weights[r to c]!!))
+            if (c == colRange.last) sb.append('\n')
+        }
+        return sb.toString()
+    }
+}
 
 class Dijkstra(tilemap: Map<Tile, Int>, source: Tile) {
 //    val d: Map<Tile, Int>
