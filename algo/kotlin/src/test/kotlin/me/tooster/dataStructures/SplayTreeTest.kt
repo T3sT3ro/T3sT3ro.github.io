@@ -1,5 +1,6 @@
 package me.tooster.dataStructures
 
+import me.tooster.TreePrinter
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
@@ -8,11 +9,11 @@ internal class SplayTreeTest {
 // FIXME some weird shenanigans with compilation happen when either this function or TreePrinter is used in tests
 //       it just doesn't want to fucking compile with internal IDE/kotlin errors
 
-//    fun Node<Int>.isHeapOrder(): Boolean {
-//        val isNodeOrdered = (left == null || left!!.value <= value)
-//                && (right == null || right!!.value > value)
-//        return (isNodeOrdered && (left?.isHeapOrder() ?: true) && (right?.isHeapOrder() ?: true))
-//    }
+    fun Node<Int>.isHeapOrder(): Boolean {
+        val isNodeOrdered = (left == null || left!!.value <= value)
+                && (right == null || right!!.value > value)
+        return (isNodeOrdered && (left?.isHeapOrder() ?: true) && (right?.isHeapOrder() ?: true))
+    }
 
     @Test
     @Order(1)
@@ -64,8 +65,8 @@ internal class SplayTreeTest {
         val greater = tree.split(10)
         assertTrue(tree.max()!! <= 10)
         assertTrue(greater.min()!! > 10)
-//        assertTrue(tree.root?.isHeapOrder() ?: true)
-//        assertTrue(greater.root?.isHeapOrder() ?: true)
+        assertTrue(tree.root?.isHeapOrder() ?: true)
+        assertTrue(greater.root?.isHeapOrder() ?: true)
     }
 
     @Test
@@ -74,29 +75,28 @@ internal class SplayTreeTest {
         val tree = SplayTree<Int>()
         listOf(17, 18, 12, 8, 2, 3, 14, 4, 7, 13, 10, 5, 6, 20, 1, 15, 11, 19, 9, 16).forEach {
             tree.insert(it)
-//            assertTrue(tree.root?.isHeapOrder() ?: true);
+            assertTrue(tree.root?.isHeapOrder() ?: true);
         }
 
     }
 
     @Test
     fun verbose() {
-//        val printer = TreePrinter<Node<Int>>({ it.value.toString() }, { it.left }, { it.right })
-//        printer.setSquareBranches(true)
+        val printer = TreePrinter<Node<Int>>({ it.value.toString() }, { it.left }, { it.right }).withSquareBranches()
         val tree = SplayTree<Int>()
         val seq = (1..20).shuffled()
 
         seq.also { println(it) }.forEach {
             println("\u001b[32m[$it]\u001b[0m")
             tree.insert(it)
-//            printer.printTree(tree.root)
+            printer.printTree(tree.root)
         }
 
         seq.also { println(it) }.forEach {
             println("\u001b[31m[$it]\u001b[0m")
             tree.delete(it)
             assert(!tree.find(it))
-//            printer.printTree(tree.root)
+            printer.printTree(tree.root)
         }
     }
 }
