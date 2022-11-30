@@ -1,15 +1,30 @@
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "me.tooster"
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 plugins {
     kotlin("jvm") version "1.7.20"
     idea
     id("org.sonarqube") version "3.0"
+}
+
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions {
+        freeCompilerArgs += "-Xcontext-receivers"
+    }
 }
 
 val sandbox = sourceSets.create("sandbox")
@@ -32,6 +47,8 @@ dependencies {
     implementation(kotlin("script-runtime"))
 
     testImplementation(libs.junit.implementation)
+    testImplementation("hu.webarticum:tree-printer:3.0.0")
+    testImplementation("tech.vanyo:tree_printer")
     testRuntimeOnly(libs.junit.runtime)
 
 
@@ -44,18 +61,18 @@ dependencies {
 
     sandboxImplementation(libs.bundles.apache)
     sandboxImplementation(kotlin("script-runtime"))
-
-
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+
+tasks.register<Test>("testLogging") {
+    description = "Run test task with stdout/stderr logged"
+    group = "verification"
+    testLogging {
+        outputs.upToDateWhen { false }
+        events = setOf(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT, TestLogEvent.STARTED)
+    }
 }
 
-val test by tasks.getting(Test::class) {
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
-
-//    doFirst {
-//        jvmArgs("-javaagent:${agent.singleFile}")
-//    }
 }

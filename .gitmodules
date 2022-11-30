@@ -1,3 +1,12 @@
 [submodule "algo/Tree-Generator"]
-	path = algo/Tree-Generator
+	path = jekyll/algo/Tree-Generator
 	url = https://github.com/ouuan/Tree-Generator.git
+[submodule "algo/kotlin/src/tree-printer"]
+	path = algo/kotlin/third-party/davidsusu/tree-printer
+	url = https://github.com/davidsusu/tree-printer
+[submodule "algo/kotlin/third-party/billvanyo/tree_printer"]
+	path = algo/kotlin/third-party/billvanyo/tree_printer
+	url = https://github.com/billvanyo/tree_printer.git
+[submodule "algo/kotlin/third-party/davidsusu/tree-printer"]
+	path = algo/kotlin/third-party/davidsusu/tree-printer
+	url = https://github.com/davidsusu/tree-printer.git

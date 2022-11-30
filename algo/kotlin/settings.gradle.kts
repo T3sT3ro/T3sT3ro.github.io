@@ -1,3 +1,5 @@
+rootProject.name = "kotlin-playground"
+
 // version catalog for bundling deps docs: https://docs.gradle.org/current/userguide/platforms.html
 dependencyResolutionManagement {
     versionCatalogs {
@@ -12,5 +14,19 @@ dependencyResolutionManagement {
             library("junit.runtime", "org.junit.jupiter", "junit-jupiter-engine").versionRef("junit")
 
         }
+    }
+}
+
+/*
+sourceControl {
+    gitRepository(uri("https://github.com/davidsusu/tree-printer.git")) {
+        producesModule("hu.webarticum:tree-printer")
+    }
+}
+*/
+
+includeBuild("third-party/billvanyo/tree_printer") {
+    dependencySubstitution {
+        substitute(module("tech.vanyo:tree_printer")).using(project(":"))
     }
 }

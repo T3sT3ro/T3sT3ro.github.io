@@ -5,10 +5,6 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 internal class SplayTreeTest {
-
-// FIXME some weird shenanigans with compilation happen when either this function or TreePrinter is used in tests
-//       it just doesn't want to fucking compile with internal IDE/kotlin errors
-
     fun Node<Int>.isHeapOrder(): Boolean {
         val isNodeOrdered = (left == null || left!!.value <= value)
                 && (right == null || right!!.value > value)

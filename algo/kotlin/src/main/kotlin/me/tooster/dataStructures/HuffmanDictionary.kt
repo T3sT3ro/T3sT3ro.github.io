@@ -3,7 +3,7 @@ package me.tooster.dataStructures
 import java.util.*
 
 internal typealias HuffmanNode = HuffmanTree
-internal interface HuffmanTree : Comparable<HuffmanNode> {
+internal sealed interface HuffmanTree : Comparable<HuffmanNode> {
     val priority: Int
     override fun compareTo(other: HuffmanNode) = this.priority - other.priority
 }

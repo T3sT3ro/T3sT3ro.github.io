@@ -6,5 +6,8 @@ function zipWith(f, ...xs) { return xs.map(e => f(...e)) }
 
 function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
 
+const cartesian = 
+    (...a) => a.reduce((a, b) => a.flatMap(d => b.map(e => [d, e].flat())));
+
 // zipWith((a, b) => a+b, [1, 12], [5, 16])
 // 
