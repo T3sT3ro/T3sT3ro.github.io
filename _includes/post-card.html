@@ -1,6 +1,33 @@
----
----
+<div class="post-card">
 
-<article>
-    
-</article>
+  <h5 class="meta">
+    <time datetime={{ include.post.date | date: '%s'}}>
+      {{ include.post.date | date_to_string }}
+    </time>
+
+    {%- for tag in include.post.tags -%}
+      <span class="tag">
+        <a class="href" href="{{ BASE_PATH }}/search?tag={{tag}}">{{tag}}</a>
+      </span>
+    {%- endfor -%}
+
+  </h5>
+
+  <article>
+    <h1 class="title">
+      <a href="{{ BASE_PATH }}{{ include.post.url }}">{{ include.post.title }}</a>
+    </h1>
+
+    {%- if include.truncate -%}
+
+      <div class="preview">
+        {{ include.post.content | truncatewords: 250 | markdownify }}
+      </div>
+
+      <a class="read-more" href="{{ include.post.url }}">Read more...</a>
+
+    {%- else -%}
+      {{ include.post.content | markdownify }}
+    {%- endif -%}
+  </article>
+</div>

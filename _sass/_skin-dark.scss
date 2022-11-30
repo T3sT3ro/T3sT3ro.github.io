@@ -1,0 +1,75 @@
+
+@font-face {
+    font-family: 'Roboto Slab', serif;
+    src: url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@200;400;700&display=swap');
+}
+
+
+@mixin palette {
+    --th-background-1: #212121;
+    --th-background-2: #484848;
+    
+    
+    --th-error: #CF6679;
+    
+    // REWORKED
+    --th-background: #121212;
+    
+    --th-on-surface: #eee;
+    --th-on-P: #111;
+    --th-on-S: #eee;
+    --th-on-background: #777f;
+    --th-on-background-half: #7777;
+    --th-on-background-quarter: #7773;
+
+    --th-P-border:  #5b480e;
+    --th-P-border-semitrans: #5b480e91; // from above;
+    --th-P-dark: #c79100;   //#c79400;
+    --th-P-normal: #ffc107; //#ffc400;
+    --th-P-light: #fff350;  //#fff64f;
+
+    --th-S-normal: #00658c;
+    --th-S-light: #4b93bc;
+    --th-S-dark: #003b5e;
+
+    --th-scrollbar-bg: #fff4;
+    --th-scrollbar-fg: var(--th-P-dark);
+    --th-scrollbar-fg-active: var(--th-P-normal);
+
+    --th-code-inline-fg: #a9b7c6;
+    --th-code-inline-bg: #2b2b2b;
+
+    --th-code-line-highlight: #fff2;
+}
+
+@mixin breathe {
+    --th-breather-size-in: 7vh;
+    --th-breather-size-out: 5vh;
+}
+
+// Elevations from M3
+// @mixin elevation-0 { opacity: 0%;   box-shadow: 0 0 0dp #000;   }
+// @mixin elevation-1 { opacity: 5%;   box-shadow: 0 0 1dp #000;   }
+// @mixin elevation-2 { opacity: 8%;   box-shadow: 0 0 3dp #000;   }
+// @mixin elevation-3 { opacity: 11%;  box-shadow: 0 0 6dp #000;  }
+// @mixin elevation-4 { opacity: 12%;  box-shadow: 0 0 8dp #000;  }
+// @mixin elevation-5 { opacity: 14%;  box-shadow: 0 0 12dp #000; }
+
+@mixin elevate($n, $surface-color) {
+    $a: nth(0% 5% 8% 11% 12% 14%, $n);
+    $blur: nth(0px 1px 3px 6px 8px 12px, $n);
+    background-color: rgba($surface-color, $a);
+    box-shadow: 0 0 $blur #000;
+}
+
+// fix highlight selection
+.hljs ::selection, .hljs::selection {
+    background-color: #214283 !important;  
+    color: unset !important;
+}
+
+.hljs-ln .mark-line {
+    background-color: #484848;
+    border-width: 1px 0 1px 0;
+    border-style: solid;
+}

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  {% assign title = ' -.- {{ page.title }}'%}
+  {%- include head.html title=title -%}
+
+  <body>
+    {% include header.html %}
+    <main>
+
+      {%- include post-card.html post=page -%}
+    </main>
+
+    {%- include footer.html -%}
+  </body>
+
+</html>
+

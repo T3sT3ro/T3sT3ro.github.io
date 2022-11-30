@@ -1,0 +1,51 @@
+---
+title: TODO
+layout: post
+permalink: /todo
+---
+
+- [x] time using `<time>`
+- [ ] links and buttons
+  - [ ] codepen
+  - [ ] github
+  - [ ] linkedin?
+- [ ] breathing widget
+- [ ] header eyes following and animation
+- [x] font jumping FOUT, FOIT
+- [ ] "back" button
+- [ ] search page
+- [ ] functional tags
+- [x] inline code format
+- [x] `<kbd>` style
+- [ ] smooth scroll snap
+- [ ] fontawesome
+- [ ] checkbox styling
+- [x] help icon displaying keyboard shortcuts
+- [x] fix resizing of code elements at small sizes
+- [ ] comments via giscuis
+- [x] shadow to card
+- [x] line numbers
+  - [ ] more consistent formatting
+  - [ ] individual line highlight
+  - [x] easier to enable/disable
+- [x] fix shortcuts
+  - [x] F for fullscreen
+    - [x] wrap pre in div with flexbox
+  - [x] R for reset
+  - [x] L for toggle lines
+  - [x] W for word
+  - [x] fix question mark
+  - [ ] add buttons for mobile
+- [ ] add proper elevation
+- [x] `overflow: hidden` on `preview` prevents margin collapse
+- [x] add before content on pre blocks with filename attribute
+- [ ] add theme explorer (demo) of site and utilize m3 tokens for unified theming
+- [ ] ~~remove mathjax config file~~ good for separation
+- [x] investigate disabling rouge in kramdown
+- [ ] ~~make latex double dollar signs work~~ undoable with kramdown v3+
+- [x] fix border colors of articles and codeblocks
+- [x] fix body and html size on smaller device
+- [x] add redirect to test under `/test`
+- [x] ~~set header aspect ratio instead of auto height?~~ invalid, because I use `<a>` now
+- [ ] use template inheritance
+- [x] fix pre overflow when no higlightjs is loaded

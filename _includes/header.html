@@ -1,4 +1,24 @@
-
 <header>
-    <a href="/" class="header"><img src="/assets/images/header.svg" alt="PLACEHOLDER"></a>
+
+  <a href="/">{{ site.title }}
+
+    {%- comment -%}
+
+      <img src="/assets/images/header.svg" alt="PLACEHOLDER">
+      <!-- From https://css-tricks.com/snippets/svg/svg-knockout-text/ -->
+
+
+      <!-- To check out: https://stackoverflow.com/questions/13932946/transparent-text-cut-out-of-background -->
+      <svg class="knockout-text-container" width="100%" height="100%">
+
+      <rect class="knockout-text-bg" width="100%" height="100%" x="0" y="0" 
+      mask="url(#knockout-text)" title="k"/>
+
+      <mask id="knockout-text">
+      <rect width="100%" height="100%" fill="#fff" x="0" y="0" />
+      <text x="50%" y="50%" fill="#000" text-anchor="middle">-.-</text>
+      </mask>
+      </svg>
+    {%- endcomment -%}
+  </a>
 </header>

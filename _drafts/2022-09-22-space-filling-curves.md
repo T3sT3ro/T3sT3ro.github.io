@@ -1,16 +1,15 @@
 ---
 title: Space filling curves
 date: 2022-09-22T16:14:58.448Z
-lastmod: 2022-11-02T12:23:51.614Z
-layout: post
+lastmod: 2022-11-25T11:00:52.194Z
 ---
 
 Z-curves are given by:
 
-```pseudo
-Z(n, x, y) -> "explode" and interleave x and y bit representations
-Z(n, t) -> inverse of above - (x, y) where x is made from every odd bit and y from every even bit 
-rot(n, x, y, rx, ry) -> rotate/flip the quadrant
+```txt
+Z(n, x, y)              -> "explode" and interleave x and y bit representations
+Z(n, t)                 -> inverse of above - (x, y) where x is made from every odd bit and y from every even bit 
+rot(n, x, y, rx, ry)    -> rotate/flip the quadrant
 n parameter determines curve degree
 ```
 
