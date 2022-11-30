@@ -1,0 +1,18 @@
+services:
+
+  jekyll-server:
+    image: jekyll/jekyll:4.2.2
+    volumes:
+      - .:/srv/jekyll:Z
+      - ./vendor/bundle:/usr/local/bundle:Z
+    ports:
+      - '[::1]:4000:4000'
+      - '[::1]:35729:35729'
+    command: jekyll serve --livereload
+
+  bundle-install:
+    image: jekyll/jekyll:4.2.2
+    volumes:
+      - .:/srv/jekyll:Z
+      - ./vendor/bundle:/usr/local/bundle:Z
+    command: bundle config unset deployment && bundle update && bundle install --deployment

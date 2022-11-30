@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Placeholder</title>
+  <meta name="author" content="Tooster">
+
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link
+    href="https://fonts.googleapis.com/css?family=Open+Sans:400,700,400i|Roboto+Mono|Roboto+Slab|Zilla+Slab+Highlight:700"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,700;1,400;1,700&family=Raleway:wght@500&display=swap"
+    rel="stylesheet">
+</head>
+
+<body class="breathe">
+
+  {%- include header.html -%}
+
+  {%- include toolbar.html -%}
+
+  <main>
+    {%- for post in site.posts -%}
+      {%- include post-card.html -%}
+    <li>
+      <span>{{ post.date | date_to_string }}</span>
+      &raquo;
+      <a href="{{ BASE_PATH }}{{ post.url }}">{{ post.title }}</a>
+    </li>
+    {{ post.content | truncatelines:5}}<br>
+    <a href="{{ post.url }}">Read more...</a><br><br>
+    {% endfor %}
+  </main>
+
+</body>
+
+</html>
