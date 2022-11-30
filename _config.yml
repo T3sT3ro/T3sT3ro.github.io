@@ -18,20 +18,41 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Placeholder 
-email: your-email@example.com
-discord: Tooster#3471
-description: >- # this means to ignore newlines until "baseurl:"
-  TODO: Add some clever and funny description
+title: ._.
+description: Tooster's playground
+author:
+  discord: Tooster#3471
+  github_username:  T3sT3ro
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://T3sT3ro.github.io" # the base hostname & protocol for your site, e.g. http://example.com
-github_username:  T3sT3ro
 
 # Build settings
-remote_theme: T3sT3ro/T3sT3ro.github.io@theme
+# remote_theme: T3sT3ro/T3sT3ro.github.io@theme
+
+markdown: kramdown
+sass:
+  style: compact
+kramdown:
+  input: GFM
+  gfm_emojis: true
+  math_engine: mathjax
+  syntax_highlighter:
+  syntax_highlighter_opts: 
+    disable: true
+
+    
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: post
+
+
+# TODO: add comments to posts via giscuis https://www.freecodecamp.org/news/github-discussions-as-chat-system/
+  
 plugins:
-  - jekyll-feed
-  - jekyll-remote-theme
+  - jekyll-gist
+  - jekyll-seo-tag
 
 # Exclude from processing.
 # The following items will not be processed, by default.
@@ -40,15 +61,12 @@ plugins:
 #
 # Excluded items can be processed by explicitly listing the directories or
 # their entries' file path in the `include:` list.
-#
-# exclude:
-#   - .sass-cache/
-#   - .jekyll-cache/
-#   - gemfiles/
-#   - Gemfile
-#   - Gemfile.lock
-#   - node_modules/
-#   - vendor/bundle/
-#   - vendor/cache/
-#   - vendor/gems/
-#   - vendor/ruby/
+exclude:
+  - frontmatter.json
+  - .sass-cache/
+  - .jekyll-cache/
+  - Gemfile
+  - Gemfile.lock
+  - node_modules/
+  - vendor
+  - docker-compose.yml

@@ -1,20 +1,20 @@
 ---
-title: Templating languages comparison
-description: description of some templating language tools
+title: Templating languages
 date: 2022-09-23T09:15:14.392Z
-preview: ""
 tags: templates
-lastmod: 2022-11-02T11:56:03.249Z
+lastmod: 2022-11-25T00:46:34.580Z
 last-table-update: 2022-11-02T11:40:14.174Z
+layout: post
+draft: true
 ---
 
-# Templating?
+This post serves as a reference for templating languages, comparison of their respective features and what I've learned about them so far.
 
 Ejs, Liquid, Mustache, Handlebars, Scriban... ugh... so many and so similar, yet so different!
 
-Which one to choose though?
+> Q: Which one to choose though?
+> : A: Liquid
 
-**Answer**: Liquid
 
 Just kidding.
 
@@ -24,7 +24,7 @@ The table was last updated at {{ page.last-table-update | date: "%d-%m-%Y"}}
 
 |feature| EJS| Liquid| Mustache| Handlebars| Pug | Scriban |
 |---|---|---|---|---|---|---|
-|scripting language| JS embedded with `<% ... %>` tags on site | liquid language | mustache language | handlebars, but also compatible with mustache | JS, Pug | Scriban language |
+|scripting language| JS embedded with `<% ... %>` tags on site | liquid language | mustache language | handlebars, but also compatible with mustache | JS, Pug | Scriban language |
 
 ## detailed comparisons
 

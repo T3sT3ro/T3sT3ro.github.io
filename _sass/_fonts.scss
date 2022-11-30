@@ -1,0 +1,89 @@
+@use "sass:selector";
+
+// https://stackoverflow.com/questions/16108103/append-the-parent-selector-to-the-end-with-sass
+@mixin wf-fallback-font {
+    @at-root :is(.wf-inactive, .wf-loading) & {
+        @content
+    }
+};
+
+// used https://principled-special-carriage.glitch.me/?font=JetBrains%20Mono
+// and https://screenspan.net/fallback
+// and https://meowni.ca/font-style-matcher/
+@font-face {
+    font-family: "Poppins-fallback";
+    size-adjust: 112.50%;
+    ascent-override: 110%;
+    src: local("Arial");
+}
+
+@font-face {
+    font-family: "Roboto Slab-fallback";
+    size-adjust: 117.86999999999993%;
+    ascent-override: 83%;
+    src: local("Times New Roman");
+}
+
+@font-face {
+    font-family: "JetBrains Mono-fallback";
+    // size-adjust: 116%;
+    // font-weight: 700;
+    
+    size-adjust: 105%;
+    ascent-override: 89%;
+    descent-override: 36%;
+    line-gap-override: normal;
+
+    src: local("Courier New");
+}
+
+
+@mixin text-code-intellij { 
+    font-family: 'JetBrains Mono', 'JetBrains Mono-fallback', monospace;
+    @include wf-fallback-font {
+        font-family: 'JetBrains Mono-fallback', monospace;
+    //     font-family: Courier;
+    //     // font-size: 16px;
+    //     // line-height: 1.6;
+    //     letter-spacing: 0.1px;
+    //     // color: red;
+    //     // visibility: visible;
+    //     font-weight: 600;
+    //     word-spacing: -0.65px;
+    }
+}
+
+@mixin text-code-roboto { font-family: 'Roboto Mono', monospace; }
+@mixin text-regular-open { font-family: 'Open Sans', sans-serif; }
+@mixin text-regular-poppins { 
+    font-family: 'Poppins', 'Poppins-fallback', sans-serif;
+    @include wf-fallback-font {
+        font-family: 'Poppins-fallback', sans-serif;
+    //     font-family: Arial;
+    //     letter-spacing: 0.8px;
+    //     word-spacing: 1.3px;
+    //     size-adjust: 112.50%;
+    //     ascent-override: 110%;
+    //     src: local("Arial");
+    }
+}
+@mixin text-regular-raleway { font-family: 'Raleway', sans-serif; }
+@mixin text-header-roboto { 
+    font-family: 'Roboto Slab', 'Roboto Slab-fallback', serif;
+    @include wf-fallback-font {
+        font-family: 'Roboto Slab-fallback', serif;
+    //     // font-family: Georgia;
+    //     // font-size: 37px
+    //     // line-height: 1.6
+    //     // font-weight: 700
+    //     // letter-spacing: -1.4px;
+    //     // word-spacing: -1.7px;
+    //     font-family: "Roboto Slab-fallback";
+    //     size-adjust: 117.86999999999993%;
+    //     ascent-override: 83%;
+    //     src: local("Times New Roman");
+    }
+}
+@mixin text-header-zilla { font-family: 'Zilla Slab', serif; }
+@mixin text-decorative { font-family: 'Tangerine', cursive; }
+
