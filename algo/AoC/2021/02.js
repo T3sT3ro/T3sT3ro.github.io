@@ -1,4 +1,4 @@
-const $ = require('./in');
+const $ = require('../in');
 t = $('IN/02').textContent.trim().split('\n');
 
 f = t.map(x=> x.split(' ')).map(([dir, x])=> [({'forward':[1, 0], 'up':[0, -1], 'down':[0, +1]})[dir], +x]);

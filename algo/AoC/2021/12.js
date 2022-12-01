@@ -1,4 +1,4 @@
-$ = require('./in.js');
+$ = require('../in.js');
 const _ = require('lodash');
 t = $('IN/12').textContent.trim().split('\n').map(r => r.split('-'));
 G = {};

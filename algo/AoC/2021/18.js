@@ -1,4 +1,4 @@
-$ = require('./in.js');
+$ = require('../in.js');
 const { indexOf } = require('lodash');
 const _ = require('lodash');
 
@@ -12,7 +12,7 @@ const T = $('IN/18-test').textContent.trim().split('\n')
  */ 
 function dFlat(t, d=0, path=0) {
     if(typeof(t) == 'number') return [{v: t, d: d}];
-    return _.flatMap(t, (x => dFlat(x , d+1));
+    return _.flatMap(t, (x => dFlat(x , d+1)));
 }
 
 function linkLeafs(t) {

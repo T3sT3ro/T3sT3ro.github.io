@@ -1,4 +1,4 @@
-const $ = require('./in');
+const $ = require('../in');
 t = $('IN/05').textContent.trim().split('\n');
 P = t.map(x => x.split(" -> ").map(c => c.split(',').map(i => +i)));
 /**

@@ -1,4 +1,4 @@
-const $ = require('./in');
+const $ = require('../in');
 t = $('IN/03').textContent.split('\n');
 bits = []; for(let i in [...new Array(t[0].length)]) bits.push(t.map(x => x[i]).filter(x => x==='1').length);
 MSB = parseInt(bits.map(x => x >= t.length/2 ? 1 : 0).join(''), 2);

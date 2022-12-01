@@ -1,4 +1,4 @@
-const $ = require('./in');
+const $ = require('../in');
 const t = $('IN/01').textContent.trim();
 _ = require('lodash');
 

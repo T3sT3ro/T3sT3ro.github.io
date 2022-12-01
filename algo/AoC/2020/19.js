@@ -1,9 +1,11 @@
-let [Srules, strings] = $('pre').textContent.split('\n\n').map(ts => ts.split('\n').filter(x => x.length > 0))
-let [Srules, strings] = $('pre').textContent.split('\n\n').map(ts => ts.split('\n').filter(x => x.length > 0))
-Srules = Srules.map(x => x.split(': '))
-Srules = Srules.map(([prod, results]) => [prod, results.split(' | ').map(rs => rs.split(' '))])
-rules = Srules.reduce((obj, [prod, results]) => Object.assign(obj, {[prod]:results}), {})
-Srules = Srules.sort(([n1, rest], [n2, rest2]) => n1-n2)
+$ = require('../in.js');
+let [Srules, strings] = $('IN/19').textContent.replaceAll('"', '')
+    .split('\n\n').map(ts => ts.split('\n').filter(x => x.length > 0))
+Srules = Srules
+    .map(x => x.split(': '))
+    .map(([prod, results]) => [prod, results.split(' | ').map(rs => rs.split(' '))])
+rules = Srules.reduce((obj, [prod, results]) => Object.assign(obj, { [prod]: results }), {})
+Srules = Srules.sort(([n1, rest], [n2, rest2]) => n1 - n2)
 rules = Srules.map(r => r[1])
 
 function cykMatch(productions, word){
@@ -38,7 +40,7 @@ function cykMatch(productions, word){
 }
 
 
-console.log(ok, cyk);
+// console.log(ok, cyk);
 
 // ^
 // this probably doesn't work..... IDK, counts for eternity :|
@@ -49,11 +51,15 @@ console.log(ok, cyk);
 // dirty....
 function buildCappedRegex(rules, node, cap){
     if(cap == 0) return "";
-    if(typeof(rules[node]) == 'string') return rules[node];
+    if(!rules[node]) return node;
     return `(?:${rules[node].map(r => r.map(p => buildCappedRegex(rules, p, node == p ? cap-1 : cap)).join('')).join('|')})`;
 }
 
 rx = RegExp(`^${buildCappedRegex(rules, 0, 1)}$`); // part 1
+console.log(strings.filter(s => s.match(rx)).length);
+
+rules[8] = [[42], [42, 8]]; 
+rules[11] = [[42, 31], [42, 11, 31]]; 
 rx = RegExp(`^${buildCappedRegex(rules, 0, 10)}$`); // part 2
 
-strings.filter(s => s.match(rx))
+console.log(strings.filter(s => s.match(rx)).length)

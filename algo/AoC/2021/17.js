@@ -1,4 +1,4 @@
-$ = require('./in.js');
+$ = require('../in.js');
 const _ = require('lodash');
 
 const [xmin, xmax, ymin, ymax] = $('IN/17').textContent.match(/.*x=(-?\d+)..(-?\d+).*y=(-?\d+)..(-?\d+)/).slice(1).map(x => +x);
