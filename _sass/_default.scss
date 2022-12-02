@@ -211,6 +211,11 @@ blockquote {
     &:after {content: "]";}
 }
 
+.footnotes {
+    color: var(--th-on-surface-dim);
+    font-size: 12pt;
+}
+
 @import "code";
 
 
