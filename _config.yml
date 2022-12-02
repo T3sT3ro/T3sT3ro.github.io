@@ -53,6 +53,7 @@ defaults:
 plugins:
   - jekyll-gist
   - jekyll-seo-tag
+  - jekyll-relative-links
 
 # Exclude from processing.
 # The following items will not be processed, by default.

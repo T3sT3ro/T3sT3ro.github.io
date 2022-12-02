@@ -21,6 +21,8 @@ group :jekyll_plugins do
   gem 'jekyll-seo-tag', "~> 2.8"
   gem "jekyll-gist"
   gem "gemoji", "~> 3.0"
+  gem 'jekyll-relative-links'
+  
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem

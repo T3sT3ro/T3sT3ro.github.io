@@ -49,3 +49,5 @@ permalink: /todo
 - [x] ~~set header aspect ratio instead of auto height?~~ invalid, because I use `<a>` now
 - [ ] use template inheritance
 - [x] fix pre overflow when no higlightjs is loaded
+- [ ] add collapse to code via some kind of `.collapse` class
+- [ ] fix scrolls with code blocks with headers (filenames)
