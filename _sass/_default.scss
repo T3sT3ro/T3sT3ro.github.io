@@ -26,7 +26,7 @@ body {
         ". toolbox ."
         ". main ."
         ". footer ." 150px
-        / auto MIN(700px, calc(100vw - 16px)) auto;
+        / 1fr MIN(700px, calc(100vw - 16px)) 1fr;
 
     position: relative;
     scroll-behavior: smooth;

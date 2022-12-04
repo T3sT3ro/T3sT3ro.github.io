@@ -1,0 +1,21 @@
+#advent {
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 3;
+    h1 {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        display: inline-block;
+        transform: rotate(180deg);
+        position: sticky;
+        top: 0;
+        margin-right: 1em;
+        color: var(--th-S-light);
+    }
+}
+
+@media (max-width: 922px) {
+    #advent {
+        display: none;
+    }
+}
