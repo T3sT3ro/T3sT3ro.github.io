@@ -21,7 +21,10 @@ DAYS=${@:-`date +%-d`} # today if not specified
 # END=${3:-`if [[ -z "$2" ]]; then echo $START; else echo 25; fi`}
 
 for i in $DAYS; do
-echo "Fetching year $YEAR day $i...";
+    
+    FILEBASENAME=$(printf "%02d" $i)
+    
+    echo "Fetching year $YEAR day $i...";
     curl "https://adventofcode.com/$YEAR/day/$i/input" \
     -b "session=$SESSION_COOKIE" \
     -H 'authority: adventofcode.com' \
@@ -39,5 +42,14 @@ echo "Fetching year $YEAR day $i...";
     -H 'sec-fetch-user: ?1' \
     -H 'upgrade-insecure-requests: 1' \
     -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36' \
-    --compressed > $(printf "$YEAR/IN/%02d" $i)
+    --compressed > "$YEAR/IN/$FILEBASENAME"
+    
+    SOLUTION="$YEAR/$FILEBASENAME.js"
+    if [[ ! -f $SOLUTION ]]; then
+        echo "programm missing, creating template..."
+        echo "\
+\$ = require('../in.js');
+_ = require('lodash');
+t = \$('IN/$FILEBASENAME').textContent.trim().split('\n');" > $SOLUTION
+    fi
 done
