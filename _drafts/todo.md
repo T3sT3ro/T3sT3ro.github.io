@@ -25,8 +25,8 @@ permalink: /todo
 - [ ] comments via giscuis
 - [x] shadow to card
 - [x] line numbers
-  - [ ] more consistent formatting
-  - [ ] individual line highlight
+  - [x] more consistent formatting
+  - [x] individual line highlight
   - [x] easier to enable/disable
 - [x] fix shortcuts
   - [x] F for fullscreen
@@ -50,4 +50,6 @@ permalink: /todo
 - [ ] use template inheritance
 - [x] fix pre overflow when no higlightjs is loaded
 - [ ] add collapse to code via some kind of `.collapse` class
-- [ ] fix scrolls with code blocks with headers (filenames)
+- [x] fix scrolls with code blocks with headers (filenames)
+- [ ] tables styling
+- [ ] custom processor for codeblocks and similar using [this guide](https://fuzyll.com/2017/changing-markdown-output-in-jekyll/)

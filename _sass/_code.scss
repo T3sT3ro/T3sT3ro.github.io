@@ -83,18 +83,19 @@ pre:not(:has(.hljs)) { // fallback when hljs is not loaded
 }
 
 // coloring lines
-.hljs-ln-highlight {
+.hljs .highlight {
     .hljs-ln-numbers {    
         box-shadow: 5px 0px;
+        color: var(--th-S-light);
     }
     .hljs-ln-code {
         background-color: var(--th-code-line-highlight);
     }
 }
-.hljs-ln-highlight-start.hljs-ln-code { 
+.hljs .highlight.start .hljs-ln-code { 
     border-top: 1px solid;    
 }
-.hljs-ln-highlight-end.hljs-ln-code   { 
+.hljs .highlight.end .hljs-ln-code   { 
     border-bottom: 1px solid; 
 }
 
@@ -148,6 +149,10 @@ pre {
     color: var(--th-code-inline-fg);
     background-color: var(--th-code-inline-bg);
     white-space: nowrap;
+    
+    @media (max-width: 400) {
+        white-space: pre-wrap;
+    }
 }
 
 #shortcuts {
