@@ -1,0 +1,31 @@
+{
+    "files.associations": {
+        "*.*shader": "glsl",
+        "*.vert": "glsl",
+        "*.frag": "glsl",
+        "cstdio": "cpp",
+        "*.tcc": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "string_view": "cpp",
+        "iosfwd": "cpp",
+        "numeric": "cpp",
+        "functional": "cpp",
+        "regex": "cpp",
+        "tuple": "cpp",
+        "bitset": "cpp"
+    },
+    "frontMatter.content.autoUpdateDate": true,
+    "yaml.schemas": {
+        "https://json.schemastore.org/github-workflow.json": "file:///home/tooster/workspace/ttr/T3sT3ro.github.io/eleventy-gh/.github/workflows/build.yml"
+    },
+    "liquid.format.enable": true,
+    "svg.preview.background": "dark-transparent",
+    "[markdown]": {
+    },
+    "cSpell.words": [
+        "fontawesome"
+    ],
+    "markdown.extension.tableFormatter.normalizeIndentation": false
+}
