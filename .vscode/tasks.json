@@ -1,0 +1,46 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "C/C++: g++ build active file",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Update gems",
+            "type": "shell",
+            "command": "docker compose run jekyll-server bash -c 'bundle config unset deployment && bundle update && bundle install --deployment'",
+            "problemMatcher": []
+        },
+        {
+            "label": "compose up jekyll",
+            "type": "docker-compose",
+            "dockerCompose": {
+                "up": {
+                    "detached": true,
+                    "build": true,
+                    "services": ["jekyll-server"]
+                },
+                "files": [
+                    "${workspaceFolder}/docker-compose.yml"
+                ]
+            }
+        }
+    ],
+    "version": "2.0.0"
+}
