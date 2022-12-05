@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'rust-sandbox'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=rust-sandbox",
+                    "--package=rust-sandbox"
+                ],
+                "filter": {
+                    "name": "rust-sandbox",
+                    "kind": "bin"
+                }
+            },
+            "args": ["/home/tooster/.local/share/multimc/mods/ferium/1.19.2/forge/AdvancedCompas-forge-1.19.2-1.2.13.jar"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'rust-sandbox'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=rust-sandbox",
+                    "--package=rust-sandbox"
+                ],
+                "filter": {
+                    "name": "rust-sandbox",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
