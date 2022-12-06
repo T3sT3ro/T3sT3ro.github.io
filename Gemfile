@@ -22,7 +22,7 @@ group :jekyll_plugins do
   gem "jekyll-gist"
   gem "gemoji", "~> 3.0"
   gem 'jekyll-relative-links'
-  
+  gem 'jekyll-sitemap' # to make google analytics happy
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
