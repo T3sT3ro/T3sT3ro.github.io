@@ -55,6 +55,8 @@ plugins:
   - jekyll-gist
   - jekyll-seo-tag
   - jekyll-relative-links
+  
+  - jekyll-sitemap # after aothers so it processes inputs produced by previous plugins
 
 # Exclude from processing.
 # The following items will not be processed, by default.
