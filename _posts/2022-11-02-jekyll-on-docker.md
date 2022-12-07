@@ -1,8 +1,11 @@
 ---
 title: Jekyll + Docker + Compose + VScode = ♥
+tags:
+  - docker
+  - jekyll
 date: 2022-11-02T09:15:23.457Z
-tags: docker jekyll
-lastmod: 2022-12-06T13:12:08.757Z
+lastmod: 2022-12-06T15:30:13.086Z
+type: default
 ---
 
 If you:
