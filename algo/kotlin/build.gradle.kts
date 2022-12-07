@@ -51,6 +51,9 @@ dependencies {
     testImplementation("tech.vanyo:tree_printer")
     testRuntimeOnly(libs.junit.runtime)
 
+    // https://blog.jetbrains.com/kotlin/2021/02/multik-multidimensional-arrays-in-kotlin/
+    implementation("org.jetbrains.kotlinx:multik-core:0.2.0")
+    implementation("org.jetbrains.kotlinx:multik-default:0.2.0")
 
     val commonImplementation by configurations
     val sandboxImplementation by configurations
