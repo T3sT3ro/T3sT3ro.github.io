@@ -1,8 +1,8 @@
 ---
-title: Jekyll on Docker = ♥
+title: Jekyll + Docker + Compose + VScode = ♥
 date: 2022-11-02T09:15:23.457Z
 tags: docker jekyll
-lastmod: 2022-12-01T23:58:22.542Z
+lastmod: 2022-12-06T13:12:08.757Z
 ---
 
 If you:
@@ -161,6 +161,8 @@ Then I've excelent news!
 - launch debugger chrome instance via task in VSCode using `F5` (or via bash script) and to update gems from step (9.) (by running tasks)
 - stop containers with `docker compose down`
 - check if containers are running with `docker compose ps` or in the VSCode docker tab
+
+As a bonus I could recommend using [Frontmatter extension for VSCode](https://frontmatter.codes/) as a local CMS for the site. It works wonderfully well.
 
 ## How to revert if you get bored
 
