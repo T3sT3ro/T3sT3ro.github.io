@@ -1,8 +1,9 @@
 ---
 title: Templating languages
 date: 2022-09-23T09:15:14.392Z
-tags: templates
-lastmod: 2022-11-25T00:46:34.580Z
+tags:
+  - templates
+lastmod: 2022-12-06T15:27:36.841Z
 last-table-update: 2022-11-02T11:40:14.174Z
 layout: post
 draft: true

@@ -4,10 +4,97 @@
   "frontMatter.content.publicFolder": "assets",
   "frontMatter.content.pageFolders": [
     {
+      "title": "drafts",
+      "path": "[[workspace]]/_drafts"
+    },
+    {
       "title": "posts",
       "path": "[[workspace]]/_posts"
     }
   ],
-  "frontMatter.taxonomy.tags": [],
-  "frontMatter.taxonomy.categories": []
+  "frontMatter.taxonomy.tags": [
+    "a",
+    "docker",
+    "e",
+    "fun",
+    "jekyll",
+    "l",
+    "m",
+    "p",
+    "s",
+    "t"
+  ],
+  "frontMatter.taxonomy.categories": [],
+  "frontMatter.taxonomy.contentTypes": [
+    {
+      "name": "default",
+      "pageBundle": false,
+      "fields": [
+        {
+          "title": "Title",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "title": "Description",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "title": "Publishing date",
+          "name": "date",
+          "type": "datetime",
+          "default": "{{now}}",
+          "isPublishDate": true
+        },
+        {
+          "title": "Content preview",
+          "name": "preview",
+          "type": "image"
+        },
+        {
+          "title": "Is in draft",
+          "name": "draft",
+          "type": "boolean"
+        },
+        {
+          "title": "Tags",
+          "name": "tags",
+          "type": "tags"
+        },
+        {
+          "title": "Categories",
+          "name": "categories",
+          "type": "categories"
+        }
+      ]
+    },
+    {
+      "name": "todolist",
+      "pageBundle": false,
+      "fields": [
+        {
+          "title": "title",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "title": "layout",
+          "name": "layout",
+          "type": "string"
+        },
+        {
+          "title": "permalink",
+          "name": "permalink",
+          "type": "string"
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "default": "todolist",
+          "hidden": true
+        }
+      ]
+    }
+  ]
 }

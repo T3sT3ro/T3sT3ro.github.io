@@ -27,5 +27,6 @@
     "cSpell.words": [
         "fontawesome"
     ],
-    "markdown.extension.tableFormatter.normalizeIndentation": false
+    "markdown.extension.tableFormatter.normalizeIndentation": false,
+    "frontMatter.preview.host": "localhost:4000"
 }
