@@ -28,35 +28,67 @@ function debug() {
     console.error();
 }
 
-function *move([Ox, Oy], debug = () => {}) {
-    let [x, y] = [Ox, Oy]; // particle
 
-    while(true) {
-        if (y > ymax) return;
-        else if(!cave[[x, y+1]]) [x, y] = [x, y+1];
-        else if(!cave[[x-1, y+1]]) [x, y] = [x-1, y+1];
-        else if(!cave[[x+1, y+1]]) [x, y] = [x+1, y+1];
-        else {
-            if(x == Ox && y == Oy) {return yield 1;};
-            cave[[x, y]] = 'o';
-            [x, y] = [Ox, Oy];
-            debug();
-            yield 1;
+function approach1() {
+    function *move([Ox, Oy], debug = () => {}) {
+        let [x, y] = [Ox, Oy]; // particle
+    
+        while(true) {
+            if (y > ymax) return;
+            else if(!cave[[x, y+1]]) [x, y] = [x, y+1];
+            else if(!cave[[x-1, y+1]]) [x, y] = [x-1, y+1];
+            else if(!cave[[x+1, y+1]]) [x, y] = [x+1, y+1];
+            else {
+                if(x == Ox && y == Oy) {return yield 1;};
+                cave[[x, y]] = 'o';
+                [x, y] = [Ox, Oy];
+                debug();
+                yield 1;
+            }
         }
     }
+    // PT 1
+    let total = 0;
+    for(cnt of move(O)) total += cnt;
+    debug();
+    console.log(total);
+
+    // PT 2
+    ymax += 2;
+    xmin = 500 - ymax; xmax = 500 + ymax;
+    for(let i = xmin; i <= xmax; i++) cave[[i, ymax]] = '#';
+    for(cnt of move(O)) total += cnt;
+    debug();    
+    console.log(total);
 }
 
+function approach2() {
+    // returns [shouldContinue, count]
 
-// PT 1
-let total = 0;
-for(cnt of move(O)) total += cnt;
-debug();
-console.log(total);
+    let S = [O]; // stack of positions to fill next;
+    let total = 0;
+    let lim = ymax+2;
+    let firstSolved = false;
 
-// PT 2
-ymax += 2;
-xmin = 500 - ymax; xmax = 500 + ymax;
-for(let i = xmin; i <= xmax; i++) cave[[i, ymax]] = '#';
-for(cnt of move(O)) total += cnt;
-debug();
-console.log(total);
+    while(S.length > 0) {
+        let [x, y] = _.last(S);
+        let [D, L, R] = [0, -1, 1].map(dx => [x+dx, y+1]);
+
+        if(false) {}
+        else if (!cave[D] && y+1 < lim) S.push(D);
+        else if (!cave[L] && y+1 < lim) S.push(L);
+        else if (!cave[R] && y+1 < lim) S.push(R);
+        else {
+            if (!firstSolved && y+1 == lim) {
+                console.log(total);
+                firstSolved = true;
+            }
+            total++;
+            cave[S.pop()] = 'o';
+        }
+    }
+
+    console.log(total);
+}
+
+approach2();
