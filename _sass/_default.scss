@@ -24,7 +24,7 @@ body {
     grid-template:
         ". header ."
         ". toolbox ."
-        ". main ."
+        ". main ." 1fr
         ". footer ." 150px
         / 1fr MIN(700px, calc(100vw - 16px)) 1fr;
 
@@ -55,7 +55,7 @@ a {
     
     &:hover {
         color: var(--th-P-light);
-        transition: all 0.1s;
+        transition: all 0.1s;   
     }
 }
 
@@ -81,11 +81,31 @@ header {
         mix-blend-mode: screen;
         border-radius: 50vmin;
 
+        svg {
+            height: 1.5em;
+            width: 100%;
+            display: block;
+            #mouth {
+                animation-duration: .3s;
+                animation-iteration-count: 1;
+            }
+        }
+
         &:hover {
             color: black;
             transition: none;
+            svg #mouth {
+                animation-name: mouth-bounce;
+                animation-timing-function: ease;
+            }
         }
     }
+}
+
+@keyframes mouth-bounce {
+    0%   { transform: translateY(0px); }
+    50%  { transform: translateY(-1px);}
+    100% { transform: translateY(0px); }
 }
 
 nav {
@@ -151,15 +171,41 @@ main {
         display: flex;
         flex-direction: row-reverse;
         align-items: baseline;
-        
+        @include text-header-roboto;
+        font-size: 0.83em;
+        font-weight: bold;
+        position: relative;
+
         .tag {
             margin: 0 .2em;
             border: 1px solid var(--th-P-dark);
             border-radius: 2px;
             padding: 1px 6px;
+            min-width: 2em;
+            text-align: center;
         }
 
-        time { margin-left: 2em; }
+        
+        time { 
+            padding-left: 2em; 
+            &.created {
+                position: absolute;
+                right: 0;
+                top: -100%;
+                // bottom: 0;
+                // transform: rotate(90deg) translateX(100%);
+                // transform-origin: bottom right;
+            }
+            &.lastmod:hover ~ .created, &.lastmod ~ .created:hover { 
+                opacity: 1;
+                visibility: visible;
+            }
+            &.lastmod ~ .created{ 
+                opacity: 0;
+                visibility: hidden;
+                transition: all .8s ease-out .5s;
+            }
+        }
     }
 
     .title {

@@ -1,8 +1,9 @@
 ---
 title: Quick comparison of Static site Generators
 date: 2022-11-23T19:44:01.877Z
-lastmod: 2022-11-24T13:58:29.349Z
-layout: post
+lastmod: 2022-12-15T21:11:28.165Z
+tags:
+  - SSR
 ---
 
 ## Jekyll

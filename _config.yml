@@ -19,7 +19,7 @@
 # in the templates via {{ site.myvariable }}.
 
 title: ._.
-description: Tooster's playground
+description: Tooster's random shit.
 author:
   discord: Tooster#3471
   github_username:  T3sT3ro
@@ -67,10 +67,11 @@ plugins:
 # their entries' file path in the `include:` list.
 exclude:
   - frontmatter.json
+  - .frontmatter
   - .sass-cache/
   - .jekyll-cache/
   - Gemfile
   - Gemfile.lock
-  - node_modules/
+  - '**/node_modules/'
   - vendor
   - docker-compose.yml
