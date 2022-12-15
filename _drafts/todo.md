@@ -2,6 +2,7 @@
 title: TODO
 layout: post
 permalink: /todo
+lastmod: 2022-12-13T17:14:19.441Z
 ---
 
 - [x] time using `<time>`
@@ -53,3 +54,9 @@ permalink: /todo
 - [x] fix scrolls with code blocks with headers (filenames)
 - [ ] tables styling
 - [ ] custom processor for codeblocks and similar using [this guide](https://fuzyll.com/2017/changing-markdown-output-in-jekyll/)
+- [ ] SEO
+  - [ ] check why sitemap not working on google console
+  - [ ] slug optimization
+- [ ] tags and category pages
+- [ ] separate stuff from website content
+- [ ] preprocess codeblocks to compile highlight on the backend instead of frontend

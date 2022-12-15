@@ -2,13 +2,31 @@
     grid-column-start: main-start;
     grid-column-end: main-end;
 
-
     h1 {
-        color: var(--th-S-light);
+        font-family: 'Source Code Pro', monospace;
+        color: #00cc00;
+        text-shadow: 0 0 2px #00cc00, 0 0 5px #00cc00;
         text-align: center;
+        &:hover {
+            color: #99ff99;
+            text-shadow: 0 0 2px #99ff99, 0 0 5px #99ff99;
+            .stars {
+                color: #ffffee;
+                text-shadow: 0 0 5px #ffffee;
+            }
+        }
+        .stars {
+            color: #ffff66;
+            text-shadow: 0 0 5px #ffff66;
+        }
     }
 }
 
+@media (max-width: 578px) {
+    .stars {
+        display: block;
+    }
+}
 @media (min-width: 922px) {
     #advent {
         grid-column-start: 1;

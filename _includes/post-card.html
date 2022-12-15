@@ -1,17 +1,25 @@
 <div class="post-card">
 
-  <h5 class="meta">
-    <time datetime={{ include.post.date | date: '%s'}}>
-      {{ include.post.date | date_to_string }}
+  <div class="meta">
+
+    {%- assign visibleDate = include.post.lastmod or include.post.date -%}
+
+    <time class="lastmod" datetime={{ visibleDate | date: '%s' }}>
+      {{ visibleDate | date_to_string }}
     </time>
+    {%- if include.post.date != include.post.lastmod -%}
+    <time class="created" datetime={{ include.post.date | date: '%s' }}>
+      First posted at {{ include.post.date | date_to_string }}
+    </time>
+    {%- endif -%}
 
     {%- for tag in include.post.tags -%}
-      <span class="tag">
-        <a class="href" href="{{ BASE_PATH }}/search?tag={{tag}}">{{tag}}</a>
-      </span>
+    <span class="tag">
+      <a class="href" href="{{ BASE_PATH }}/search?tag={{tag}}">{{tag}}</a>
+    </span>
     {%- endfor -%}
 
-  </h5>
+  </div>
 
   <article>
     <h1 class="title">
@@ -20,14 +28,18 @@
 
     {%- if include.truncate -%}
 
-      <div class="preview">
-        {{ include.post.content | truncatewords: 250 | markdownify }}
-      </div>
+    {% if include.post.description %}
+    {{- include.post.description -}}
+    {% else %}
+    <div class="preview">
+      {{ include.post.content | truncatewords: 250 | markdownify }}
+    </div>
+    {% endif %}
 
-      <a class="read-more" href="{{ include.post.url }}">Read more...</a>
+    <a class="read-more" href="{{ include.post.url }}">Read more...</a>
 
     {%- else -%}
-      {{ include.post.content | markdownify }}
+    {{ include.post.content | markdownify }}
     {%- endif -%}
   </article>
 </div>
