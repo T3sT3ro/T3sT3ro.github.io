@@ -13,7 +13,15 @@
                 "**/lodash/**"
             ],
             "type": "node",
-            "cwd": "${fileDirname}"
+            "cwd": "${fileDirname}",
         },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "TS launch",
+            "program": "${file}",
+            "preLaunchTask": "tsc: build - util/tsconfig.json",
+            "cwd": "${fileDirname}",
+        }
     ]
 }

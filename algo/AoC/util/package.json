@@ -1,0 +1,20 @@
+{
+  "name": "@t3st3ro/util",
+  "version": "1.0.0",
+  "description": "utilities for quick scripting and hacking sessions such as AoC",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [
+    "util"
+  ],
+  "type": "module",
+  "author": "T3sT3ro",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/lodash": "^4.14.191",
+    "@types/node": "^18.11.13",
+    "typescript": "^4.9.4"
+  }
+}

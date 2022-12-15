@@ -1,12 +1,21 @@
 #!/bin/bash
 # Command acquired by: developer tools > network tab > request > copy > copy as cURL
 # Cookies can be acquired by clicking lock icon on browser's address bar
+# reads session.cookie
 # Arguments [optional]:
 #  [1st]     - year, default is this year
 #  [rest...] - days (use bash substitution like {1..25} to generate range)
 # BE AWARE THAT HISTORY CAN REMEMBER COOKIES, SO DON'T DO echo <cookie> > ...
 
-read -rep $'Paste the value of session cookie (just the hash):\n' SESSION_COOKIE
+COOKIEFILE=aoc-session.cookie
+ls >&2
+if [ -e $COOKIEFILE ]; then
+    echo "using cookie file: $COOKIEFILE" >&2
+    SESSION_COOKIE=$(cat $COOKIEFILE)
+else
+    echo "reading from STDIN: $COOKIEFILE" >&2
+    read -rep $'Paste the value of session cookie (just the hash):\n' SESSION_COOKIE
+fi
 
 if [[ -z $SESSION_COOKIE ]]; then
     echo "session cookie not specified" >&2

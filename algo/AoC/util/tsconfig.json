@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "target": "ES2022",
+        "sourceMap": true,
+        "outDir": "dist",
+        "paths": {
+            "in": [
+                "../in.js"
+            ],
+            "aoc": [
+                "../2020/IN",
+                "../2021/IN",
+                "../2022/IN"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*",
+        "tests/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
