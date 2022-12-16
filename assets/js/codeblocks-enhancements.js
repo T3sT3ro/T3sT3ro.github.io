@@ -1,73 +1,80 @@
-hljs.highlightAll ();
-hljs.initLineNumbersOnLoad ();
+(() => {
+    hljs.highlightAll();
+    hljs.initLineNumbersOnLoad();
 
-document.documentElement.addEventListener('keydown', (evt) => {
-    const key = evt.key.toLowerCase();
-    const target = document.querySelector('pre:hover');
-    if(!target) return;
-    
-    switch (key) {
-        // Rollback the size and style of window
-        case 'r':
-            codeblockRestore(target);
-            break;
-        case 'f':
-            codeblockToggleFit(target);
-            break;
-        case 'l':
-            codeblocktoggleLines(target);
-            break;
-        case 'w':
-            codeblockToggleWrap(target);
-            break;
+    const CODEBLOCK_FLAGS = {
+        FIT: 'fit-code',
+        WRAP: 'line-wrap',
+        LINES: 'lines',
     }
-});
 
-$('pre:has(code)').wrap("<div class='code-wrapper'></div>"); // wrapper for fitting on screen
+    document.documentElement.addEventListener('keydown', (evt) => {
+        const key = evt.key.toLowerCase();
 
-$(document).ready(function () {
-    $('code.hljs').each(function (i, e) {
-        hljs.lineNumbersBlock(e).then(() => {
-            if(!e.parentNode.hasAttribute('lines')) return;
-            
-
-            let ranges = e.parentNode.getAttribute('lines').split(',')
-                .map(x => x.match(/^(\d+)(?:-(\d+))?$/))
-                .filter(x => x)
-                .map(([, start, end]) => [+start, +(end || start)]);
-
-            // algorithmically could be done better, but is not worth it if there are <10 or so highlights
-            const [START, HIGHLIGHT, END] = ['start', 'highlight', 'end'];
-            for (const [start, end] of ranges) {
-                let [si, ei] = [start - 1, end - 1];
-
-                // I expect myself to provide proper line numbers so I don't handle edge cases
-                $(e).find('tr').slice(si, si+1).addClass(START);
-                $(e).find('tr').slice(si, ei+1).addClass(HIGHLIGHT);
-                $(e).find('tr').slice(ei, ei+1).addClass(END);
+        const selector = evt.shiftKey ? 'pre' : 'pre:hover';
+        $(`${selector}:has(.hljs)`).each(function (index, target) {
+            switch (key) {
+                // Rollback the size and style of window
+                case 'r':
+                    target.style.removeProperty('width');
+                    target.style.removeProperty('height');
+                    backupRestore(target, false);
+                    break;
+                case 'f':
+                    target.classList.toggle(CODEBLOCK_FLAGS.FIT);
+                    break;
+                case 'l':
+                    target.classList.toggle(CODEBLOCK_FLAGS.LINES);
+                    break;
+                case 'w':
+                    target.classList.toggle(CODEBLOCK_FLAGS.WRAP);
+                    break;
             }
         });
+
     });
 
-});
+    $('pre:has(code)').wrap("<div class='code-wrapper'></div>"); // wrapper for fitting on screen
 
-function codeblockToggleWrap(target) {
-    target.classList.toggle('line-wrap');
-}
+    function highlightLines(e, lines) {
+        if (!lines) return;
 
-function codeblocktoggleLines(target) {
-    target.classList.toggle('lines');
-}
+        let ranges = lines.split(/,\s*/)
+            .map(x => x.match(/^(\d+)(?:-(\d+))?$/))
+            .filter(x => x)
+            .map(([, start, end]) => [+start, +(end || start)]);
 
-// toggle window fit to width
-function codeblockToggleFit(target) {
-    target.classList.toggle('fit-code');
-}
+        // algorithmically could be done better, but is not worth it if there are <10 or so highlights
+        const [START, HIGHLIGHT, END] = ['start', 'highlight', 'end'];
+        for (const [start, end] of ranges) {
+            let [si, ei] = [start - 1, end - 1];
 
-// restore certain properties
-function codeblockRestore(target) {
-    target.style.removeProperty('width');
-    target.style.removeProperty('height');
-    target.classList.remove('fit-code');
-    target.classList.toggle('line-wrap');
-}
+            // I expect myself to provide proper line numbers so I don't handle edge cases
+            $(e).find('tr').slice(si, si + 1).addClass(START);
+            $(e).find('tr').slice(si, ei + 1).addClass(HIGHLIGHT);
+            $(e).find('tr').slice(ei, ei + 1).addClass(END);
+        }
+    }
+
+    function backupRestore(e, backup, flags = CODEBLOCK_FLAGS) {
+        for (const [f, c] of Object.entries(flags)) {
+            let entry = `initial:${f.toLowerCase()}`;
+            if (backup) {
+                e.dataset[entry] = e.classList.contains(c);
+            } else {
+                if (e.dataset[entry] == 'true') e.classList.add(c)
+                else if (e.dataset[entry] == 'false') e.classList.remove(c);
+                // ^ if not set in dataset then don't rollback
+            }
+        }
+    }
+
+    $(document).ready(function () {
+        $('code.hljs').each(function (i, e) {
+            hljs.lineNumbersBlock(e).then(() => {
+                highlightLines(e, e.parentNode.getAttribute('lines'));
+                backupRestore(e.parentNode, true);
+            });
+        });
+    });
+})();
