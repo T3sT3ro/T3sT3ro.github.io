@@ -83,20 +83,34 @@ pre:not(:has(.hljs)) { // fallback when hljs is not loaded
 }
 
 // coloring lines
-.hljs .highlight {
-    .hljs-ln-numbers {    
-        box-shadow: 5px 0px;
-        color: var(--th-S-light);
+[lines] {
+
+    .hljs .highlight {
+        .hljs-ln-numbers {
+            box-shadow: 5px 0px;
+            color: var(--th-S-light);
+        }
+
+        .hljs-ln-code {
+            background-color: var(--th-code-line-highlight);
+            border-right: 1px solid var(--th-S-light);
+        }
     }
-    .hljs-ln-code {
-        background-color: var(--th-code-line-highlight);
+
+    .hljs .highlight.start .hljs-ln-code {
+        border-top: 1px solid var(--th-S-light);
+        // box-shadow: 0px -1px 1px;
     }
-}
-.hljs .highlight.start .hljs-ln-code { 
-    border-top: 1px solid;    
-}
-.hljs .highlight.end .hljs-ln-code   { 
-    border-bottom: 1px solid; 
+
+    .hljs .highlight.end .hljs-ln-code {
+        border-bottom: 1px solid var(--th-S-light);
+        // box-shadow: 0px 1px 1px;
+    }
+
+    // .hljs .highlight.end.start .hljs-ln-code {
+    //     // border-top: 1px solid;
+    //     box-shadow: 0px -1px 1px, 0px 1px 1px;
+    // }
 }
 
 pre {
