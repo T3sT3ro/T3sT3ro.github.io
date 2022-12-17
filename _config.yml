@@ -72,6 +72,12 @@ exclude:
   - .jekyll-cache/
   - Gemfile
   - Gemfile.lock
-  - '**/node_modules/'
-  - vendor
+  - "*node_modules"
+  - "*target"
+  - "*build"
+  - "*out"
+  - "*vendor"
   - docker-compose.yml
+  - jsconfig.json
+  - package-lock.json
+  - package.json
