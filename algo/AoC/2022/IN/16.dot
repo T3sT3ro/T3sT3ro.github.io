@@ -1,0 +1,109 @@
+strict graph {
+    {rank=same; AA}
+    {rank=same; JW; HX; MA; KO}
+    {root=AA;}
+    NV -- {ZV CG YB HX OY};
+    NU -- {DA MA OA DK};
+    VU -- {PS FX};
+    JW -- {AA MD};
+    RI -- {OY DG};
+    DG -- {TG RI DF EV KW};
+    PH -- {KW OW LT LZ};
+    KZ -- {ET QV CK MS};
+    IX -- {TS DO};
+    MS -- {LZ KZ};
+    IL -- {DO ET};
+    EJ -- {AV JY};
+    DK -- {NU CG};
+    YB -- {NV PS};
+    OA -- {YA NU};
+    DA -- {NU RG};
+    KO -- {AA TG};
+    RG -- {DF DA ZV MD LB};
+    MA -- {AA NU};
+    OW -- {DO PH};
+    KW -- {DG PH};
+    DO -- {IX IL CZ OW};
+    DF -- {RG DG};
+    TG -- {DG KO};
+    LB -- {RG FX};
+    HX -- {AA NV};
+    GB -- {AV XK};
+    CG -- {DK NV};
+    LT -- {AO PH};
+    FX -- {LB HY VU};
+    ET -- {IL KZ};
+    CK -- {UX KZ};
+    LZ -- {PH MS};
+    YA -- {JY OA};
+    TS -- {NO IX};
+    NO -- {TS};
+    XK -- {GB};
+    PS -- {EV VU YB};
+    AA -- {JW HX MA KO};
+    MD -- {JW RG};
+    JM -- {QV HY AO};
+    AV -- {EJ GB};
+    AO -- {JM LT};
+    JY -- {YA EJ};
+    OY -- {NV RI};
+    UX -- {CZ CK};
+    HY -- {JM FX};
+    EV -- {PS DG};
+    CZ -- {UX DO};
+    ZV -- {NV RG};
+    QV -- {JM KZ};
+
+
+    NV [label=5]
+NU [label=6]
+VU [label=0]
+JW [label=0]
+RI [label=0]
+DG [label=9]
+PH [label=7]
+KZ [label=12]
+IX [label=0]
+MS [label=0]
+IL [label=0]
+EJ [label=20]
+DK [label=0]
+YB [label=0]
+OA [label=0]
+DA [label=0]
+KO [label=0]
+RG [label=4]
+MA [label=0]
+OW [label=0]
+KW [label=0]
+DO [label=14]
+DF [label=0]
+TG [label=0]
+LB [label=0]
+HX [label=0]
+GB [label=0]
+CG [label=0]
+LT [label=0]
+FX [label=23]
+ET [label=0]
+CK [label=0]
+LZ [label=0]
+YA [label=17]
+TS [label=0]
+NO [label=8]
+XK [label=24]
+PS [label=18]
+AA [label=0]
+MD [label=0]
+JM [label=19]
+AV [label=0]
+AO [label=0]
+JY [label=0]
+OY [label=0]
+UX [label=13]
+HY [label=0]
+EV [label=0]
+CZ [label=0]
+ZV [label=0]
+QV [label=0]
+}
