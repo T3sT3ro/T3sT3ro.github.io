@@ -1,10 +1,16 @@
 ---
 title: Space filling curves
+description: About space filling curves, several simple implementations and usages.
 date: 2022-09-22T16:14:58.448Z
-lastmod: 2022-11-25T11:00:52.194Z
+lastmod: 2022-12-16T23:41:07.409Z
+latex: true
 ---
 
 Z-curves are given by:
+
+\\[ 
+    \alpha
+\\]
 
 ```txt
 Z(n, x, y)              -> "explode" and interleave x and y bit representations

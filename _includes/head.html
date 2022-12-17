@@ -11,8 +11,7 @@
     content="{{ page.excerpt | default: site.description | strip_html | normalize_whitespace | truncate: 160 | escape }}">
   {%- endcomment -%}
 
-  <link rel="shortcut icon" href="/assets/images/favicon-variant-6.png"
-    type="image/x-icon">
+  <link rel="shortcut icon" href="/assets/images/favicon-variant-6.png" type="image/x-icon">
 
   <!-- google analytics -->
   <meta name="google-site-verification" content="pbXWbgM1YlXAu410W85BQuuPLd-Hwtw3oEcWnJ7aGYY" />
@@ -25,8 +24,11 @@
 
   <!-- for mathjax support -->
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  {% if include.latex %}
   <script src="/assets/js/mathjax-config.js"></script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  {% endif %}
 
   <!-- for highlight.js -->
 

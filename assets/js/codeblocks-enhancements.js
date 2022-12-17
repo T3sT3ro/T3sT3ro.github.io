@@ -1,6 +1,14 @@
-(() => {
+// @ts-check
+$(function () {
+
     hljs.highlightAll();
-    hljs.initLineNumbersOnLoad();
+
+    $('code.hljs').each(function (i, e) {
+        hljs.lineNumbersBlock(e).then(() => {
+            highlightLines(e, e.parentNode.getAttribute('lines'));
+            backupRestore(e.parentNode, true);
+        });
+    });
 
     const CODEBLOCK_FLAGS = {
         FIT: 'fit-code',
@@ -8,33 +16,65 @@
         LINES: 'lines',
     }
 
-    document.documentElement.addEventListener('keydown', (evt) => {
+    $(document).keydown((evt) => {
         const key = evt.key.toLowerCase();
 
-        const selector = evt.shiftKey ? 'pre' : 'pre:hover';
-        $(`${selector}:has(.hljs)`).each(function (index, target) {
-            switch (key) {
-                // Rollback the size and style of window
-                case 'r':
-                    target.style.removeProperty('width');
-                    target.style.removeProperty('height');
-                    backupRestore(target, false);
-                    break;
-                case 'f':
-                    target.classList.toggle(CODEBLOCK_FLAGS.FIT);
-                    break;
-                case 'l':
-                    target.classList.toggle(CODEBLOCK_FLAGS.LINES);
-                    break;
-                case 'w':
-                    target.classList.toggle(CODEBLOCK_FLAGS.WRAP);
-                    break;
-            }
-        });
-
+        $(`${evt.shiftKey ? 'pre' : 'pre:hover'} .hljs`)
+            .parent()
+            .each(function (index, target) {
+                switch (key) {
+                    // Rollback the size and style of window
+                    case 'r':
+                        target.style.removeProperty('width');
+                        target.style.removeProperty('height');
+                        backupRestore(target, false);
+                        break;
+                    case 'f':
+                        target.classList.toggle(CODEBLOCK_FLAGS.FIT);
+                        break;
+                    case 'l':
+                        target.classList.toggle(CODEBLOCK_FLAGS.LINES);
+                        break;
+                    case 'w':
+                        target.classList.toggle(CODEBLOCK_FLAGS.WRAP);
+                        break;
+                }
+            });
     });
 
-    $('pre:has(code)').wrap("<div class='code-wrapper'></div>"); // wrapper for fitting on screen
+    // wrapper for fitting on screen inside flexbox
+    $('pre code').parent().wrap("<div class='code-wrapper'></div>");
+
+    /** @param {HTMLElement} e observed code block */
+    function alignBlockToCenter(e) {
+        if(e.style.width === undefined)
+            return e.style.removeProperty('left');
+
+        const $e =$(e);
+        let bodyWidth = document.body.clientWidth;
+        let elemWidth = Math.round($e.outerWidth()*10)/10;
+        let maxWidth = parseFloat(window.getComputedStyle(e).maxWidth);
+        let minWidth = $e.parent().innerWidth() ?? 0;
+        let t = (elemWidth-minWidth) / (maxWidth-minWidth);
+
+        let parentPos = $e.parent().position().left;
+        let $art = $('article');
+        let contentOffset = ($art.outerWidth() - $art.width())/2;
+        let targetOffset = -(parentPos - contentOffset)/2;
+        e.style.left = `${targetOffset*t}px`;
+    }
+
+
+    let resizeObserver = new ResizeObserver((entries) => 
+        entries.forEach(e => alignBlockToCenter(e.target)));
+    $('pre .hljs').parent().each((i, b) => resizeObserver.observe(b));
+
+    $(window).resize(() =>
+        $('pre .hljs[style*="width"]')
+            .parent()
+            .each((i, b) => alignBlockToCenter(b))
+    );
+
 
     function highlightLines(e, lines) {
         if (!lines) return;
@@ -68,13 +108,4 @@
             }
         }
     }
-
-    $(document).ready(function () {
-        $('code.hljs').each(function (i, e) {
-            hljs.lineNumbersBlock(e).then(() => {
-                highlightLines(e, e.parentNode.getAttribute('lines'));
-                backupRestore(e.parentNode, true);
-            });
-        });
-    });
-})();
+});

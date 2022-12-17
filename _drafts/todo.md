@@ -2,7 +2,7 @@
 title: TODO
 layout: post
 permalink: /todo
-lastmod: 2022-12-13T17:14:19.441Z
+lastmod: 2022-12-17T11:54:17.056Z
 ---
 
 - [x] time using `<time>`
@@ -11,7 +11,7 @@ lastmod: 2022-12-13T17:14:19.441Z
   - [ ] github
   - [ ] linkedin?
 - [ ] breathing widget
-- [ ] header eyes following and animation
+- [x] header eyes following and animation
 - [x] font jumping FOUT, FOIT
 - [ ] "back" button
 - [ ] search page
@@ -36,6 +36,8 @@ lastmod: 2022-12-13T17:14:19.441Z
   - [x] L for toggle lines
   - [x] W for word
   - [x] fix question mark
+  - [x] SHIFT to aplpy to all
+  - [x] properly restore initial state
   - [ ] add buttons for mobile
 - [ ] add proper elevation
 - [x] `overflow: hidden` on `preview` prevents margin collapse
@@ -52,6 +54,7 @@ lastmod: 2022-12-13T17:14:19.441Z
 - [x] fix pre overflow when no higlightjs is loaded
 - [ ] add collapse to code via some kind of `.collapse` class
 - [x] fix scrolls with code blocks with headers (filenames)
+- [x] fix overflow of resized nested codeblock
 - [ ] tables styling
 - [ ] custom processor for codeblocks and similar using [this guide](https://fuzyll.com/2017/changing-markdown-output-in-jekyll/)
 - [ ] SEO
@@ -60,3 +63,4 @@ lastmod: 2022-12-13T17:14:19.441Z
 - [ ] tags and category pages
 - [ ] separate stuff from website content
 - [ ] preprocess codeblocks to compile highlight on the backend instead of frontend
+- [ ] [server side math rendering?](https://github.com/fmeum/jekyll-mathjax-csp)

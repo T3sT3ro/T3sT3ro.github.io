@@ -8,11 +8,6 @@
 
     {%- include advent.html -%}
 
-    {%- comment -%}
-      {%- include nav.html %}
-      {%- include toolbar.html -%}
-    {%- endcomment -%}
-
     <main>
       {%- for post in site.posts -%}
         {%- include post-card.html post=post truncate=true -%}
