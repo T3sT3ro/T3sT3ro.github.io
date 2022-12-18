@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "canvas": "^2.10.2",
     "fastpriorityqueue": "^0.7.1",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "plotly": "^1.0.6",
+    "plotly.js-dist": "^2.16.5"
   }
 }

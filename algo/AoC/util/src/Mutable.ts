@@ -1,6 +1,8 @@
 import _ from 'lodash';
 
-type Table = (any | Table)[];
+// TODO: set of arrays
+
+type Mutable = (any | Mutable)[];
 
 /**
  * 
@@ -47,7 +49,7 @@ class MuTable {
 
 /// ============== table functions
 
-export function mapAll(table: Table, mapper) {
+export function mapAll(table: Mutable, mapper) {
     if (!Array.isArray(table)) 
         return mapper(table);
     else
