@@ -4,22 +4,26 @@ pre, code, samp, var {
     @include text-code-intellij;
 }
 
-pre code.hljs { 
-    padding: 1rem; 
+pre code.hljs {
+    padding: 1rem;
 }
 
 .line-wrap {
     white-space: pre-wrap;
+
     .hljs-ln-numbers {
         vertical-align: baseline;
     }
 }
 
-pre:not(:has(.hljs)) { // fallback when hljs is not loaded
+pre:not(:has(.hljs)) {
+
+    // fallback when hljs is not loaded
     code {
         display: block;
         padding: 1rem;
     }
+
     overflow: auto;
     background-color: #2b2b2b;
 }
@@ -37,11 +41,11 @@ pre:not(:has(.hljs)) { // fallback when hljs is not loaded
         min-width: 100%;
         width: 100%;
         max-width: 95vw;
-        
+
         resize: both;
         overflow-x: auto;
         overflow-y: clip;
-        
+
         display: flex;
         flex-direction: column;
 
@@ -61,7 +65,7 @@ pre:not(:has(.hljs)) { // fallback when hljs is not loaded
 }
 
 .lines {
-    
+
     .hljs-ln {
         margin-left: -0.7em;
     }
@@ -72,12 +76,12 @@ pre:not(:has(.hljs)) { // fallback when hljs is not loaded
         padding-right: .3em !important;
         border-right-style: solid;
         border-right-width: 1px;
-    
+
         text-align: right;
         color: var(--th-code-line-highlight);
     }
 
-    .hljs-ln-numbers + .hljs-ln-code {
+    .hljs-ln-numbers+.hljs-ln-code {
         padding-left: .5em !important;
     }
 }
@@ -124,14 +128,14 @@ pre {
         color: var(--th-on-P);
         padding-left: 0.5em;
     }
-    
+
     // &:after {
     //     content: "[F] - fit width to window \A
     //               [R] - reset to initial size \A
     //               [L] - toggle lines";
     //     display: block;
     //     width: min-content;
-        
+
     //     position: absolute;
     //     top: 0;
     //     right: 0;
@@ -140,72 +144,32 @@ pre {
     //     // background-color: transparent;
     //     // padding: .5em;
     //     // border-radius: 2px;
-        
+
     //     transition: all 1s ease-out .5s;
     //     transform: translateX(calc(100% + 1.5em));
     // }
-    
+
     // &:hover:after {
     //     color: var(--th-on-surface);
     //     // background-color: var(--th-S-dark);
     // }
 }
 
-:not(pre) > code, kbd, var, samp, pre:has(code) {
+:not(pre)>code, kbd, var, samp, pre:has(code) {
     // box-shadow: 0 0 2px var(--th-P-normal);
     border: 1px solid var(--th-P-border);
     border-radius: 3px;
 }
 
-:not(pre) > code, kbd { // inline code and kbd
+:not(pre)>code, kbd {
+    // inline code and kbd
     padding: 0px 4px;
     margin: 4px;
     color: var(--th-code-inline-fg);
     background-color: var(--th-code-inline-bg);
     white-space: nowrap;
-    
+
     @media (max-width: 400) {
         white-space: pre-wrap;
-    }
-}
-
-#shortcuts {
-    display: block;
-    
-    position: fixed;
-    bottom: 0;
-    right: 0;
-
-    
-    span {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        
-        min-width: 50px;
-        min-height: 50px;
-        
-        text-align: center;
-        font-size: 25pt;
-    }
-    
-    pre {
-        display: none;
-        text-align: left;
-        font-size: 1rem;
-        padding: 1em;
-        margin: 0;
-        white-space: pre-line;
-        background-color: var(--th-S-dark);
-        border: 1px solid var(--th-S-normal);
-    }
-
-    &:hover {
-        span {
-            display: none;
-        }
-        pre {
-            display: block;
-        }
     }
 }

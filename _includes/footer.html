@@ -1,17 +1,38 @@
-<div id="shortcuts">
-    <span>?</span>
-    <pre>
-        Shortcuts for codeblocks 
-        (affects hovered element or all with SHIFT)
+<footer>
+    {% if include.comments %}
+    <div id="comments" class="giscus"></div>
+    <script src="https://giscus.app/client.js" data-repo="T3sT3ro/T3sT3ro.github.io"
+        data-repo-id="MDEwOlJlcG9zaXRvcnk3OTc5MjkzNA==" data-category="comments" data-category-id="DIC_kwDOBMGLJs4CTJba"
+        data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0"
+        data-input-position="top" data-theme="transparent_dark" data-lang="en" data-loading="lazy"
+        crossorigin="anonymous" async>
+        </script>
+    {% endif %}
 
-        [L] - toggle line numbers
-        [W] - wrap long lines
-        [F] - fit codeblock to window size
-        [R] - reset properties
-    </pre>
+    <small id="copyright">Page made by yours trully ©2022.</small>
+</footer>
+
+
+<div id="shortcuts">
+    <a href="#" title="back to top"><i class="fa-regular fa-chevron-up fa-fw"></i></a>
+    <a href="https://github.com/T3sT3ro" title="Visit my github!"><i class="fa-brands fa-github fa-fw"></i></a>
+
+    <div class="help">
+        <i class="fa-solid fa-question fa-fw"></i>
+        <pre>
+            Shortcuts for codeblocks
+            (affects hovered element or all with SHIFT)
+            [L] - toggle line numbers
+            [W] - wrap long lines
+            [F] - fit codeblock to window size
+            [R] - reset properties
+        </pre>
+    </div>
 </div>
 
 <!-- jQuery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js"
+    integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script src="/assets/js/codeblocks-enhancements.js"></script>
