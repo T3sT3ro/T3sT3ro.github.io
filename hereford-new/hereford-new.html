@@ -1,3 +1,6 @@
+---
+layout: none
+---
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link href="https://fonts.googleapis.com/css?family=Roboto+Slab:400,700" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
     <title>hereford-map</title>
     <style>
 body{font-family:'Roboto Slab',serif;color:#eee;background:#222;font-weight:400;margin:8px}*{box-sizing:border-box}label{text-transform:uppercase;font-size:1.5em;font-weight:700}aside{top:50%;float:left;width:18%;min-width:260px;margin:0 1%}#sidepanel{padding:30px;background:#111}main{margin-left:20%;width:80%}@media screen and (max-width:1000px){aside,main{width:100%}aside{margin:auto;float:none}main{margin:10px auto}}.container{display:block;position:relative;padding-left:35px;margin-bottom:12px;cursor:pointer;font-size:1.2em;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.container input{position:absolute;opacity:0;cursor:pointer}.checkmark{position:absolute;top:0;left:0;height:25px;width:25px;background-color:#333}a.header,a.header img{width:100%}input[type=radio]+.checkmark{border-radius:50%}.container:hover input~.checkmark{background-color:#555}.container input:checked~.checkmark{background-color:#999}.wrap-collabsible{margin-bottom:1.2rem 0}input[type=checkbox]{display:none}.lbl-toggle{display:block;opacity:.75;cursor:pointer;transition:all .25s ease-out}.lbl-toggle:hover{opacity:1}.lbl-toggle::before{content:' ';display:inline-block;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:5px solid currentColor;vertical-align:middle;margin-right:.7rem;transform:translateY(-2px);transition:transform .2s ease-out}.toggle:checked+.lbl-toggle::before{transform:rotate(90deg) translateX(-3px)}.collapsible-content{max-height:0;overflow:hidden;transition:max-height .25s ease-in-out}.toggle:checked+.lbl-toggle+.collapsible-content{max-height:1000px}.collapsible-content .content-inner{padding:.5rem 1rem}hr{border:0;height:0;border-top:1px solid #0002;border-bottom:1px solid #fff5}#display{height:98vh;border:3px dashed #111;overflow:auto;position:relative}img.layer,img.legend{position:absolute;left:0;right:0;display:none}img.legend{display:block}a.header{max-width:600px;margin:20px auto;display:block}
@@ -16,7 +19,7 @@ body{font-family:'Roboto Slab',serif;color:#eee;background:#222;font-weight:400;
 
 <body>
     <aside>
-        <a href="/index.html" class="header"><img src="/assets/header.svg" alt="PLACEHOLDER"></a>
+        {% include header.html %}
         <div id="sidepanel">
 
             <div class="wrap-collabsible">
@@ -36,11 +39,12 @@ body{font-family:'Roboto Slab',serif;color:#eee;background:#222;font-weight:400;
                     </div>
                 </div>
             </div>
-            <script type="text/javascript" src="config.json"></script>
+            <script type="text/json" src="config.json"></script>
             <script src="json-load.js"></script>
 
         </div>
     </aside>
+    This page is old AF and I will probably remove it one day...
     <main id="main">
         <div id="display">
         </div>

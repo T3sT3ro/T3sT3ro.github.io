@@ -1,6 +1,6 @@
 <header>
 
-  <a href="/"><!-- <span>{{ site.title }}</span> -->
+  <a href="/">
     <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
       <rect id="leftEye" x="2" y="8.506" width="2" height="1.5" style="stroke: rgb(0, 0, 0); fill-rule: nonzero; stroke-width: 0px;"></rect>
       <rect id="rightEye" x="12" y="8.506" width="2" height="1.494" style="stroke-width: 0px;"></rect>
@@ -8,22 +8,8 @@
     </svg>
 
     {%- comment -%}
-
-      <img src="/assets/images/header.svg" alt="PLACEHOLDER">
-      <!-- From https://css-tricks.com/snippets/svg/svg-knockout-text/ -->
-
-
-      <!-- To check out: https://stackoverflow.com/questions/13932946/transparent-text-cut-out-of-background -->
-      <svg class="knockout-text-container" width="100%" height="100%">
-
-      <rect class="knockout-text-bg" width="100%" height="100%" x="0" y="0" 
-      mask="url(#knockout-text)" title="k"/>
-
-      <mask id="knockout-text">
-      <rect width="100%" height="100%" fill="#fff" x="0" y="0" />
-      <text x="50%" y="50%" fill="#000" text-anchor="middle">-.-</text>
-      </mask>
-      </svg>
+    <!-- From https://css-tricks.com/snippets/svg/svg-knockout-text/ -->
+    <!-- To check out: https://stackoverflow.com/questions/13932946/transparent-text-cut-out-of-background -->
     {%- endcomment -%}
   </a>
 </header>

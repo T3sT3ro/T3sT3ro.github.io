@@ -241,7 +241,7 @@ footer {
         mask-image: linear-gradient(white 250px 220px, transparent 300px);
         
 
-        & :first-of-type(h1) {
+        & :first-child {
             margin-top: 0;
         }
         

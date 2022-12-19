@@ -1,9 +1,9 @@
 {
     "floors": [
-        {"alias": "basement",  "value": "B"},
+        {"alias": "basement",  "value": "B", "skip": ["hatch-floor", "window", "droneholes"]},
         {"alias": "1st floor", "value": "1F"},
         {"alias": "2nd floor", "value": "2F"},
-        {"alias": "3rd floor", "value": "3F"}
+        {"alias": "3rd floor", "value": "3F", "skip": ["hatch-ceiling", "droneholes"]}
     ],
     "modes": [
         {"alias":"floor hatch",         "value": "hatch-floor"},

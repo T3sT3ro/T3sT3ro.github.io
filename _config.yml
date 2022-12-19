@@ -47,6 +47,7 @@ defaults:
       path: ""
     values:
       layout: post
+      comments: true
 
 
 # TODO: add comments to posts via giscuis https://www.freecodecamp.org/news/github-discussions-as-chat-system/

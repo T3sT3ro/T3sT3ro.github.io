@@ -48,6 +48,7 @@ $.getJSON('config.json', function (data) {
 
         // layers images
         for (const j in data.modes) {
+            if(data.floors[i]?.skip?.includes(data.modes[j].value)) continue;
             var layer = data.modes[j];
             var imgsrc = `./${floor.value}/${floor.value}-${layer.value}.png`;
             // check for existence of layer
