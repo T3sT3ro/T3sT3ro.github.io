@@ -2,28 +2,28 @@
 title: TODO
 layout: post
 permalink: /todo
-lastmod: 2022-12-17T11:54:17.056Z
+lastmod: 2022-12-19T13:41:06.481Z
 ---
 
 - [x] time using `<time>`
 - [ ] links and buttons
   - [ ] codepen
-  - [ ] github
+  - [x] github
   - [ ] linkedin?
 - [ ] breathing widget
 - [x] header eyes following and animation
 - [x] font jumping FOUT, FOIT
-- [ ] "back" button
+- [x] "back" button
 - [ ] search page
 - [ ] functional tags
 - [x] inline code format
 - [x] `<kbd>` style
 - [ ] smooth scroll snap
-- [ ] fontawesome
+- [x] fontawesome
 - [ ] checkbox styling
 - [x] help icon displaying keyboard shortcuts
 - [x] fix resizing of code elements at small sizes
-- [ ] comments via giscuis
+- [x] comments via [giscus](https://giscus.app/)
 - [x] shadow to card
 - [x] line numbers
   - [x] more consistent formatting

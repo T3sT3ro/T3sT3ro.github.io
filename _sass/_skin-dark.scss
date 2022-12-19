@@ -48,6 +48,20 @@
     --th-breather-size-out: 5vh;
 }
 
+@mixin elevate-1 {
+    backdrop-filter: blur(2px);
+    box-shadow: /* 0 0 1px var(--th-P-normal), */0 0 10px black;
+    border-radius: 2px;
+    outline: 1px solid var(--th-P-border-semitrans);
+}
+
+@mixin elevate-2 {
+    backdrop-filter: blur(2px);
+    border-radius: 6px;
+    box-shadow: 0 0 12px #000;
+    outline: 1px solid var(--th-P-border-semitrans);
+}
+
 // Elevations from M3
 // @mixin elevation-0 { opacity: 0%;   box-shadow: 0 0 0dp #000;   }
 // @mixin elevation-1 { opacity: 5%;   box-shadow: 0 0 1dp #000;   }

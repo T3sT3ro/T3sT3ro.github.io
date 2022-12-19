@@ -4,11 +4,12 @@ tags:
   - docker
   - jekyll
 date: 2022-11-02T09:15:23.457Z
-lastmod: 2022-12-15T21:05:39.238Z
+lastmod: 2022-12-19T09:08:56.427Z
 type: default
 slug: jekyll-docker-compose-vscode-<3
 description: Keep your global scope clean — setup local jekyll development with Docker,
   Compose and VSCode instead of locally installing ruby and other crap.
+comments: true
 ---
 
 If you:
