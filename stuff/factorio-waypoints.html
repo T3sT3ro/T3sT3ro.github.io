@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        display: flex;
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        min-height: 100vh;
+        max-width: 100%;
+        height: fit-content;
+        font-family: "Rubik", sans-serif;
+    }
+
+    aside {
+        background-color: #313031;
+        border: 4px solid hwb(0 33% 67%);
+        border-style: ridge;
+        box-shadow: 0px 0 5px black;
+        color: lightgray;
+        padding: 1em;
+        max-width: min(40vw, 430px);
+        min-width: 360px;
+        display: flex;
+        flex-direction: column;
+        max-height: 100vh;
+        overflow-y: auto;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5 {
+        text-transform: uppercase;
+        color: orange;
+    }
+
+    h4 {
+        margin-bottom: 0.2em;
+    }
+
+    kbd {
+        background-color: #222;
+        border-radius: 3px;
+        border: 1px solid #fff;
+        margin: 0 0.2em;
+        color: #eee;
+        display: inline-block;
+        font-size: 1em;
+        font-weight: 700;
+        line-height: 1;
+        padding: 2px 4px;
+        white-space: nowrap;
+    }
+
+    summary li {
+        margin: initial;
+    }
+
+    main {
+        display: flex;
+        flex-grow: 1;
+        flex-direction: column;
+    }
+
+    main .center {
+        margin: auto auto;
+        padding: 1em;
+    }
+
+    main .center canvas {
+        display: block;
+        outline: 1px solid black;
+        margin: auto auto 1em auto;
+    }
+
+    main .center pre {
+        white-space: pre-line;
+    }
+
+    #controls>ul {
+        list-style-type: none;
+        padding-left: 0;
+    }
+
+    .settings li {
+        display: flex;
+        align-items: center;
+        margin: .2em 0;
+    }
+
+    .settings li label {
+        width: 180px;
+    }
+
+    .settings li pre {
+        width: 4ch;
+        margin: 0 auto 0 .5em;
+        font-weight: bold;
+    }
+
+    #controls li {
+        display: flex;
+        place-items: self-start;
+    }
+
+    .bottom {
+        margin-top: auto;
+    }
+
+    #command-stack {
+        border: 1px solid orange;
+        border-left: 5px solid orange;
+        height: 200px;
+        max-height: 400px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #command-stack ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    #command-stack li {
+        padding-left: 5px;
+        margin: 2px 0;
+        background-color: #444;
+    }
+
+    ::-webkit-scrollbar {
+        width: 2px;
+        background-color: #111;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: orange;
+        border-radius: 3px;
+    }
+
+    #command-stack ul#redo-stack {
+        margin-top: auto;
+    }
+
+    #command-stack ul#redo-stack>li:last-child {
+        border-bottom: 1px solid #a55;
+    }
+
+    #command-stack ul#redo-stack li {
+        color: #a55;
+        background-color: #222;
+    }
+
+    ol,
+    ul {
+        padding-left: 1.4em;
+    }
+
+    li {
+        margin-top: .2em;
+    }
+
+    .help {
+        content: "(?)";
+        color: orange;
+        margin-left: auto;
+        display: inline-block;
+        cursor: help;
+    }
+</style>
+
+<body>
+    <aside>
+        <div>
+            <h3>Controls:</h3>
+            <ul>
+                <li>By default the <strong>SMART</strong> mode is enabled for detecting rotation/axis. </li>
+                <li>Draw belts normally with <kbd>LMB</kbd>, rotate/swap axis with <kbd>R</kbd>
+                    and erase with <kbd>RMB</kbd>.
+                </li>
+                <li>Press <kbd>Ctrl</kbd>+<kbd>LMB</kbd> to place waypoints</li>
+                <li>Press <kbd>LMB</kbd> to add a waypoint and place tiles.</li>
+                <li>Press <kbd>Ctrl</kbd>+<kbd>LMB</kbd> instead to create waypoint without tiles.</li>
+                <li>Keep modifying path <strong>OR</strong> press <kbd>Q</kbd>.</li>
+                <li>Move mouse to move waypoint. A cursor will be shown snapped to the guide showing where the waypoint
+                    will be placed.</li>
+                </li>
+                <!-- <li>Holding <kbd>Shift</kbd> while building would place ghosts. Pressing <kbd>LMB</kbd> would place
+                    entities in reach in the game (just a concept not implemented)</li> -->
+            </ul>
+
+            <details>
+                <summary>Legend</summary>
+                <ul>
+                    <li><span style="color:#888">Gray/darker</span> box <br>— cursor, snapped to guides, places tiles</li>
+                    <li><span style="color:orange">orange</span> boxes <br>— belts</li>
+                    <li><span style="color:#0096FF; text-decoration: solid underline">Solid blue</span> lines <br>— locked guides, snaps the cursor</li>
+                    <li><span style="color:#0096FF;">Solid blue</span> small square dot <br>— origin against which guide rotates</li>
+                    <li><span style="color:#0096FF; text-decoration: dashed underline">Dashed blue</span> lines - unlocked guides, can move/rotate</li>
+                    <li><span style="color:#0096FF">Blue</span> square in smart mode <br>— radius for smart detection of axis. Bring cursor to to it unlock the guide.</li>
+                    <li><span style="color:darkturquoise">Cyan</span> cursor <br>— cursor for placing a waypoint</li>
+                    <li><span style="color:#0d0e">Green</span> cursor <br>— cursor for placing a waypoint together with tiles</li>
+                    <li><span style="color:#a000a0">Purple</span> box <br>— waypoint</li>
+                    <li><span style="color:#a000a0; text-decoration: dashed underline">Purple dashed</span> line <br>— waypoints path</li>
+                    <li><span style="color:magenta">Magenta</span> box <br>— last placed waypoint</li>
+                </ul>
+
+            </details>
+        </div>
+
+        <div id="controls">
+            <h4>Axis snapping</h4>
+            <ul>
+                <li>
+                    <input type="radio" name="snap-mode" id="snap-mode-vanilla" data-keybind="1" value="vanilla">
+                    <kbd>1</kbd>
+                    <label for="snap-mode-vanilla">
+                        vanilla fast belt bending with <kbd>R</kbd>
+                    </label>
+                </li>
+                <li>
+                    <input type="radio" name="snap-mode" id="snap-mode-smart" data-keybind="2" value="smart" checked>
+                    <kbd>2</kbd>
+                    <label for="snap-mode-smart">
+                        smart snap by movement and <kbd>R</kbd> to flip
+                        <small class="help"
+                            title="Detect snap axis by initial mouse movement.&#10;Move mouse back to snap's origin to change the axis or use [R] to change axis.">(?)</small>
+                    </label>
+
+                </li>
+                <li>
+                    <input type="radio" name="snap-mode" id="snap-mode-closest" data-keybind="3" value="closest">
+                    <kbd>3</kbd>
+                    <label for="snap-mode-closest">
+                        snap to closest axis
+                        <small class="help" title="Cursor is snapped to the closer axis guide.">(?)</small>
+                    </label>
+                </li>
+                <!-- <li>
+                    <input type="radio" name="snap-mode" id="snap-mode-none" data-keybind="4" value="none">
+                    <kbd>4</kbd>
+                    <label for="snap-mode-none" title="Tiles are placed without any restrictions">
+                        no snapping (legacy)
+                    </label>
+                </li> -->
+                <!-- <li>
+                    <input type="radio" name="snap-mode" id="snap-mode-flip" data-keybind="3" value="flip">
+                    <kbd>3</kbd> <label for="snap-mode-flip"
+                        title="Initial axis is vertical, flip it using shortcut.">flip at snap's origin with
+                        <kbd>F</kbd></label>
+                </li> -->
+            </ul>
+            <ul class="settings">
+                <li>
+                    <label for="grid-size">grid-size: </label>
+                    <input type="range" name="grid-size" id="grid-size-slider" min="10" max="40" step="1" value="15">
+                    <pre id="grid-size-value">???</pre>
+                </li>
+                <li>
+                    <label for="smart-radius-slider">
+                        smart axis radius:
+                        <small class="help"
+                            title="minimal distance from mouse click to smart axis. Applies only in 'smart' mode.">(?)</small>
+                    </label>
+                    <input type="range" name="smart-radius" id="smart-radius-slider" min="0.5" max="6" step=".5"
+                        value="1.5">
+                    <pre id="smart-radius-value">???</pre>
+                </li>
+                <li>
+                    <label for="snap-eraser">
+                        snap eraser:
+                        <small class="help" title="Erasing with [RMB] will also snap to guides.">(?)</small>
+                    </label>
+                    <input type="checkbox" name="snap-eraser" id="snap-eraser">
+                    <kbd>e</kbd>
+                </li>
+            </ul>
+        </div>
+
+        <div class="bottom">
+            <h3>Undo/Redo stack </h3>
+            <ul>
+                <li>Undo: <kbd>Ctrl</kbd>+<kbd>Z</kbd></li>
+                <li>Redo: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> or <kbd>Ctrl</kbd>+<kbd>Y</kbd></li>
+            </ul>
+
+            <code>history size: <span id="hist-count">0</span></code>
+            <div id="command-stack">
+                <ul id="redo-stack"></ul>
+                <ul id="undo-stack"></ul>
+            </div>
+        </div>
+    </aside>
+    <main>
+        <div class="center">
+            <canvas id="main-canvas" width=600px height=600px></canvas>
+            <p>Debug:</p>
+            <canvas id="debug-canvas" width=600px height=150px></canvas>
+        </div>
+    </main>
+
+</body>
+
+<script>
+    // HELPERS AND UTILS -------------------------------------------------------
+    let html = {
+        /** @type {HTMLCanvasElement} */
+        canvas: document.getElementById('main-canvas'),
+        /** @type {HTMLCanvasElement} */
+        debugCanvas: document.getElementById('debug-canvas'),
+        smartRadiusSlider: document.getElementById('smart-radius-slider'),
+        smartRadiusValue: document.getElementById('smart-radius-value'),
+        gridSizeSlider: document.getElementById('grid-size-slider'),
+        gridSizeValue: document.getElementById('grid-size-value'),
+        snapEraser: document.querySelector('#snap-eraser'),
+        histCnt: document.getElementById('hist-count'),
+        undoLog: document.getElementById('undo-stack'),
+        redoLog: document.getElementById('redo-stack'),
+    };
+
+
+    const THEME = {
+        gridColor: 'gray',
+        gridWidth: .5,
+        cursorColor: '#0004',
+        tileColor: 'gold',
+        cursorWaypointColor: '#0d0e',
+        cursorWaypointAlternativeColor: 'darkturquoise',
+        cursorWaypointDash: cellSize => [cellSize / 4, ... new Array(7).fill(2 * cellSize / 4)],
+        waypointDashWidth: 4,
+        waypointColor: 'purple', //'#ed19',
+        lastWaypointColor: 'magenta', //'#ed19',
+        waypointPathDash: [8, 8],
+        waypointPathDash: [10, 10], //[20, 4, 4, 20],
+        guideColor: 'navy',
+        guideFocusedColor: 'blue',
+        guideDash: [10, 6],
+        guideWidth: 1.5,
+        flagPresentColor: 'green',
+        flagMissingColor: 'red',
+        debugFont: '15px monospace',
+    };
+
+    class Point extends Array {
+        static #swizzleIndices = { x: 0, y: 1, z: 2, w: 3, u: 0, v: 1, s: 2, t: 3, 0: 0, 1: 1, 2: 2, 3: 3 };
+        static #swizzle = k => Point.#swizzleIndices[k];
+        static #swizzleAll(swizzle) { // returns indices of swizzle or null if invalid
+            return swizzle.split?.(/,?/)?.map(Point.#swizzle)?.reduce((ok, k, _, a) => ok && k >= 0 ? a : null, []);
+        }
+        static #spread(xs, i) { return xs?.length === undefined ? xs : xs.length == 1 ? xs[0] : xs[i]; }
+        static #unwrap(xs) { return xs?.length > 1 ? new Point(...xs) : xs?.length == 1 ? xs[0] : xs; }
+        static #proxify(obj) {
+            return new Proxy(obj, {
+                get(o, k, r) { return Reflect.get(o, k, r) ?? Point.#unwrap(Point.#swizzleAll(k)?.map(k => o[k])); },
+                set(o, k, v) { return Point.#swizzleAll(k)?.every((k, i) => (o[k] = Point.#spread(v, i), true)) ?? false; },
+            });
+        }
+        equals(...vals) {
+            vals = vals?.length == 1 && typeof vals[0] == 'object' ? vals[0] : vals;
+            return vals.every((v, i) => this[i] == v) && vals.length == this.length;
+        }
+        map(...args) { return new Point(Array.prototype.map.call(this, ...args)); }
+        zip(zipper = (...vals) => vals, ...others) {
+            return this.map((x, i) => zipper(x, ...Array.prototype.map.call(others, o => o?.[i])));
+        }
+        plus(...deltas) { return this.zip((x, d) => x + (d ?? 0), deltas); }
+        times(...f) { return f.length == 1 ? this.map(x => x * f[0]) : this.zip((x, f) => x * (f ?? 1), f); }
+        constructor(...vals) { // (1, 2...), ([1, 2]), ({x:1, y:2})
+            super();
+            return vals.reduce((o, v, i) => ((typeof v == 'object' && v !== null) ? Object.assign(o, v) : o[i] = v, o), Point.#proxify(this));
+        }
+    }
+
+    const undoStack = new class UndoStack {
+        undoStack = [];
+        redoStack = [];
+        pendingCommit = null;
+
+        /** @param {()=>[string, ...any]} perform @param {()=>{}} revert @param {(...[string, ...any])=>{string}} resultCombine */
+        commit(perform = () => "unnamed action", revert, resultsCombine = (...results) => results,) {
+            if (!this.pendingCommit) {
+                let commit = this.pendingCommit = { perform: perform, rollbacks: [], results: [] };
+                commit.rollbacks.push(revert); // wil be added at the end 
+                commit.results.push(perform());
+                this.pendingCommit = null;
+                let revertAll = () => commit.rollbacks.slice(0).reverse().forEach(rollback => rollback());
+
+                let logNode = document.createElement('li');
+                logNode.innerHTML = resultsCombine(...commit.results);
+                this.undoStack.push({ perform: perform, revert: revertAll, logNode: logNode });
+                html.undoLog.prepend(logNode);
+                this.redoStack = [];
+                html.redoLog.innerHTML = '';
+                html.histCnt.innerHTML = this.undoStack.length + this.redoStack.length;
+                return;
+            } else {
+                this.pendingCommit.rollbacks.push(revert);
+                this.pendingCommit.results.push(perform());
+            }
+
+        }
+        undo() {
+            let last = this.undoStack.pop();
+            if (last) {
+                last.revert();
+                this.redoStack.push(last);
+                html.redoLog.append(last.logNode);
+                last.logNode.scrollIntoView({ block: "center" });
+            }
+        }
+        redo() {
+            let last = this.redoStack.pop();
+            if (last) {
+                let commit = this.pendingCommit = { perform: last.perform, rollbacks: [], results: [] };
+                commit.rollbacks.push(last.revert); // wil be added at the end 
+                commit.results.push(last.perform());
+                this.pendingCommit = null;
+
+                let revertAll = () => commit.rollbacks.slice(0).reverse().forEach(rollback => rollback());
+                this.undoStack.push({ perform: last.perform, revert: revertAll, logNode: last.logNode });
+
+                html.undoLog.prepend(last.logNode);
+                last.logNode.scrollIntoView({ block: "center" });
+            }
+        }
+    }
+
+    const flags = { HOVER: false, DRAW: false, ERASE: false, WAYPOINTS: false };
+
+    const Tiles = { EMPTY: null, BELT: 1 };
+    const SnapMode = { VANILLA: 'vanilla', SMART: 'smart', CLOSEST: 'closest' };
+
+    // SETTINGS AND DATA BINDING -----------------------------------------------
+    var gridSize = setGridSize(+html.gridSizeSlider.value);
+    function setGridSize(size) {
+        html.gridSizeSlider.value = size;
+        html.gridSizeValue.textContent = size;
+        return gridSize = size;
+    }
+    html.gridSizeSlider.addEventListener('input', e => { setGridSize(e.target.value); render(); });
+
+    var smartRadius = setSmartRadius(+html.smartRadiusSlider.value);
+    function setSmartRadius(r) {
+        html.smartRadiusSlider.value = r;
+        html.smartRadiusValue.textContent = r;
+        return smartRadius = r;
+    }
+    html.smartRadiusSlider.addEventListener('input', e => setSmartRadius(e.target.value));
+
+    var snapEraser = html.snapEraser.checked;
+    html.snapEraser.addEventListener('change', e => snapEraser = e.target.checked);
+
+    var snapMode = setSnapMode(document.querySelector(`input[name="snap-mode"]:checked`).value);
+    function setSnapMode(mode) {
+        document.querySelector(`input[name="snap-mode"][value="${mode}"]`).checked = true;
+        return snapMode = mode;
+    }
+    document.querySelectorAll(`input[name="snap-mode"]`).forEach(e =>
+        e.addEventListener('change', e => setSnapMode(e.target.value)));
+
+    function cellSize() { return html.canvas.width / gridSize; }
+
+    var mPos = new Point(0, 0);
+    var gPos = new Point(0, 0);
+    var cPos = new Point(0, 0);
+
+    function updatePos(mouseX, mouseY) {
+        const rect = html.canvas.getBoundingClientRect()
+        mPos.xy = [mouseX - rect.left, mouseY - rect.top];
+        gPos.xy = mPos.map(xi => Math.floor((xi - .5) / cellSize()));
+    }
+
+    function setTiles(start, end, tile) {
+        let previousTiles = {};
+        let queueUpdate = p => level[p] != tile ? (previousTiles[p] = level[p], 1) : 0;
+
+        let deltas = end.zip((g, c) => g - c, start);
+        let toUpdate = 1 + Math.max(...deltas.map(Math.abs));
+        let updated = queueUpdate(start);
+        if (start.x == end.x || start.y == end.y) {
+            for (let i = 1; i < toUpdate; i++)
+                updated += queueUpdate(start = start.plus(...deltas.map(Math.sign)));
+        }
+        if (!start.equals(end)) updated += queueUpdate(end);
+
+        if (updated == 0) return [0, toUpdate];
+
+        let action = tile == Tiles.BELT ? `<span style="color:LimeGreen">put</span>` : `<span style="color:coral">erased</span>`;
+
+        for (const p in previousTiles)
+            undoStack.commit(() => {
+                tile == Tiles.EMPTY ? delete level[p] : level[p] = tile;
+                return [`${action} tile [${p}]`, p];
+            }, () => {
+                previousTiles[p] == Tiles.EMPTY ? delete level[p] : level[p] = previousTiles[p];
+            }, ([msg, rest]) => msg);
+        // }
+        return [updated, toUpdate];
+    }
+
+    /** @type {Point | null} */
+    var snapGuides = new Point(null, null); // specifies coordinate overrides
+    var snapOrigin = null;
+
+    function snap(pos, snapGuides) { // snaps position to snap axis
+        return pos.zip((xi, si) => si ?? xi, snapGuides);
+    }
+
+    function distanceToOrigin() { // returns 
+        return snapOrigin.zip((xi, mi) => Math.abs(xi + .5 - mi), mPos.times(1 / cellSize()));
+    }
+
+    function getDetectionRadius() {
+        switch (snapMode) {
+            case SnapMode.VANILLA: return -1;
+            case SnapMode.SMART: return smartRadius;
+            case SnapMode.CLOSEST: return Infinity;
+        }
+    }
+
+    var guideLocked = false;
+    function updateSnapGuides() {
+        if (!flags.DRAW && !(flags.ERASE && snapEraser)) {
+            if (snapGuides.equals(null, null) && snapMode == SnapMode.VANILLA)
+                snapGuides.xy = [gPos.x, null];
+            if (!snapOrigin) snapGuides = snapGuides.map((x, i) => x == null ? null : gPos[i]);
+        }
+
+        if (!snapOrigin) return;
+
+        let [dx, dy] = distanceToOrigin();
+        let r = getDetectionRadius();
+
+        guideLocked = true;
+        if (dx < r && dy < r) {
+            guideLocked = false;
+            snapGuides.xy = dx <= dy ? [snapOrigin.x, null] : [null, snapOrigin.y];
+        }
+        else if (!snapGuides && dy >= r) snapGuides.xy = [snapOrigin.x, null];
+        else if (!snapGuides && dx >= r) snapGuides.xy = [null, snapOrigin.y];
+    }
+
+    function updateCursor() { // returns previous cursor
+        updateSnapGuides();
+
+        let prevCursor = cPos.xy;
+        cPos = snapOrigin ? snap(gPos, snapGuides) : gPos.xy; // cursor;
+
+        return prevCursor;
+    }
+
+    function updateOrigin(newOrigin) {
+        snapOrigin = newOrigin;
+        snapGuides = snapGuides.map((xi, i) => xi != null ? newOrigin?.[i] : xi);
+    }
+
+
+    function updateLevel(prevCursor) {
+        if ((flags.DRAW || flags.ERASE) && !flags.WAYPOINTS && !waypoints) {
+            setTiles(prevCursor, cPos, flags.DRAW ? Tiles.BELT : Tiles.EMPTY);
+        } else if (waypoints && flags.ERASE && !flags.WAYPOINTS) {
+            setTiles(gPos, gPos, Tiles.EMPTY);
+        }
+    }
+
+    function addWaypoint(fillTiles) {
+        if (cPos.equals(waypoints?.at(-1))) return;
+        let previousOrigin = waypoints?.at(-1);
+        let previousWaypoints = waypoints;
+        let waypointPosition = cPos.xy;
+
+        undoStack.commit(
+            () => {
+                updateCursor();
+                if (!waypoints) waypoints = [];
+                waypoints = [...waypoints, waypointPosition];
+                updateOrigin(waypointPosition);
+                //FIXME update guides
+                let msg = jsonify`create waypoint <span style="color:darkcyan">${waypointPosition}</span>`;
+                if (waypoints.length >= 2) {
+                    let [A, B] = waypoints.slice(-2);
+                    if (fillTiles) {
+                        let [updated, total] = setTiles(A, B, Tiles.BELT);
+                        msg += ` updating ${updated}/${total} tiles:`;
+                    }
+                    return msg;
+                }
+                return msg;
+            },
+            () => {
+                waypoints = previousWaypoints;
+                updateOrigin(previousOrigin);
+                updateCursor();
+            },
+            (...results) => results.length == 1 ? results : results.at(-1) +
+                `<ul>${results.map(([msg]) => `<li>${msg}</li>`).slice(0, -1).join('')}</ul>`
+        );
+    }
+
+
+
+
+
+    html.canvas.addEventListener('mousemove', onMouseMove);
+    function onMouseMove(evt) {
+        flags.HOVER = true;
+
+        updatePos(evt.clientX, evt.clientY);
+        updateLevel(updateCursor());
+        render();
+    };
+
+    const level = {};
+    var waypoints; // nullable
+    html.canvas.addEventListener('mousedown', startAction);
+    function startAction(evt) {
+        flags.HOVER = true;
+        flags.DRAW = evt.buttons == 1;
+        flags.ERASE = evt.buttons == 2;
+        flags.WAYPOINTS = evt.ctrlKey;
+
+        updatePos(evt.clientX, evt.clientY);
+        if ((flags.DRAW || snapEraser && flags.ERASE || flags.WAYPOINTS) && !waypoints)
+            snapOrigin = cPos.xy;
+        updateLevel(updateCursor());
+        if (flags.DRAW && (flags.WAYPOINTS || waypoints))
+            addWaypoint(!flags.WAYPOINTS);
+        render();
+    };
+
+    document.addEventListener('mouseup', onActionFinish);
+    function onActionFinish(evt) {
+        flags.DRAW = flags.ERASE = false;
+        if (!waypoints)
+            snapOrigin = null;
+        render();
+    }
+
+    function maskBy(values, mask) {
+        return values.map((xi, i) => xi == null ? mask?.[i] : null);
+    }
+
+    document.addEventListener('keydown', evt => {
+        if (evt.ctrlKey && evt.key == 'r') evt.preventDefault();
+        if (evt.key == 'Control') flags.WAYPOINTS = true;
+
+        if (evt.ctrlKey && evt.key == 'z') undoStack.undo();
+        if (evt.ctrlKey && evt.key == 'y' || evt.ctrlKey && evt.key == 'Z') {
+            undoStack.redo();
+            updateCursor();
+            render();
+        }
+
+        if (evt.key == 'r') {
+            // if (snapMode == SnapMode.VANILLA) {
+            if (snapOrigin && !waypoints) snapOrigin = cPos.xy;
+            snapGuides = maskBy(snapGuides, waypoints ? snapOrigin : cPos);
+            // } else
+            // snapGuides = maskBy(snapGuides, snapOrigin);
+            updateLevel(updateCursor());
+        }
+
+        if ('123'.includes(evt.key)) {
+            setSnapMode(document.querySelector(`input[data-keybind="${evt.key}"]`).value);
+            updateCursor();
+        }
+        if (evt.key == 'e') {
+            html.snapEraser.checked = !html.snapEraser.checked;
+            html.snapEraser.dispatchEvent(new Event('change'));
+        }
+        if (evt.key == 'q') {
+            if (waypoints) {
+                let oldWaypoints = waypoints;
+                let oldSnapOrigin = snapOrigin;
+                let oldSnapGuides = snapGuides.xy;
+                undoStack.commit(() => {
+                    updateCursor();
+                    waypoints = null;
+                    snapOrigin = null;
+                    snapGuides.xy = null;
+                    return "exited waypoint mode"
+                }, () => {
+                    waypoints = oldWaypoints;
+                    snapOrigin = oldSnapOrigin;
+                    snapGuides.xy = oldSnapGuides;
+                    updateCursor();
+                });
+            }
+        }
+
+        render();
+    })
+
+    document.addEventListener('keyup', evt => {
+        if (evt.key == 'Control')
+            flags.WAYPOINTS = false;
+        render();
+    });
+
+    // for clearing preview state
+    html.canvas.addEventListener('mouseout', evt => {
+        flags.HOVER = false;
+        render();
+    });
+
+    html.canvas.oncontextmenu = function (e) { e.preventDefault(); }
+
+
+
+
+
+    // RENDERING ---------------------------------------------------------------
+    // TODO show preview of undo/redo on hover
+
+    /**  @param {CanvasRenderingContext2D } ctx*/
+    function drawGrid(ctx) {
+        ctx.beginPath();
+        ctx.lineWidth = THEME.gridWidth;
+        ctx.strokeStyle = THEME.gridColor;
+        for (let x = 0; x <= html.canvas.width; x += cellSize()) {
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, html.canvas.height);
+        }
+        for (let y = 0; y <= html.canvas.height; y += cellSize()) {
+            ctx.moveTo(0, y);
+            ctx.lineTo(html.canvas.height, y);
+        }
+        ctx.stroke();
+    }
+
+
+    /**  @param {CanvasRenderingContext2D } ctx*/
+    function drawLevel(ctx) {
+        ctx.beginPath();
+        ctx.fillStyle = THEME.tileColor;
+        for (let x = 0; x < gridSize; x++) {
+            for (let y = 0; y < gridSize; y++) {
+                if (level[[x, y]])
+                    ctx.fillRect(x * cellSize(), y * cellSize(), cellSize(), cellSize());
+            }
+        }
+    }
+
+    /**  @param {CanvasRenderingContext2D } ctx*/
+    function drawCursor(ctx) {
+        if (flags.HOVER) {
+            ctx.save();
+            if (flags.WAYPOINTS || waypoints) {
+                ctx.strokeStyle = flags.WAYPOINTS ? THEME.cursorWaypointAlternativeColor : THEME.cursorWaypointColor;
+                let d = ctx.lineWidth = THEME.waypointDashWidth;
+                if (flags.WAYPOINTS) ctx.setLineDash(THEME.cursorWaypointDash(cellSize() + d));
+                ctx.strokeRect(...cPos.map(x => x * cellSize() - d / 2), cellSize() + d, cellSize() + d);
+            } else {
+                ctx.fillStyle = THEME.cursorColor; // gray;
+                ctx.fillRect(...cPos.times(cellSize()), cellSize(), cellSize());
+            }
+            ctx.fillStyle = 'black';
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+            ctx.strokeText(gPos, ...mPos.xy.plus(0, -10));
+            ctx.fillText(gPos, ...mPos.xy.plus(0, -10));
+            ctx.restore();
+        }
+    }
+
+    /**  @param {CanvasRenderingContext2D } ctx*/
+    function drawWaypoints(ctx) {
+        if (snapOrigin && waypoints) {
+            ctx.save();
+            // ctx.globalCompositeOperation = 'screen';
+            ctx.strokeStyle = THEME.waypointColor;
+            let d = ctx.lineWidth = THEME.waypointDashWidth * 15 / gridSize;
+            let lastWaypoint = null;
+            for (const [i, waypoint] of Object.entries(waypoints)) {
+                if (lastWaypoint) {
+                    ctx.setLineDash(THEME.waypointPathDash.map(x => x * 15 / gridSize));
+                    ctx.moveTo(...lastWaypoint.plus(.5, .5).times(cellSize()));
+                    ctx.lineTo(...waypoint.plus(.5, .5).times(cellSize()));
+                    ctx.stroke();
+                }
+                ctx.setLineDash(THEME.cursorWaypointDash(cellSize() - d * 2));
+                if (i == waypoints.length - 1)
+                    ctx.strokeStyle = THEME.lastWaypointColor;
+                ctx.strokeRect(...waypoint.times(cellSize()).plus(d, d), cellSize() - d * 2, cellSize() - d * 2);
+                lastWaypoint = waypoint;
+            }
+            ctx.restore();
+        }
+    }
+
+    /**  @param {CanvasRenderingContext2D } ctx*/
+    function drawSnap(ctx) {
+        // if (!flags.HOVER) return;
+        if (!snapOrigin && snapMode != SnapMode.VANILLA || snapGuides.equals(null, null) ||
+            flags.ERASE && !snapEraser) return;
+        ctx.save();
+        ctx.beginPath();
+        ctx.lineWidth = THEME.guideWidth;
+        // draw snapOrigin
+        if (snapOrigin /* && snapMode != SnapMode.VANILLA */) {
+            ctx.fillStyle = THEME.guideColor;
+            ctx.fillRect((snapOrigin[0] + .5) * cellSize() - 3, (snapOrigin[1] + .5) * cellSize() - 3, 6, 6);
+        }
+
+        // draw smart drawGuides
+        if (!snapOrigin && snapGuides || snapOrigin && !snapGuides || !guideLocked)
+            ctx.setLineDash(THEME.guideDash);
+        if (snapOrigin && snapMode == SnapMode.SMART) {
+            ctx.strokeStyle = snapGuides ? THEME.guideColor : THEME.guideFocusedColor;
+            let [offset, size] = [+.5 - smartRadius, smartRadius * cellSize() * 2];
+            ctx.strokeRect(...snapOrigin.plus(offset, offset).times(cellSize()), size, size);
+        }
+        if (snapMode == snapMode.VANILLA || snapGuides) {
+            ctx.strokeStyle = THEME.guideColor;
+            let mins = snapGuides.map(xi => ((xi ?? -1) + .5) * cellSize());
+            let maxs = snapGuides.map(xi => ((xi ?? gridSize) + .5) * cellSize());
+            ctx.moveTo(...mins);
+            ctx.lineTo(...maxs);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+    }
+
+    /**  @param {CanvasRenderingContext2D } ctx*/
+    var debugCtx = html.debugCanvas.getContext('2d');
+    debugCtx.font = THEME.debugFont;
+
+    function jsonify(strings, ...args) {
+        return args.map((x, i) => strings[i] + JSON.stringify(x)) + strings.at(-1);
+    }
+
+    function drawDebug(ctx) {
+        ctx.clearRect(0, 0, html.debugCanvas.width, html.debugCanvas.height);
+
+        ctx.fillText(`mouse:  [${mPos.x}, ${mPos.y}]`, 0, 20);
+        ctx.fillText(`tile:   [${gPos.x}, ${gPos.y}]`, 0, 40);
+        ctx.fillText(`cursor: [${cPos.x}, ${cPos.y}]`, 0, 60);
+        ctx.save();
+        ctx.fillStyle = `blue`;
+        ctx.fillText(jsonify`snapOrigin: ${snapOrigin}`, 0, 80);
+        ctx.fillText(jsonify`snapGuides: ${snapGuides}`, 0, 100);
+        ctx.fillText(jsonify`waypoints: ${waypoints}`, 0, 120);
+        ctx.restore();
+
+        ctx.fillText(`flags:`, 300, 20);
+        ctx.save();
+        let i = 0;
+        for (const k in flags) {
+            ctx.fillStyle = flags[k] ? THEME.flagPresentColor : THEME.flagMissingColor;
+            ctx.fillText(`${k}: ${flags[k]}`, 320, 40 + 20 * i++);
+        }
+        ctx.restore();
+    }
+
+    var ctx = html.canvas.getContext('2d');
+
+    function render() {
+        window.requestAnimationFrame(() => {
+            ctx.clearRect(0, 0, html.canvas.width, html.canvas.height);
+
+            drawGrid(ctx);
+            drawLevel(ctx);
+            drawWaypoints(ctx);
+            drawSnap(ctx);
+            drawCursor(ctx);
+
+            ctx.stroke();
+
+            drawDebug(debugCtx);
+        });
+    }
+
+    render();
+
+</script>
+
+</html>
