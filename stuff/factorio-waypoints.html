@@ -188,14 +188,16 @@
         <div>
             <h3>Controls:</h3>
             <ul>
-                <li>By default the <strong>SMART</strong> mode is enabled for detecting rotation/axis. </li>
+                <li>By default the <strong>SMART</strong> mode is enabled for detecting rotation/axis.</li>
                 <li>Draw belts normally with <kbd>LMB</kbd>, rotate/swap axis with <kbd>R</kbd>
                     and erase with <kbd>RMB</kbd>.
                 </li>
-                <li>Press <kbd>Ctrl</kbd>+<kbd>LMB</kbd> to place waypoints</li>
+                <li>Press <kbd>Ctrl</kbd>+<kbd>LMB</kbd> to place waypoints.</li>
                 <li>Press <kbd>LMB</kbd> to add a waypoint and place tiles.</li>
+                <li>Rotate the snap guide with <kbd>R</kbd>.</li>
                 <li>Keep modifying path using controls above <strong>OR</strong> press <kbd>Q</kbd> to exit.</li>
-                <li>Move mouse to change the position of the cursor placing new waypoints. The cursor will be snapped to the guides.</li>
+                <li>Move mouse to change the position of the cursor placing new waypoints. The cursor will be snapped to
+                    the guides.</li>
                 </li>
                 <!-- <li>Holding <kbd>Shift</kbd> while building would place ghosts. Pressing <kbd>LMB</kbd> would place
                     entities in reach in the game (just a concept not implemented)</li> -->
@@ -204,16 +206,25 @@
             <details>
                 <summary>Legend</summary>
                 <ul>
-                    <li><span style="color:#888">Gray/darker</span> box <br>— cursor, snapped to guides, places tiles</li>
+                    <li><span style="color:#888">Gray/darker</span> box <br>— cursor, snapped to guides, places tiles
+                    </li>
                     <li><span style="color:orange">orange</span> boxes <br>— belts</li>
-                    <li><span style="color:#0096FF; text-decoration: solid underline">Solid blue</span> lines <br>— locked guides, snaps the cursor</li>
-                    <li><span style="color:#0096FF;">Solid blue</span> small square dot <br>— origin against which guide rotates</li>
-                    <li><span style="color:#0096FF; text-decoration: dashed underline">Dashed blue</span> lines - unlocked guides, can move/rotate</li>
-                    <li><span style="color:#0096FF">Blue</span> square in smart mode <br>— radius for smart detection of axis. Bring cursor to to it unlock the guide.</li>
+                    <li><span style="color:#0096FF; text-decoration: solid underline">Solid blue</span> lines <br>—
+                        locked guides, snaps the cursor</li>
+                    <li><span style="color:#0096FF;">Solid blue</span> small square dot <br>— origin against which guide
+                        rotates</li>
+                    <li><span style="color:#0096FF; text-decoration: dashed underline">Dashed blue</span> lines <br>—
+                        unlocked guides, can move/rotate</li>
+                    <li><span style="color:#0096FF; text-decoration: dotted underline">Dotted blue</span> lines <br>—
+                        a helper line projected from mouse position onto guide (cursor is a result of this projection).</li>
+                    <li><span style="color:#0096FF">Blue</span> square in smart mode <br>— radius for smart detection of
+                        axis. Bring cursor to to it unlock the guide.</li>
                     <li><span style="color:darkturquoise">Cyan</span> cursor <br>— cursor for placing a waypoint</li>
-                    <li><span style="color:#0d0e">Green</span> cursor <br>— cursor for placing a waypoint together with tiles</li>
+                    <li><span style="color:#0d0e">Green</span> cursor <br>— cursor for placing a waypoint together with
+                        tiles</li>
                     <li><span style="color:#a000a0">Purple</span> box <br>— waypoint</li>
-                    <li><span style="color:#a000a0; text-decoration: dashed underline">Purple dashed</span> line <br>— waypoints path</li>
+                    <li><span style="color:#a000a0; text-decoration: dashed underline">Purple dashed</span> line <br>—
+                        waypoints path</li>
                     <li><span style="color:magenta">Magenta</span> box <br>— last placed waypoint</li>
                 </ul>
 
@@ -286,6 +297,14 @@
                     <input type="checkbox" name="snap-eraser" id="snap-eraser">
                     <kbd>e</kbd>
                 </li>
+                <li>
+                    <label for="inverse-smart-snap">
+                        invert smart snap when fast belt drawing:
+                        <small class="help" title="When in a regular fast belt bending mode (not waypoints)&#10;moving mouse beyond the snap radius will change the axis.">(?)</small>
+                    </label>
+                    <input type="checkbox" name="inverse-smart-snap" id="inverse-smart-snap">
+                    <kbd>i</kbd>
+                </li>
             </ul>
         </div>
 
@@ -325,6 +344,7 @@
         gridSizeSlider: document.getElementById('grid-size-slider'),
         gridSizeValue: document.getElementById('grid-size-value'),
         snapEraser: document.querySelector('#snap-eraser'),
+        inverseSmartSnap: document.querySelector('#inverse-smart-snap'),
         histCnt: document.getElementById('hist-count'),
         undoLog: document.getElementById('undo-stack'),
         redoLog: document.getElementById('redo-stack'),
@@ -344,13 +364,14 @@
         lastWaypointColor: 'magenta', //'#ed19',
         waypointPathDash: [8, 8],
         waypointPathDash: [10, 10], //[20, 4, 4, 20],
+        pivotSize: 6,
         guideColor: 'navy',
         guideFocusedColor: 'blue',
         guideDash: [10, 6],
         guideWidth: 1.5,
         flagPresentColor: 'green',
         flagMissingColor: 'red',
-        debugFont: '15px monospace',
+        debugFont: '12px monospace',
     };
 
     class Point extends Array {
@@ -377,6 +398,7 @@
         }
         plus(...deltas) { return this.zip((x, d) => x + (d ?? 0), deltas); }
         times(...f) { return f.length == 1 ? this.map(x => x * f[0]) : this.zip((x, f) => x * (f ?? 1), f); }
+        vectorTo(other) { return other.map((oi, i) => oi - this[i]); }
         constructor(...vals) { // (1, 2...), ([1, 2]), ({x:1, y:2})
             super();
             return vals.reduce((o, v, i) => ((typeof v == 'object' && v !== null) ? Object.assign(o, v) : o[i] = v, o), Point.#proxify(this));
@@ -404,6 +426,7 @@
                 this.redoStack = [];
                 html.redoLog.innerHTML = '';
                 html.histCnt.innerHTML = this.undoStack.length + this.redoStack.length;
+                logNode.scrollIntoView({ block: "center" });
                 return;
             } else {
                 this.pendingCommit.rollbacks.push(revert);
@@ -459,14 +482,7 @@
     }
     html.smartRadiusSlider.addEventListener('input', e => setSmartRadius(e.target.value));
 
-    var snapEraser = html.snapEraser.checked;
-    html.snapEraser.addEventListener('change', e => snapEraser = e.target.checked);
-
-    var snapMode = setSnapMode(document.querySelector(`input[name="snap-mode"]:checked`).value);
-    function setSnapMode(mode) {
-        document.querySelector(`input[name="snap-mode"][value="${mode}"]`).checked = true;
-        return snapMode = mode;
-    }
+    var snapMode = document.querySelector(`input[name="snap-mode"]:checked`).value;
     document.querySelectorAll(`input[name="snap-mode"]`).forEach(e =>
         e.addEventListener('change', e => setSnapMode(e.target.value)));
 
@@ -475,8 +491,15 @@
     var mPos = new Point(0, 0);
     var gPos = new Point(0, 0);
     var cPos = new Point(0, 0);
+    var cursorLocked = false; // if cursor snaps to mask. Used when erasing vs drawing
+    var snapMaskLocked = false; // if snapMask changes
+    var snapMask = [1, 0]; // one of: [1, 0], [0, 1].
+    var pivot = null; // the old snapOrigin
 
-    function updatePos(mouseX, mouseY) {
+    const level = {};
+    var waypoints; // nullable. Presence indicated being in waypoint mode
+
+    function updateMouse(mouseX, mouseY) {
         const rect = html.canvas.getBoundingClientRect()
         mPos.xy = [mouseX - rect.left, mouseY - rect.top];
         gPos.xy = mPos.map(xi => Math.floor((xi - .5) / cellSize()));
@@ -510,60 +533,54 @@
         return [updated, toUpdate];
     }
 
-    /** @type {Point | null} */
-    var snapGuides = new Point(null, null); // specifies coordinate overrides
-    var snapOrigin = null;
 
-    function snap(pos, snapGuides) { // snaps position to snap axis
-        return pos.zip((xi, si) => si ?? xi, snapGuides);
+    function maskBy(mask, ones, zeroes) { // for [a, b], [1, 0], [c, d] returns [a, d]
+        return mask.map((m, i) => m ? ones?.[i] : zeroes?.[i]);
     }
 
-    function distanceToOrigin() { // returns 
-        return snapOrigin.zip((xi, mi) => Math.abs(xi + .5 - mi), mPos.times(1 / cellSize()));
-    }
-
-    function getDetectionRadius() {
-        switch (snapMode) {
-            case SnapMode.VANILLA: return -1;
-            case SnapMode.SMART: return smartRadius;
-            case SnapMode.CLOSEST: return Infinity;
+    function setSnapMode(mode) {
+        snapMode = mode;
+        switch (mode) {
+            case SnapMode.VANILLA:
+                snapMask = [1, 0];
+                return;
+            case SnapMode.SMART:
+            case SnapMode.CLOSEST:
+                return;
         }
     }
 
-    var guideLocked = false;
-    function updateSnapGuides() {
-        if (!flags.DRAW && !(flags.ERASE && snapEraser)) {
-            if (snapGuides.equals(null, null) && snapMode == SnapMode.VANILLA)
-                snapGuides.xy = [gPos.x, null];
-            if (!snapOrigin) snapGuides = snapGuides.map((x, i) => x == null ? null : gPos[i]);
-        }
+    function isInverseSmartSnapActive() {
+        return !waypoints && html.inverseSmartSnap.checked && snapMode == SnapMode.SMART;
+    }
+    function updateSnapMask() {
 
-        if (!snapOrigin) return;
+        if (!pivot) return;
 
-        let [dx, dy] = distanceToOrigin();
-        let r = getDetectionRadius();
+        let [dx, dy] = pivot.zip((xi, mi) => Math.abs(xi + .5 - mi), mPos.times(1 / cellSize()));
+        let r = {
+            [SnapMode.VANILLA]: -1,
+            [SnapMode.SMART]: smartRadius,
+            [SnapMode.CLOSEST]: Infinity,
+        }[snapMode];
 
-        guideLocked = true;
-        if (dx < r && dy < r) {
-            guideLocked = false;
-            snapGuides.xy = dx <= dy ? [snapOrigin.x, null] : [null, snapOrigin.y];
-        }
-        else if (!snapGuides && dy >= r) snapGuides.xy = [snapOrigin.x, null];
-        else if (!snapGuides && dx >= r) snapGuides.xy = [null, snapOrigin.y];
+        let inSmartRadius = dx < r && dy < r;
+
+        snapMaskLocked = !inSmartRadius ^ isInverseSmartSnapActive();
+
+        if (!snapMaskLocked)
+            snapMask = dx <= dy ? [1, 0] : [0, 1];
     }
 
-    function updateCursor() { // returns previous cursor
-        updateSnapGuides();
-
+    function updateCursor() {
         let prevCursor = cPos.xy;
-        cPos = snapOrigin ? snap(gPos, snapGuides) : gPos.xy; // cursor;
+        updateSnapMask();
+        if (cursorLocked) cPos.xy = maskBy(snapMask, pivot, gPos);
+        else cPos.xy = gPos;
+        if (!waypoints && html.inverseSmartSnap.checked && snapMode == SnapMode.SMART)
+            pivot = cPos.xy;
 
         return prevCursor;
-    }
-
-    function updateOrigin(newOrigin) {
-        snapOrigin = newOrigin;
-        snapGuides = snapGuides.map((xi, i) => xi != null ? newOrigin?.[i] : xi);
     }
 
 
@@ -577,31 +594,41 @@
 
     function addWaypoint(fillTiles) {
         if (cPos.equals(waypoints?.at(-1))) return;
-        let previousOrigin = waypoints?.at(-1);
-        let previousWaypoints = waypoints;
-        let waypointPosition = cPos.xy;
+        let oldPivot = pivot;
+        let newPivot = cPos.xy;
+        let oldSnapMask = snapMask.slice();
+        let oldCursorLocked = cursorLocked;
 
         undoStack.commit(
             () => {
-                updateCursor();
                 if (!waypoints) waypoints = [];
-                waypoints = [...waypoints, waypointPosition];
-                updateOrigin(waypointPosition);
-                //FIXME update guides
-                let msg = jsonify`create waypoint <span style="color:darkcyan">${waypointPosition}</span>`;
+                waypoints = [...waypoints, newPivot];
+                pivot = newPivot;
+                cursorLocked = true;
+
+                updateCursor();
+                
+                let msg = jsonify`create waypoint <span style="color:darkcyan">${newPivot}</span>`;
+
                 if (waypoints.length >= 2) {
                     let [A, B] = waypoints.slice(-2);
                     if (fillTiles) {
                         let [updated, total] = setTiles(A, B, Tiles.BELT);
                         msg += ` updating ${updated}/${total} tiles:`;
                     }
+                    
+                    snapMask.reverse();
+                    updateCursor();
                     return msg;
                 }
                 return msg;
             },
             () => {
-                waypoints = previousWaypoints;
-                updateOrigin(previousOrigin);
+                waypoints.pop();
+                if (waypoints.length == 0) waypoints = undefined;
+                pivot = oldPivot;
+                snapMask = oldSnapMask.slice();
+                cursorLocked = oldCursorLocked;
                 updateCursor();
             },
             (...results) => results.length == 1 ? results : results.at(-1) +
@@ -613,91 +640,129 @@
 
 
 
-    html.canvas.addEventListener('mousemove', onMouseMove);
-    function onMouseMove(evt) {
+
+    html.canvas.addEventListener('mousemove', (evt) => {
         flags.HOVER = true;
 
-        updatePos(evt.clientX, evt.clientY);
-        updateLevel(updateCursor());
+        updateMouse(evt.clientX, evt.clientY);
+        let prevCursor = updateCursor();
+        if (flags.DRAW || flags.ERASE)
+            updateLevel(prevCursor);
         render();
-    };
+    });
 
-    const level = {};
-    var waypoints; // nullable
-    html.canvas.addEventListener('mousedown', startAction);
-    function startAction(evt) {
+    html.canvas.addEventListener('mousedown', (evt) => {
         flags.HOVER = true;
         flags.DRAW = evt.buttons == 1;
         flags.ERASE = evt.buttons == 2;
         flags.WAYPOINTS = evt.ctrlKey;
+        updateMouse(evt.clientX, evt.clientY);
 
-        updatePos(evt.clientX, evt.clientY);
-        if ((flags.DRAW || snapEraser && flags.ERASE || flags.WAYPOINTS) && !waypoints)
-            snapOrigin = cPos.xy;
-        updateLevel(updateCursor());
-        if (flags.DRAW && (flags.WAYPOINTS || waypoints))
+        // normal drawing
+        if ((flags.DRAW || flags.ERASE && html.snapEraser.checked) && !waypoints && !flags.WAYPOINTS) {
+            pivot = gPos.xy;
+            cursorLocked = true;
+            updateLevel(updateCursor());
+        } else if (flags.DRAW && (flags.WAYPOINTS || waypoints))
             addWaypoint(!flags.WAYPOINTS);
-        render();
-    };
+        else return;
 
-    document.addEventListener('mouseup', onActionFinish);
-    function onActionFinish(evt) {
+        render();
+    });
+
+    document.addEventListener('mouseup', (evt) => {
         flags.DRAW = flags.ERASE = false;
-        if (!waypoints)
-            snapOrigin = null;
+        if (!waypoints) {
+            cursorLocked = false;
+            pivot = null;
+            snapMaskLocked = false;
+        }
         render();
-    }
+    });
 
-    function maskBy(values, mask) {
-        return values.map((xi, i) => xi == null ? mask?.[i] : null);
-    }
+    /*
+    Compat checklist:
+    - [ ] snap guides with R without changing pivot in vanilla
+    - [ ] update pivot while drawing in normal mode
+    - [ ] don't snap eraser unless option enabled
+    - [ ] rotate snap guides whenever waypoint is added and snaps are locked
+    */
 
     document.addEventListener('keydown', evt => {
-        if (evt.ctrlKey && evt.key == 'r') evt.preventDefault();
-        if (evt.key == 'Control') flags.WAYPOINTS = true;
+        // prevent page refresh
+        if (evt.ctrlKey && evt.key == 'r')
+            evt.preventDefault();
 
-        if (evt.ctrlKey && evt.key == 'z') undoStack.undo();
+        if (evt.key == 'Control')
+            flags.WAYPOINTS = true;
+
+        // undo
+        if (evt.ctrlKey && evt.key == 'z') {
+            undoStack.undo();
+            updateCursor();
+        }
+
+        // redo
         if (evt.ctrlKey && evt.key == 'y' || evt.ctrlKey && evt.key == 'Z') {
             undoStack.redo();
             updateCursor();
-            render();
         }
 
+        // rotate
         if (evt.key == 'r') {
-            // if (snapMode == SnapMode.VANILLA) {
-            if (snapOrigin && !waypoints) snapOrigin = cPos.xy;
-            snapGuides = maskBy(snapGuides, waypoints ? snapOrigin : cPos);
-            // } else
-            // snapGuides = maskBy(snapGuides, snapOrigin);
+            snapMask.reverse(); // change axis for rotation
+            if (pivot && !waypoints) // update pivot outside waypoint mode only
+                pivot = cPos.xy;
             updateLevel(updateCursor());
         }
 
+        // mode toggles
         if ('123'.includes(evt.key)) {
-            setSnapMode(document.querySelector(`input[data-keybind="${evt.key}"]`).value);
+            let input = document.querySelector(`input[data-keybind="${evt.key}"]`);
+            input.checked = true;
+            setSnapMode(input.value);
             updateCursor();
         }
+
+        // eraser snap toggle
         if (evt.key == 'e') {
             html.snapEraser.checked = !html.snapEraser.checked;
-            html.snapEraser.dispatchEvent(new Event('change'));
+            updateCursor();
         }
-        if (evt.key == 'q') {
-            if (waypoints) {
-                let oldWaypoints = waypoints;
-                let oldSnapOrigin = snapOrigin;
-                let oldSnapGuides = snapGuides.xy;
-                undoStack.commit(() => {
-                    updateCursor();
-                    waypoints = null;
-                    snapOrigin = null;
-                    snapGuides.xy = null;
-                    return "exited waypoint mode"
-                }, () => {
-                    waypoints = oldWaypoints;
-                    snapOrigin = oldSnapOrigin;
-                    snapGuides.xy = oldSnapGuides;
-                    updateCursor();
-                });
-            }
+        
+        // inverse smart mode in fast belt drawing toggle
+        if (evt.key == 'i') {
+            html.inverseSmartSnap.checked = !html.inverseSmartSnap.checked;
+            updateCursor();
+        }
+
+        // exit
+        if (evt.key == 'q' && waypoints) {
+            let oldWaypoints = waypoints;
+            let _previousCursorLocked = cursorLocked;
+            let _previousSnapMask = snapMask;
+            let _previousSnapMaskLocked = snapMaskLocked;
+            let _previousSnapPivot = pivot;
+
+            undoStack.commit(() => {
+                waypoints = null;
+
+                cursorLocked = false;
+                snapMaskLocked = false;
+                pivot = null;
+
+                updateCursor();
+                return "exited waypoint mode"
+            }, () => {
+                waypoints = oldWaypoints;
+
+                cursorLocked = _previousCursorLocked;
+                snapMask = _previousSnapMask;
+                snapMaskLocked = _previousSnapMaskLocked;
+                pivot = _previousSnapPivot;
+
+                updateCursor();
+            });
         }
 
         render();
@@ -756,29 +821,38 @@
     /**  @param {CanvasRenderingContext2D } ctx*/
     function drawCursor(ctx) {
         if (flags.HOVER) {
-            ctx.save();
+            ctx.beginPath();
             if (flags.WAYPOINTS || waypoints) {
                 ctx.strokeStyle = flags.WAYPOINTS ? THEME.cursorWaypointAlternativeColor : THEME.cursorWaypointColor;
                 let d = ctx.lineWidth = THEME.waypointDashWidth;
                 if (flags.WAYPOINTS) ctx.setLineDash(THEME.cursorWaypointDash(cellSize() + d));
                 ctx.strokeRect(...cPos.map(x => x * cellSize() - d / 2), cellSize() + d, cellSize() + d);
-            } else {
+            } else { // gray cursor
                 ctx.fillStyle = THEME.cursorColor; // gray;
                 ctx.fillRect(...cPos.times(cellSize()), cellSize(), cellSize());
             }
+            // draw mouse <-> cursor guide
+            ctx.beginPath();
+            ctx.strokeStyle = THEME.guideColor;
+            ctx.lineWidth = THEME.guideWidth;
+            ctx.setLineDash([4]);
+            ctx.moveTo(...cPos.plus(.5, .5).times(cellSize()));
+            ctx.lineTo(...gPos.plus(.5, .5).times(cellSize()));
+            ctx.stroke();
+            // draw tile's coordinates
+            ctx.beginPath();
             ctx.fillStyle = 'black';
             ctx.strokeStyle = 'white';
             ctx.lineWidth = 2;
             ctx.setLineDash([]);
             ctx.strokeText(gPos, ...mPos.xy.plus(0, -10));
             ctx.fillText(gPos, ...mPos.xy.plus(0, -10));
-            ctx.restore();
         }
     }
 
     /**  @param {CanvasRenderingContext2D } ctx*/
     function drawWaypoints(ctx) {
-        if (snapOrigin && waypoints) {
+        if (waypoints) {
             ctx.save();
             // ctx.globalCompositeOperation = 'screen';
             ctx.strokeStyle = THEME.waypointColor;
@@ -803,28 +877,35 @@
 
     /**  @param {CanvasRenderingContext2D } ctx*/
     function drawSnap(ctx) {
-        // if (!flags.HOVER) return;
-        if (!snapOrigin && snapMode != SnapMode.VANILLA || snapGuides.equals(null, null) ||
-            flags.ERASE && !snapEraser) return;
+        if (!flags.HOVER) return;
+        if (!pivot && snapMode != SnapMode.VANILLA || flags.ERASE && !html.snapEraser.checked) return;
         ctx.save();
         ctx.beginPath();
         ctx.lineWidth = THEME.guideWidth;
-        // draw snapOrigin
-        if (snapOrigin /* && snapMode != SnapMode.VANILLA */) {
+
+        // draw pivot
+        if (pivot /* && snapMode != SnapMode.VANILLA */) {
             ctx.fillStyle = THEME.guideColor;
-            ctx.fillRect((snapOrigin[0] + .5) * cellSize() - 3, (snapOrigin[1] + .5) * cellSize() - 3, 6, 6);
+            let d = THEME.pivotSize;
+            ctx.fillRect(...pivot.plus(.5, .5).times(cellSize()).plus(-d / 2, -d / 2), d, d);
         }
 
-        // draw smart drawGuides
-        if (!snapOrigin && snapGuides || snapOrigin && !snapGuides || !guideLocked)
+        // draw guides with dash when unlocked
+        if (!snapMaskLocked || isInverseSmartSnapActive())
             ctx.setLineDash(THEME.guideDash);
-        if (snapOrigin && snapMode == SnapMode.SMART) {
-            ctx.strokeStyle = snapGuides ? THEME.guideColor : THEME.guideFocusedColor;
+
+        // draw smart mode detection box
+        if (cursorLocked && snapMode == SnapMode.SMART) {
+            ctx.strokeStyle = snapMaskLocked ? THEME.guideColor : THEME.guideFocusedColor;
             let [offset, size] = [+.5 - smartRadius, smartRadius * cellSize() * 2];
-            ctx.strokeRect(...snapOrigin.plus(offset, offset).times(cellSize()), size, size);
+            ctx.strokeRect(...pivot.plus(offset, offset).times(cellSize()), size, size);
         }
-        if (snapMode == snapMode.VANILLA || snapGuides) {
+
+        // draw guides to snap to
+        if (snapMode == SnapMode.VANILLA || pivot) {
+            ctx.setLineDash(!snapMaskLocked ? THEME.guideDash : []);
             ctx.strokeStyle = THEME.guideColor;
+            let snapGuides = maskBy(snapMask, pivot || gPos);
             let mins = snapGuides.map(xi => ((xi ?? -1) + .5) * cellSize());
             let maxs = snapGuides.map(xi => ((xi ?? gridSize) + .5) * cellSize());
             ctx.moveTo(...mins);
@@ -832,7 +913,6 @@
         }
         ctx.stroke();
         ctx.restore();
-
     }
 
     /**  @param {CanvasRenderingContext2D } ctx*/
@@ -851,17 +931,19 @@
         ctx.fillText(`cursor: [${cPos.x}, ${cPos.y}]`, 0, 60);
         ctx.save();
         ctx.fillStyle = `blue`;
-        ctx.fillText(jsonify`snapOrigin: ${snapOrigin}`, 0, 80);
-        ctx.fillText(jsonify`snapGuides: ${snapGuides}`, 0, 100);
+        ctx.fillText(jsonify`pivot: ${pivot}`, 210, 20);
+        ctx.fillText(jsonify`cursorLocked: ${cursorLocked}`, 210, 40);
+        ctx.fillText(jsonify`maskLocked: ${snapMaskLocked}`, 210, 60);
+        ctx.fillText(jsonify`snapMask: ${snapMask}`, 210, 80);
         ctx.fillText(jsonify`waypoints: ${waypoints}`, 0, 120);
         ctx.restore();
 
-        ctx.fillText(`flags:`, 300, 20);
+        ctx.fillText(`flags:`, 400, 20);
         ctx.save();
         let i = 0;
         for (const k in flags) {
             ctx.fillStyle = flags[k] ? THEME.flagPresentColor : THEME.flagMissingColor;
-            ctx.fillText(`${k}: ${flags[k]}`, 320, 40 + 20 * i++);
+            ctx.fillText(`${k}: ${flags[k]}`, 430, 40 + 20 * i++);
         }
         ctx.restore();
     }
