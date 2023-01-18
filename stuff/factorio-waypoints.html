@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Factorio belt waypoints concept</title>
 </head>
 <style>
     * {
@@ -577,7 +577,7 @@
         updateSnapMask();
         if (cursorLocked) cPos.xy = maskBy(snapMask, pivot, gPos);
         else cPos.xy = gPos;
-        if (!waypoints && html.inverseSmartSnap.checked && snapMode == SnapMode.SMART)
+        if (isInverseSmartSnapActive())
             pivot = cPos.xy;
 
         return prevCursor;
@@ -598,6 +598,7 @@
         let newPivot = cPos.xy;
         let oldSnapMask = snapMask.slice();
         let oldCursorLocked = cursorLocked;
+        let oldSnapMaskLocked = snapMaskLocked;
 
         undoStack.commit(
             () => {
@@ -628,6 +629,7 @@
                 if (waypoints.length == 0) waypoints = undefined;
                 pivot = oldPivot;
                 snapMask = oldSnapMask.slice();
+                snapMaskLocked = oldSnapMaskLocked;
                 cursorLocked = oldCursorLocked;
                 updateCursor();
             },
@@ -680,13 +682,6 @@
         render();
     });
 
-    /*
-    Compat checklist:
-    - [ ] snap guides with R without changing pivot in vanilla
-    - [ ] update pivot while drawing in normal mode
-    - [ ] don't snap eraser unless option enabled
-    - [ ] rotate snap guides whenever waypoint is added and snaps are locked
-    */
 
     document.addEventListener('keydown', evt => {
         // prevent page refresh
@@ -733,6 +728,11 @@
         // inverse smart mode in fast belt drawing toggle
         if (evt.key == 'i') {
             html.inverseSmartSnap.checked = !html.inverseSmartSnap.checked;
+            if(!html.inverseSmartSnap.checked && !flags.DRAW && !flags.ERASE && !waypoints) {
+                // cursorLocked = false;
+                pivot = null;
+                snapMaskLocked = false;
+            }
             updateCursor();
         }
 
