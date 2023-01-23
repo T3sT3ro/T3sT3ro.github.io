@@ -5,6 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Open factorio-waypoints.html",
+            "file": "/home/tooster/workspace/ttr/T3sT3ro.github.io/stuff/factorio-waypoints.html"
+        },
+        {
             "name": "g++ - Build and debug active file",
             "type": "cppdbg",
             "request": "launch",
@@ -43,6 +49,6 @@
             "url": "http://localhost:4000",
             "webRoot": "${workspaceFolder}/_site",
             "preLaunchTask": "compose up jekyll"
-        }
+        },
     ]
 }

@@ -74,11 +74,10 @@ let islandSizes = islands.map(i => _.keys(i).length);
 console.log(_.max(islandSizes));
 
 
+const { homedir } = require('os');
 const fs = require('fs');
 
-const credentialsPath = '/home/tooster/.plotly/.credentials';
-
-fs.readFile(credentialsPath, 'utf8', (err, file) => {
+fs.readFile(`${homedir()}/.plotly/.credentials`, 'utf8', (err, file) => {
     if (err) {
         console.error(err);
         return;
@@ -104,7 +103,7 @@ fs.readFile(credentialsPath, 'utf8', (err, file) => {
         type: 'scatter3d',
         mode: 'markers',
         marker: {
-            size: 1,
+            size: 3,
             color: 'rgb(255,0,0)',
         }
     }];

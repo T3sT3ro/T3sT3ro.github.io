@@ -8,7 +8,6 @@
 # BE AWARE THAT HISTORY CAN REMEMBER COOKIES, SO DON'T DO echo <cookie> > ...
 
 COOKIEFILE=aoc-session.cookie
-ls >&2
 if [ -e $COOKIEFILE ]; then
     echo "using cookie file: $COOKIEFILE" >&2
     SESSION_COOKIE=$(cat $COOKIEFILE)
@@ -41,7 +40,7 @@ for i in $DAYS; do
     -H 'accept-language: pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7' \
     -H 'cache-control: no-cache' \
     -H 'pragma: no-cache' \
-    -H "referer: https://adventofcode.com/$YEAR/day/$i" \
+    -H "referer: https://adventofcode.com/$YEAR/day/$i/dupa" \
     -H 'sec-ch-ua: "Google Chrome";v="107", "Chromium";v="107", "Not=A?Brand";v="24"' \
     -H 'sec-ch-ua-mobile: ?0' \
     -H 'sec-ch-ua-platform: "Linux"' \
@@ -51,7 +50,10 @@ for i in $DAYS; do
     -H 'sec-fetch-user: ?1' \
     -H 'upgrade-insecure-requests: 1' \
     -H 'user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36' \
-    --compressed > "$YEAR/IN/$FILEBASENAME"
+    --compressed -o "$YEAR/IN/$FILEBASENAME" \
+    -w "status: %{http_code} size: %{size_download}B file: %{filename_effective} from: %{url} took: %{time_total}sec" \
+    -sS
+    #2>/dev/null
     
     SOLUTION="$YEAR/$FILEBASENAME.js"
     if [[ ! -f $SOLUTION ]]; then
