@@ -256,6 +256,10 @@ footer {
 
 // markdown standard
 
+li {
+    margin-block: 0.3em;
+}
+
 blockquote {
     border-left: 6px solid var(--th-on-background-half);
     margin: auto 0;
@@ -289,6 +293,17 @@ blockquote {
 
 @import "code";
 
+details {
+    summary {
+        color: var(--th-S-normal);
+    }
+    &[open] summary {
+        margin-bottom: 1rem;
+    }
+
+    padding: .5rem;
+    border: 1px solid var(--th-S-dark);
+}
 
 // widgets
 

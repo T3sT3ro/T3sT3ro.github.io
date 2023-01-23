@@ -1,6 +1,6 @@
 // Code and monospace elements
 
-pre, code, samp, var {
+pre, code, samp, var, kbd {
     @include text-code-intellij;
 }
 
@@ -163,7 +163,7 @@ pre {
 
 :not(pre)>code, kbd {
     // inline code and kbd
-    padding: 0px 4px;
+    padding: 0px .5rem;
     margin: 4px;
     color: var(--th-code-inline-fg);
     background-color: var(--th-code-inline-bg);
@@ -172,4 +172,11 @@ pre {
     @media (max-width: 400) {
         white-space: pre-wrap;
     }
+}
+
+kbd {
+    box-shadow: 1px 2px 0 1px var(--th-P-border-semitrans);
+    border-radius: 6px;
+    font-weight: bold;
+    filter: invert(100%);
 }

@@ -5,7 +5,8 @@
 
   <meta content="Tooster" name="author">
   {% seo %}
-
+  <meta http-equiv="Permissions-Policy" content="interest-cohort=()">
+  
   {%- comment -%}
   <meta name="description"
     content="{{ page.excerpt | default: site.description | strip_html | normalize_whitespace | truncate: 160 | escape }}">
