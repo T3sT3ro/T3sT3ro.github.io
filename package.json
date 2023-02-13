@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@types/highlightjs": "^9.12.2",
     "@types/jquery": "^3.5.14",
     "highlight.js": "^11.7.0"
   }
