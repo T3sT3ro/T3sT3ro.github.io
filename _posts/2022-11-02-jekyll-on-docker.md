@@ -4,11 +4,11 @@ tags:
   - docker
   - jekyll
 date: 2022-11-02T09:15:23.457Z
-lastmod: 2023-02-03T20:56:54.068Z
+lastmod: 2023-03-08T11:03:31.209Z
 type: default
 slug: self-contained-jekyll-with-docker
-description: Don't install ruby locally. Use Docker — keep your blogging environment clean
-  and scoped. Supports offline preview.
+description: How to set up easy jekyll environment using docker, docker-compose and VScode
+  without manual ruby installation.
 ---
 
 If you struggled with setting up basic jekyll blogging environment, i.e.:
