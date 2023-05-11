@@ -38,6 +38,12 @@ $(function () {
                     case 'w':
                         target.classList.toggle(CODEBLOCK_FLAGS.WRAP);
                         break;
+                    case 'a':
+                        if (evt.ctrlKey) {
+                            evt.preventDefault();
+                            window.getSelection()?.selectAllChildren(target);
+                        }
+                        break;
                 }
             });
     });
@@ -47,25 +53,25 @@ $(function () {
 
     /** @param {HTMLElement} e observed code block */
     function alignBlockToCenter(e) {
-        if(e.style.width === undefined)
+        if (e.style.width === undefined)
             return e.style.removeProperty('left');
 
-        const $e =$(e);
+        const $e = $(e);
         let bodyWidth = document.body.clientWidth;
-        let elemWidth = Math.round($e.outerWidth()*10)/10;
+        let elemWidth = Math.round($e.outerWidth() * 10) / 10;
         let maxWidth = parseFloat(window.getComputedStyle(e).maxWidth);
         let minWidth = $e.parent().innerWidth() ?? 0;
-        let t = (elemWidth-minWidth) / (maxWidth-minWidth);
+        let t = (elemWidth - minWidth) / (maxWidth - minWidth);
 
         let parentPos = $e.parent().position().left;
         let $art = $('article');
-        let contentOffset = ($art.outerWidth() - $art.width())/2;
-        let targetOffset = -(parentPos - contentOffset)/2;
-        e.style.left = `${targetOffset*t}px`;
+        let contentOffset = ($art.outerWidth() - $art.width()) / 2;
+        let targetOffset = -(parentPos - contentOffset) / 2;
+        e.style.left = `${targetOffset * t}px`;
     }
 
 
-    let resizeObserver = new ResizeObserver((entries) => 
+    let resizeObserver = new ResizeObserver((entries) =>
         entries.forEach(e => alignBlockToCenter(e.target)));
     $('pre .hljs').parent().each((i, b) => resizeObserver.observe(b));
 

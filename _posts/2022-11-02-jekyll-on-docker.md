@@ -4,25 +4,26 @@ tags:
   - docker
   - jekyll
 date: 2022-11-02T09:15:23.457Z
-lastmod: 2023-03-08T11:03:31.209Z
+lastmod: 2023-05-11T16:38:56.175Z
 type: default
 slug: self-contained-jekyll-with-docker
-description: How to set up easy jekyll environment using docker, docker-compose and VScode
-  without manual ruby installation.
+description: How to set up easy jekyll environment using docker, docker-compose and VScode without manual ruby installation.
 ---
 
-If you struggled with setting up basic jekyll blogging environment, i.e.:
+Jekyll can be finnicky. This post is a guide on how to set up jekyll locally, without manual ruby installation, managing gems and configurations and polluting system. After following this guide you will get a unified, **reproducible** environment for managing Jekyll blog.
 
-- desired a live preview...
-- preferred a "clean" solution over a global Ruby installation[^1]...
-- wanted something that "just works" and doesn't break randomly...
-- didn't want to learn about `ruby`, `bundler`, `rubyGems`, `RVM`, `rbenv` or any other ruby-specific tools...
-- tried to keep everything neatly in one directory rather than scattering files all over your system...
-- wanted a solution that allows you to write quickly even when offline
+## Why?
 
-**Then look no further!**
+I tried setting up Jekyll several times from official guides but there was always something broken:
 
-This guide serves as both a guide for you and a reminder for me on how to set it up.
+- I required Live preview that worked offline and was simple to run...
+- I Didn't want to install Ruby, `jekyll` and other tools globally on my system just for one blog[^1]...
+- It didn't "just work" — broke randomly while updating gems or system, slowed down `.bashrc` startup...
+- I Didn't want to learn even more tools: `ruby`, `bundler`, `rubyGems`, `RVM`, `rbenv` and decide on the best one...
+- I Tried to keep everything neatly in one directory rather than scattering files all over my system...
+- I Wanted to have a one-click solution to start/stop a preview...
+
+The solution to my problems was to use Docker.
 
 This guide uses Docker and Docker Compose to provide a simple control over the environment. No prior knowledge is necessary.
 
@@ -35,21 +36,23 @@ This guide uses Docker and Docker Compose to provide a simple control over the e
 - You have reproducible environment that you can setup on any machine.
 - It's just a great tool that helps with a general development (I use it to run Sonarqube, CUDA, Jekyll and others).
 
+Okay, it can be a bit slow to start, but It's bearable for me.
+
 </details>
 
 ## Guide
 
-1. First, prerequisites:
-   1. [Install Docker](https://docs.docker.com/engine/install) if you haven't done so already. Here, I use the fundamentals that can be learned in the first 5 minutes of use.
-   2. I **strongly** recommended using [VS Code](https://code.visualstudio.com/) as a main site editing tool. For extensions I recommend:
+1.  First, prerequisites:
+    1. [Install Docker](https://docs.docker.com/engine/install) if you haven't done so already. Here, I use the fundamentals that can be learned in the first 5 minutes of use.
+    1. I **strongly** recommended using [VS Code](https://code.visualstudio.com/) as a main site editing tool. For extensions I recommend:
       - [Docker](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker) extension
       - [Liquid](https://marketplace.visualstudio.com/items?itemName=sissel.shopify-liquid) (for Liquid language support in jekyll)
       - [Markdown All In One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) for autocompletion etc.
       - [Front Matter](https://marketplace.visualstudio.com/items?itemName=eliostruyf.vscode-front-matter&ssr=false#review-details) for managing posts and frontmatter in a local dashboard
       - [markdownlint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint) for standard markdown style
 
-2. Pull jekyll image with `docker pull jekyll/jekyll:4.2.2` (use can use the `:latest` tag, but I recommend using one specific version like `:4.2.2` for reproducibility).
-3. Create new website by [following the respective guide on image's page](https://github.com/envygeeks/jekyll-docker/blob/master/README.md#quick-start-under-windows-cmd), something along the lines:
+2.  Pull jekyll image with `docker pull jekyll/jekyll:4.2.2` (use can use the `:latest` tag, but I recommend using one specific version like `:4.2.2` for reproducibility).
+3.  Create new website by [following the respective guide on image's page](https://github.com/envygeeks/jekyll-docker/blob/master/README.md#quick-start-under-windows-cmd), something along the lines:
 
     ```bash
     docker run --rm \
@@ -62,10 +65,10 @@ This guide uses Docker and Docker Compose to provide a simple control over the e
 
     The last part with `bundle config...` is particularly useful for gems to cache properly and for you to be able to work offline — otherwise jekyll image will try to download gems not present in the base image each time the container is started (significantly extending launch and disallowing for work offline).
 
-4. enter newly created `MY_NEW_AWESOME_SITE_NAME` directory
-5. **[Highly recommended]:** Initialize [git](https://git-scm.com/) repository:
+4.  enter newly created `MY_NEW_AWESOME_SITE_NAME` directory
+5.  **[Highly recommended]:** Initialize [git](https://git-scm.com/) repository inside this directory:
     1. `git init`
-    2. create `.gitignore` (if missing) and add to it following content:
+    2.  create `.gitignore` (if missing) and add to it following content:
 
         ```
         **/_site
@@ -76,8 +79,8 @@ This guide uses Docker and Docker Compose to provide a simple control over the e
         ```
         {: filename=".gitignore"}
 
-6. Create `vendor/bundle` directory in the website root. This will be used to store cached gems (ruby programs).
-7. Create `docker-compose.yml` file in the website root with content similar to:
+6.  Create `vendor/bundle` directory in the website root. This will be used to store cached gems (ruby programs).
+7.  Create `docker-compose.yml` file in the website root with content similar to:
 
     ```yml
     services:
@@ -94,9 +97,9 @@ This guide uses Docker and Docker Compose to provide a simple control over the e
     ```
     {: filename="docker-compose.yml"}
 
-   The command in the services can be modified to your liking. Using `jekyll serve` command will start the local server at  address <http://localhost:4000> serving your website. `jekyll build` would rebuild site without starting server (compiled site is in the `_site` directory).
+    The command in the services can be modified to your liking. Using `jekyll serve` command will start the local server at  address <http://localhost:4000> serving your website. `jekyll build` would rebuild site without starting server (compiled site is in the `_site` directory).
 
-8. Add appropriate entries to the `_config.yml` file (to exclude them from being copied to the static site):
+8.  Add appropriate entries to the `_config.yml` file (to exclude them from being copied to the static site):
 
     ```yml
     exclude:
@@ -111,9 +114,9 @@ This guide uses Docker and Docker Compose to provide a simple control over the e
     ```
     {: filename="_config.yml"}
 
-   The last two are only needed if you also use the Front Matter addon for VSCode. To apply changes in this file (download gems, etc.) you have to run the `Update gems` task from the next step. If you don't use VSCode you have to run the command from that task manually.
+    The last two are only needed if you also use the Front Matter addon for VSCode. To apply changes in this file (download gems, etc.) you have to run the `Update gems` task from the next step. If you don't use VSCode you have to run the command from that task manually.
 
-9. **[Highly recommended]:** Add new **tasks** (in `.vscode/tasks.json`).
+9.  **[Highly recommended]:** Add new **tasks** (in `.vscode/tasks.json`).
 
     ```json
     {
@@ -184,4 +187,4 @@ As a bonus, I could recommend using the [Frontmatter extension for VSCode](https
 
 ---
 
-[^1]: You will have to install Docker though, and it would be a sin not to have it with how useful Docker is for all kinds of development.
+[^1]: You will have to install Docker though, but it would be a sin not to have it and know it as a developer.
