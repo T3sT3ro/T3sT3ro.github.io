@@ -19,6 +19,7 @@ body {
     max-width: 100%;
     min-height: 100vh;
     height: min-content;
+    overflow-y: overlay;
 
     display: grid;
     row-gap: 2em;
@@ -185,28 +186,38 @@ footer {
     }
 
     .meta {
-        text-align: right;
         margin: 0 0 .5em 0;
+        position: relative;
+        
         display: flex;
-        flex-direction: row-reverse;
         align-items: baseline;
+        justify-content: end;
+        
+        text-align: right;
+        
         @include text-header-roboto;
         font-size: 0.83em;
         font-weight: bold;
-        position: relative;
+        min-height: 1.8em;
 
-        .tag {
-            margin: 0 .2em;
-            border: 1px solid var(--th-P-dark);
-            border-radius: 2px;
-            padding: 1px 6px;
-            min-width: 2em;
-            text-align: center;
+        .tags {
+            display: flex;
+            flex-direction: row;
+            .tag {
+                margin: 0 .2em;
+                border: 1px solid var(--th-P-dark);
+                border-radius: 2px;
+                padding: 1px 6px;
+                min-width: 2em;
+                text-align: center;
+            }
         }
-
         
         time { 
             padding-left: 2em; 
+            &.lastmod {
+                text-decoration: underline dotted;
+            }
             &.created {
                 position: absolute;
                 right: 0;
@@ -222,7 +233,7 @@ footer {
             &.lastmod ~ .created{ 
                 opacity: 0;
                 visibility: hidden;
-                transition: all .8s ease-out .5s;
+                transition: all .5s 0.1s;
             }
         }
     }
@@ -338,7 +349,7 @@ details {
 
     position: fixed;
     bottom: .5em;
-    right: .5em;
+    right: .7em;
 
     @include elevate-1;
     background-color: #0008;
