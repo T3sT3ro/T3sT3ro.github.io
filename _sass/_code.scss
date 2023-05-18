@@ -74,8 +74,7 @@ pre:not(:has(.hljs)) {
         display: table-cell;
         min-width: calc(3ch + .3em);
         padding-right: .3em !important;
-        border-right-style: solid;
-        border-right-width: 1px;
+        border-right: 1px solid;
 
         text-align: right;
         color: var(--th-code-line-highlight);
@@ -91,13 +90,13 @@ pre:not(:has(.hljs)) {
 
     .hljs .highlight {
         .hljs-ln-numbers {
-            box-shadow: 5px 0px;
             color: var(--th-S-light);
         }
 
         .hljs-ln-code {
             background-color: var(--th-code-line-highlight);
             border-right: 1px solid var(--th-S-light);
+            border-left: 5px solid var(--th-S-light);
         }
     }
 
@@ -178,5 +177,5 @@ kbd {
     box-shadow: 1px 2px 0 1px var(--th-P-border-semitrans);
     border-radius: 6px;
     font-weight: bold;
-    filter: invert(100%);
+    filter: invert(100%) drop-shadow(1px 3px 0px slategray);
 }

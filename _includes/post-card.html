@@ -2,6 +2,14 @@
 
   <div class="meta">
 
+    <div class="tags">
+      {%- for tag in include.post.tags -%}
+      <span class="tag">
+        <a class="href" href="{{ BASE_PATH }}/search?tag={{tag}}">{{tag}}</a>
+      </span>
+      {%- endfor -%}
+    </div>
+
     {%- assign visibleDate = include.post.lastmod or include.post.date -%}
 
     <time class="lastmod" datetime={{ visibleDate | date: '%s' }}>
@@ -9,21 +17,23 @@
     </time>
     {%- if include.post.date != include.post.lastmod -%}
     <time class="created" datetime={{ include.post.date | date: '%s' }}>
-      First posted at {{ include.post.date | date_to_string }}
+      First published on {{ include.post.date | date_to_string }}
     </time>
     {%- endif -%}
-
-    {%- for tag in include.post.tags -%}
-    <span class="tag">
-      <a class="href" href="{{ BASE_PATH }}/search?tag={{tag}}">{{tag}}</a>
-    </span>
-    {%- endfor -%}
 
   </div>
 
   <article>
     <h1 class="title">
-      <a href="{{ BASE_PATH }}{{ include.post.url }}">{{ include.post.title }}</a>
+      {% if include.truncate %}
+      <a href="{{ BASE_PATH }}{{ include.post.url }}">
+        {% endif %}
+        {{ include.post.title }}
+        {% if include.truncate %}
+      </a>
+      {% else %}
+      <hr />
+      {% endif %}
     </h1>
 
     {%- if include.truncate -%}

@@ -4,7 +4,7 @@ tags:
   - docker
   - jekyll
 date: 2022-11-02T09:15:23.457Z
-lastmod: 2023-05-11T16:38:56.175Z
+lastmod: 2023-05-18T18:38:11.318Z
 type: default
 slug: self-contained-jekyll-with-docker
 description: How to set up easy jekyll environment using docker, docker-compose and VScode without manual ruby installation.
