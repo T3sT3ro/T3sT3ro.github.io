@@ -10,6 +10,10 @@
     scroll-behavior: smooth;
 }
 
+html {
+    padding-left: calc(100vw - 100%);
+}
+
 body {
     margin: 0;
     padding: 1rem 0 0;
@@ -19,7 +23,6 @@ body {
     max-width: 100%;
     min-height: 100vh;
     height: min-content;
-    overflow-y: overlay;
 
     display: grid;
     row-gap: 2em;
@@ -39,7 +42,7 @@ body {
     background:
         radial-gradient(var(--th-on-background) .5px, transparent 1px),
         var(--th-background);
-    background-position: top;
+    background-position: left top;
     background-size: 17px 17px;
 }
 

@@ -8,10 +8,6 @@ latex: true
 
 Z-curves are given by:
 
-\\[ 
-    \alpha
-\\]
-
 ```txt
 Z(n, x, y)              -> "explode" and interleave x and y bit representations
 Z(n, t)                 -> inverse of above - (x, y) where x is made from every odd bit and y from every even bit 
