@@ -143,13 +143,22 @@
     }
 
     ::-webkit-scrollbar {
-        width: 2px;
+        width: .4rem;
+        height: .4rem;
         background-color: #111;
     }
 
     ::-webkit-scrollbar-thumb {
         background-color: orange;
         border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-track {
+        border-radius:  3px;
+    }
+
+    ::-webkit-scrollbar-corner {
+        background-color: #111;
     }
 
     #command-stack ul#redo-stack {
@@ -336,9 +345,9 @@
     // HELPERS AND UTILS -------------------------------------------------------
     let html = {
         /** @type {HTMLCanvasElement} */
-        canvas: document.getElementById('main-canvas'),
+        canvas: dpiCorrectCanvas(document.getElementById('main-canvas')),
         /** @type {HTMLCanvasElement} */
-        debugCanvas: document.getElementById('debug-canvas'),
+        debugCanvas: dpiCorrectCanvas(document.getElementById('debug-canvas')),
         smartRadiusSlider: document.getElementById('smart-radius-slider'),
         smartRadiusValue: document.getElementById('smart-radius-value'),
         gridSizeSlider: document.getElementById('grid-size-slider'),
@@ -346,6 +355,7 @@
         snapEraser: document.querySelector('#snap-eraser'),
         inverseSmartSnap: document.querySelector('#inverse-smart-snap'),
         histCnt: document.getElementById('hist-count'),
+        commandStack: document.getElementById('command-stack'),
         undoLog: document.getElementById('undo-stack'),
         redoLog: document.getElementById('redo-stack'),
     };
@@ -405,6 +415,10 @@
         }
     }
 
+    function scrollToCommand(logNode) {
+        html.commandStack.scrollTop = logNode.offsetTop - html.commandStack.offsetTop - html.commandStack.clientHeight/2;
+    }
+
     const undoStack = new class UndoStack {
         undoStack = [];
         redoStack = [];
@@ -426,7 +440,7 @@
                 this.redoStack = [];
                 html.redoLog.innerHTML = '';
                 html.histCnt.innerHTML = this.undoStack.length + this.redoStack.length;
-                logNode.scrollIntoView({ block: "center" });
+                scrollToCommand(logNode);
                 return;
             } else {
                 this.pendingCommit.rollbacks.push(revert);
@@ -440,7 +454,7 @@
                 last.revert();
                 this.redoStack.push(last);
                 html.redoLog.append(last.logNode);
-                last.logNode.scrollIntoView({ block: "center" });
+                scrollToCommand(last.logNode);
             }
         }
         redo() {
@@ -455,7 +469,7 @@
                 this.undoStack.push({ perform: last.perform, revert: revertAll, logNode: last.logNode });
 
                 html.undoLog.prepend(last.logNode);
-                last.logNode.scrollIntoView({ block: "center" });
+                scrollToCommand(last.logNode);
             }
         }
     }
@@ -486,7 +500,7 @@
     document.querySelectorAll(`input[name="snap-mode"]`).forEach(e =>
         e.addEventListener('change', e => setSnapMode(e.target.value)));
 
-    function cellSize() { return html.canvas.width / gridSize; }
+    function cellSize() { return html.canvas.clientWidth / gridSize; }
 
     var mPos = new Point(0, 0);
     var gPos = new Point(0, 0);
@@ -794,13 +808,12 @@
         ctx.beginPath();
         ctx.lineWidth = THEME.gridWidth;
         ctx.strokeStyle = THEME.gridColor;
-        for (let x = 0; x <= html.canvas.width; x += cellSize()) {
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, html.canvas.height);
-        }
-        for (let y = 0; y <= html.canvas.height; y += cellSize()) {
-            ctx.moveTo(0, y);
-            ctx.lineTo(html.canvas.height, y);
+        for (let i = 0; i < gridSize; i++) {
+            const [cord, max] = [i*cellSize(), gridSize*cellSize()];
+            ctx.moveTo(cord, 0);
+            ctx.lineTo(cord, max);
+            ctx.moveTo(0, cord);
+            ctx.lineTo(max, cord);
         }
         ctx.stroke();
     }
@@ -915,6 +928,19 @@
         ctx.restore();
     }
 
+    // https://dev.to/pahund/how-to-fix-blurry-text-on-html-canvases-on-mobile-phones-3iep
+    function dpiCorrectCanvas(canvas, set2dTransform = true) {
+        const [width, height] = [canvas.width, canvas.height];
+        const ratio = Math.ceil(window.devicePixelRatio);
+        canvas.width = width * ratio;
+        canvas.height = height * ratio;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        if (set2dTransform)
+            canvas.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0);
+        return canvas;
+    }
+
     /**  @param {CanvasRenderingContext2D } ctx*/
     var debugCtx = html.debugCanvas.getContext('2d');
     debugCtx.font = THEME.debugFont;
@@ -926,7 +952,7 @@
     function drawDebug(ctx) {
         ctx.clearRect(0, 0, html.debugCanvas.width, html.debugCanvas.height);
 
-        ctx.fillText(`mouse:  [${mPos.x}, ${mPos.y}]`, 0, 20);
+        ctx.fillText(`mouse:  [${mPos.x.toFixed(0)}, ${mPos.y.toFixed(0)}]`, 0, 20);
         ctx.fillText(`tile:   [${gPos.x}, ${gPos.y}]`, 0, 40);
         ctx.fillText(`cursor: [${cPos.x}, ${cPos.y}]`, 0, 60);
         ctx.save();
