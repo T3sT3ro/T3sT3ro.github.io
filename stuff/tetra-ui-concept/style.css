@@ -1,0 +1,75 @@
+* {
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+
+body {
+    background-color: #111;
+    height: 100vh;
+    max-height: 100%;
+    margin: 0;
+    padding: 1rem;
+}
+
+::-webkit-scrollbar {
+    background-color: #fff2;
+    width: 4px;
+    height: 4px;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: darkorange;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-corner {
+    background-color: transparent;
+}
+
+#config {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    color: orange;
+    background: #fff2;
+    padding: .5rem 1rem;
+    z-index: 1;
+    border-radius: 2px;
+    border: 1px solid #fff4;
+    backdrop-filter: blur(2px);
+    max-height: calc(100% - 2rem);
+    overflow-y: auto;
+}
+
+#config ul {
+    margin: 0;
+    list-style-type: none;
+    border-left: 1px dashed #fff5;
+    padding-left: .5rem;
+    margin-left: .3rem;
+}
+
+details summary {
+    user-select: none;
+    cursor: pointer;
+}
+
+#ui {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: .5rem;
+    border: 1px solid #fff2;
+    box-shadow: 0 0 1rem black;
+    overflow: hidden;
+}
+
+svg {
+    width: 100%;
+    height: 100%;
+
+    background-image: radial-gradient(#555 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-repeat: repeat;
+}
