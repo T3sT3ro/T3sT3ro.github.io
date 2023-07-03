@@ -1,0 +1,12 @@
+@import url("../../node_modules/open-props/open-props.min.css");
+@import url("../../node_modules/open-props/colors-hsl.min.css");
+
+:root {
+    --surface-0-light: var(--gray-0);
+    --surface-1-light: var(--gray-1);
+    --surface-2-light: var(--gray-2);
+    --surface-3-light: var(--gray-3);
+
+    --text-0-light: var(--gray-11);
+    --text-1-light: var(--gray-8);
+}

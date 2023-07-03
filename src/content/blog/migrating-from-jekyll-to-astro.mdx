@@ -1,0 +1,53 @@
+---
+title: Migrating from Jekyll to Astro
+published: 2023-11-07T21:15:23.517Z
+modified: 2023-11-07T21:59:19.774Z
+tags:
+  - ssg
+  - astro
+  - jekyll
+description: It had to be done, Jekyll was a PITA so I moved to Astro. I reached Nirvana.
+type: blog post
+draft: true
+lastmod: 2023-11-13T16:16:48.365Z
+keywords:
+  - Astro
+  - Jekyll
+---
+
+## Why not jekyll?
+
+- slow af
+- ruby is a pain to install, manage, and update
+- templating language in jekyll is subpar to using astro templates
+- It's scss preprocessor is obsolete (can't `@use`)
+- It requires frontmatter in all files that should be processed (breaking linters)
+- It is confusing at times
+- Can't add `file.scss.liquid` support, because it doesn't include them...
+- Kramdown:
+  - fenced code blocks have problems with indentation
+  - can't use `$$ $$` for mathjax
+- It is difficult to write processors for content
+- Plugins ecosystem is subpar compared to the whole world of `npm`
+- It's activity is declining
+- It has poor IDE support
+
+## Why Astro?
+
+- It's organized
+- Has great documentation
+- I can use things like Markdown, Mdx or Markdoc out of the box with minimal configuration
+- it has a great plugin ecosystem
+- It's fast and easy to set up
+- It has great IDE support
+- It's easy to write processors for content or generate dynamic pages (like `/tags/` for example)
+- It is very much alive and actively maintained
+- Has huge community
+- It doesn't vendor-lock me. I don't even notice I use Astro most of the time
+- Writing templates is very natural
+- Islands architecture can do heavy lifting for me
+- I can do much more than SSG if I want to
+- I can choose my favorite templating language, be it Astro, JSX, plain Html + JS etc
+- Typescript support
+- Out of the box support for css modules and many optimizations
+- view transitions

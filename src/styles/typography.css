@@ -1,0 +1,52 @@
+@import url("@fontsource/poppins");
+@import url("@fontsource-variable/roboto-slab");
+@import url("@fontsource-variable/jetbrains-mono");
+@import url("@fontsource-variable/edu-qld-beginner");
+
+:root {
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono Variable fallback", monospace;
+  --font-sans: "Poppins", "Poppins-fallback", sans-serif;
+  --font-serif: "Roboto Slab Variable", "Roboto Slab-fallback", serif;
+  --font-cursive: "EduQldBeginner", cursive;
+
+  /* alternatives:
+  Mate SC for titles https://fonts.google.com/specimen/Mate+SC?query=Edu
+  Tangerine for decorative cursive
+  Kurale, more decorative headers, citations
+  Texturina, hexagonal variable serif font, https://fonts.google.com/specimen/Texturina
+  */
+}
+
+/* 
+used https://principled-special-carriage.glitch.me/?font=JetBrains%20Mono
+and https://screenspan.net/fallback
+and https://meowni.ca/font-style-matcher/ 
+
+here is a matcher for generating the fallbacks below:
+https://deploy-preview-15--upbeat-shirley-608546.netlify.app/perfect-ish-font-fallback/?font=Jacques%20Francois
+*/
+@font-face {
+  font-family: "Poppins-fallback";
+  size-adjust: 112.50%;
+  ascent-override: 110%;
+  src: local("Arial");
+}
+
+@font-face {
+  font-family: "Roboto Slab-fallback";
+  size-adjust: 117.81%;
+  ascent-override: 83%;
+  src: local("Times New Roman");
+}
+
+
+@font-face {
+  font-family: "JetBrains Mono Variable fallback";
+  /* size-adjust: 116%; */
+  /* font-weight: 700; */
+  size-adjust: 105%;
+  ascent-override: 89%;
+  descent-override: 36%;
+  line-gap-override: normal;
+  src: local("Courier New");
+}

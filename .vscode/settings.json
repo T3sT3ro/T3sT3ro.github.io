@@ -1,32 +1,70 @@
 {
-    "files.associations": {
-        "*.*shader": "glsl",
-        "*.vert": "glsl",
-        "*.frag": "glsl",
-        "cstdio": "cpp",
-        "*.tcc": "cpp",
-        "string": "cpp",
-        "unordered_map": "cpp",
-        "unordered_set": "cpp",
-        "string_view": "cpp",
-        "iosfwd": "cpp",
-        "numeric": "cpp",
-        "functional": "cpp",
-        "regex": "cpp",
-        "tuple": "cpp",
-        "bitset": "cpp"
-    },
-    "frontMatter.content.autoUpdateDate": true,
-    "yaml.schemas": {
-        "https://json.schemastore.org/github-workflow.json": "file:///home/tooster/workspace/ttr/T3sT3ro.github.io/eleventy-gh/.github/workflows/build.yml"
-    },
-    "liquid.format.enable": true,
-    "svg.preview.background": "dark-transparent",
-    "[markdown]": {
-    },
-    "cSpell.words": [
-        "fontawesome"
-    ],
-    "markdown.extension.tableFormatter.normalizeIndentation": false,
-    "frontMatter.preview.host": "localhost:4000"
+  "files.associations": {
+    "*.*shader": "glsl",
+    "*.vert": "glsl",
+    "*.frag": "glsl",
+    "cstdio": "cpp",
+    "*.tcc": "cpp",
+    "string": "cpp",
+    "unordered_map": "cpp",
+    "unordered_set": "cpp",
+    "string_view": "cpp",
+    "iosfwd": "cpp",
+    "numeric": "cpp",
+    "functional": "cpp",
+    "regex": "cpp",
+    "tuple": "cpp",
+    "bitset": "cpp"
+  },
+  "frontMatter.content.autoUpdateDate": true,
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": "file:///home/tooster/workspace/ttr/T3sT3ro.github.io/eleventy-gh/.github/workflows/build.yml"
+  },
+  "svg.preview.background": "dark-transparent",
+  "[markdown]": {},
+  "cSpell.words": [
+    "fontawesome",
+    "stylelint",
+  ],
+  "markdown.extension.tableFormatter.normalizeIndentation": false,
+  "cssvar.files": [
+    "./node_modules/open-props/open-props.min.css",
+    "./node_modules/open-props/colors-hsl.min.css",
+    "./src/styles/palettes.css",
+    "./src/styles/theme-dark.css",
+    "./src/styles/theme-light.css",
+    "./src/styles/theme.css",
+  ],
+  "cssVariables.lookupFiles": [
+    "**/*.css",
+    "**/*.scss",
+    "**/*.sass",
+    "**/*.less",
+    "node_modules/open-props/open-props.min.css",
+    "node_modules/open-props/media.min.css",
+    "src/styles/palettes.css",
+    "src/styles/theme-dark.css",
+    "src/styles/theme-light.css",
+    "src/styles/theme.css",
+  ],
+  // Do not ignore node_modules css files, which is ignored by default
+  "cssvar.ignore": [],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "astro",
+    "typescript",
+    "typescriptreact",
+  ],
+  "stylelint.validate": [
+    "html",
+    "vue",
+    "svelte",
+    "astro",
+    "css",
+    "less",
+  ],
+  "css.validate": false,
+  "less.validate": false,
+  "scss.validate": false,
 }

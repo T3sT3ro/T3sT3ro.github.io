@@ -1,0 +1,55 @@
+@import url("palettes.css");
+@import url("theme-light.css");
+@import url("theme-dark.css");
+@import url("../../node_modules/open-props/media.min.css");
+
+/* TODO reference the [reshaped](https://reshaped.so/content/docs/tokens/color) design system to mimick the semantic tokens */
+
+:root { 
+    /* theme-agnostic */
+    --primary-0:  var(--amber-1);
+    --primary-1:  var(--amber-2);
+    --primary-2:  var(--amber-3);
+    --primary-3:  var(--amber-4);
+    --primary-4:  var(--amber-5);
+    --primary-5:  var(--amber-6);
+    --primary-6:  var(--amber-7);
+    --primary-7:  var(--amber-8);
+    --primary-8:  var(--amber-9);
+    --primary-9:  var(--amber-10);
+    --primary-10: var(--amber-11);
+
+    --secondary-0:  var(--jazz-blue-1);
+    --secondary-1:  var(--jazz-blue-2);
+    --secondary-2:  var(--jazz-blue-3);
+    --secondary-3:  var(--jazz-blue-4);
+    --secondary-4:  var(--jazz-blue-5);
+    --secondary-5:  var(--jazz-blue-6);
+    --secondary-6:  var(--jazz-blue-7);
+    --secondary-7:  var(--jazz-blue-8);
+    --secondary-8:  var(--jazz-blue-9);
+    --secondary-9:  var(--jazz-blue-10);
+    --secondary-10: var(--jazz-blue-11);
+
+    /* theme-specific */
+    --text-0: var(--text-0-light);
+    --text-1: var(--text-1-light);
+
+    --surface-0: var(--surface-0-light);
+    --surface-1: var(--surface-1-light);
+    --surface-2: var(--surface-2-light);
+    --surface-3: var(--surface-3-light);
+}
+
+@media (--OSdark) {
+    :root {
+        
+        --text-0: var(--text-0-dark);
+        --text-1: var(--text-1-dark);
+
+        --surface-0: var(--surface-0-dark);
+        --surface-1: var(--surface-1-dark);
+        --surface-2: var(--surface-2-dark);
+        --surface-3: var(--surface-3-dark);
+    }
+}

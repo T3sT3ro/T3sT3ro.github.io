@@ -1,0 +1,61 @@
+---
+import { date } from "astro/zod";
+import Tag from "./Tag.astro";
+import Card from "./Card.astro";
+
+export interface Props {
+  title: string;
+  description: string;
+  pubDate: string;
+  modDate: string;
+  preview?: boolean;
+  tags?: string[];
+}
+
+// FIXME
+const postId = undefined;
+const url = undefined;
+
+const { title, description, preview, tags, modDate, pubDate } = Astro.props;
+---
+
+<article style=`view-transition-name: post-${postId}`>
+  <div class="meta">
+    <div class="tags">
+      {tags?.map((tag) => <Tag name={tag} />)}
+    </div>
+
+    <time class="lastmod" datetime={modDate}>
+      {modDate}
+    </time>
+
+    <time class="created" datetime={pubDate}>
+      {pubDate}
+    </time>
+  </div>
+
+  <h2 class="title">
+    {
+      preview ? (
+        <a href={url}>{title}</a>
+      ) : (
+        <>
+          {title}
+          <hr />
+        </>
+      )
+    }
+  </h2>
+
+  <p>{description}</p>
+
+  {
+    preview ? (
+      <a class="read-more" href={url}>
+        Read more...
+      </a>
+    ) : (
+      <slot />
+    )
+  }
+</article>

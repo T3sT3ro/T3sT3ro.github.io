@@ -1,0 +1,35 @@
+/* 
+primary brand color: HSL(45°, 100%, 51%)   #FFC105
+    closest Open Color: var(--yellow-6);
+complementary:       HSL(225°, 100%, 51%)  #0544FF
+interesting red color:                     #FF2D2D
+    closest Open Color: var(--red-7);
+*/
+
+:root {
+    /* amber palette */
+    --amber-1:  hsl(60deg 100% 96%);
+    --amber-2:  hsl(56deg 100% 89%);
+    --amber-3:  hsl(57deg 100% 76%);
+    --amber-4:  hsl(54deg 100% 64%);
+    --amber-5:  hsl(52deg 100% 55%);
+    --amber-6:  hsl(45deg 100% 51%); /* #FFC105 */
+    --amber-7:  hsl(39deg 100% 44%);
+    --amber-8:  hsl(33deg 98% 37%);
+    --amber-9:  hsl(30deg 90% 31%);
+    --amber-10: hsl(29deg 84% 26%);
+    --amber-11: hsl(28deg 100% 14%);
+
+    /* blues palette */
+    --jazz-blue-1:  hsl(199deg 100% 97%);
+    --jazz-blue-2:  hsl(200deg 100% 94%);
+    --jazz-blue-3:  hsl(196deg 100% 86%);
+    --jazz-blue-4:  hsl(194deg 100% 73%);
+    --jazz-blue-5:  hsl(193deg 100% 59%);
+    --jazz-blue-6:  hsl(194deg 98% 48%);
+    --jazz-blue-7:  hsl(197deg 100% 41%);
+    --jazz-blue-8:  hsl(198deg 100% 33%);
+    --jazz-blue-9:  hsl(197deg 100% 27%);
+    --jazz-blue-10: hsl(198deg 89% 24%);
+    --jazz-blue-11: hsl(200deg 90% 16%);
+}

@@ -1,110 +1,73 @@
 {
-  "$schema": "https://frontmatter.codes/frontmatter.schema.json",
-  "frontMatter.framework.id": "jekyll",
-  "frontMatter.content.publicFolder": "assets",
-  "frontMatter.content.pageFolders": [
-    {
-      "title": "drafts",
-      "path": "[[workspace]]/_drafts"
-    },
-    {
-      "title": "posts",
-      "path": "[[workspace]]/_posts"
-    }
-  ],
-  "frontMatter.taxonomy.tags": [
-    "a",
-    "docker",
-    "e",
-    "fun",
-    "jekyll",
-    "l",
-    "m",
-    "p",
-    "s",
-    "t"
-  ],
-  "frontMatter.taxonomy.categories": [],
+  "$schema": "https://beta.frontmatter.codes/frontmatter.schema.json",
   "frontMatter.taxonomy.contentTypes": [
     {
-      "name": "default",
+      "name": "blog",
+      "previewPath": "'blog'",
       "pageBundle": false,
+      "clearEmpty": true,
       "fields": [
         {
-          "title": "Title",
           "name": "title",
-          "type": "string"
+          "type": "string",
+          "single": true,
+          "required": true
         },
         {
-          "title": "Description",
           "name": "description",
-          "type": "string"
+          "type": "string",
+          "single": true,
+          "required": true
         },
         {
-          "title": "Publishing date",
-          "name": "date",
+          "name": "heroImage",
+          "type": "image",
+          "isPreviewImage": true
+        },
+        {
+          "name": "tags",
+          "type": "tags",
+          "required": false,
+          "default": "null"
+        },
+        {
+          "name": "categories",
+          "type": "categories",
+          "required": false,
+          "default": "null"
+        },
+        {
+          "name": "draft",
+          "type": "draft",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "published",
           "type": "datetime",
           "default": "{{now}}",
-          "isPublishDate": true
+          "isPublishDate": true,
+          "required": true
         },
         {
-          "title": "Content preview",
-          "name": "preview",
-          "type": "image"
-        },
-        {
-          "title": "Is in draft",
-          "name": "draft",
-          "type": "boolean"
-        },
-        {
-          "title": "Tags",
-          "name": "tags",
-          "type": "tags"
-        },
-        {
-          "title": "Categories",
-          "name": "categories",
-          "type": "categories"
-        },
-        {
-          "title": "lastmod",
-          "name": "lastmod",
-          "type": "datetime"
-        },
-        {
-          "title": "type",
-          "name": "type",
-          "type": "string"
-        }
-      ]
-    },
-    {
-      "name": "todolist",
-      "pageBundle": false,
-      "fields": [
-        {
-          "title": "title",
-          "name": "title",
-          "type": "string"
-        },
-        {
-          "title": "layout",
-          "name": "layout",
-          "type": "string"
-        },
-        {
-          "title": "permalink",
-          "name": "permalink",
-          "type": "string"
-        },
-        {
-          "name": "type",
-          "type": "string",
-          "default": "todolist",
-          "hidden": true
+          "name": "modified",
+          "type": "datetime",
+          "default": "{{now}}",
+          "isModifiedDate": true
         }
       ]
     }
-  ]
+  ],
+  "frontMatter.framework.id": "astro",
+  "frontMatter.preview.host": "http://localhost:4321",
+  "frontMatter.content.pageFolders": [
+    {
+      "title": "blog",
+      "path": "[[workspace]]/src/content/blog",
+      "contentTypes": [
+        "blog"
+      ]
+    }
+  ],
+  "frontMatter.content.publicFolder": "public"
 }

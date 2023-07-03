@@ -1,0 +1,42 @@
+@import '_colors.pcss';
+
+@mixin elevate-1 {
+    backdrop-filter: blur(2px);
+    box-shadow: /* 0 0 1px var(--th-P-normal), */ 0 0 10px black;
+    border-radius: 2px;
+    outline: 1px solid var(--th-P-border);
+}
+
+@mixin elevate-2 {
+    backdrop-filter: blur(2px);
+    border-radius: 6px;
+    box-shadow: 0 0 12px #000;
+    outline: 1px solid var(--th-P-border);
+}
+
+// Elevations from M3
+// @mixin elevation-0 { opacity: 0%;   box-shadow: 0 0 0dp #000;   }
+// @mixin elevation-1 { opacity: 5%;   box-shadow: 0 0 1dp #000;   }
+// @mixin elevation-2 { opacity: 8%;   box-shadow: 0 0 3dp #000;   }
+// @mixin elevation-3 { opacity: 11%;  box-shadow: 0 0 6dp #000;  }
+// @mixin elevation-4 { opacity: 12%;  box-shadow: 0 0 8dp #000;  }
+// @mixin elevation-5 { opacity: 14%;  box-shadow: 0 0 12dp #000; }
+
+@mixin elevate($n, $surface-color) {
+$a: nth(0% 5% 8% 11% 12% 14%, $n);
+$blur: nth(0px 1px 3px 6px 8px 12px, $n);
+    background-color: rgba($surface-color, $a);
+    box-shadow: 0 0 $blur #000;
+}
+
+// fix highlight selection
+.hljs ::selection, .hljs::selection {
+    background-color: #214283 !important;
+    color: unset !important;
+}
+
+.hljs-ln .mark-line {
+    background-color: #484848;
+    border-width: 1px 0 1px 0;
+    border-style: solid;
+}

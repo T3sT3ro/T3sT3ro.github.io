@@ -1,0 +1,81 @@
+---
+title: TODO
+layout: post
+permalink: /todo
+lastmod: 2022-12-19T13:41:06.481Z
+draft: true
+description: TOD list for the side
+modified: 2023-11-11T20:56:56.745Z
+---
+
+- [x] time using `<time>`
+- [ ] links and buttons
+  - [ ] codepen
+  - [x] github
+  - [ ] linkedin?
+- [ ] breathing widget
+- [x] header eyes following and animation
+- [x] font jumping FOUT, FOIT
+- [x] "back" button
+- [ ] search page
+- [ ] functional tags
+- [x] inline code format
+- [x] `<kbd>` style
+- [ ] smooth scroll snap
+- [x] fontawesome
+  - [ ] move away from fontawesome (glyph fonts are considered bad) to [astro-icons](https://www.astroicon.dev/) or something
+- [ ] checkbox styling
+- [x] help icon displaying keyboard shortcuts
+- [x] fix resizing of code elements at small sizes
+- [x] comments via [giscus](https://giscus.app/)
+- [x] shadow to card
+- [x] line numbers
+  - [x] more consistent formatting
+  - [x] individual line highlight
+  - [x] easier to enable/disable
+- [x] fix shortcuts
+  - [x] F for fullscreen
+    - [x] wrap pre in div with flexbox
+  - [x] R for reset
+  - [x] L for toggle lines
+  - [x] W for word
+  - [x] fix question mark
+  - [x] SHIFT to aplpy to all
+  - [x] properly restore initial state
+  - [ ] add buttons for mobile
+- [ ] add proper elevation
+- [x] `overflow: hidden` on `preview` prevents margin collapse
+- [x] add before content on pre blocks with filename attribute
+- [ ] add theme explorer (demo) of site and utilize m3 tokens for unified theming
+- [ ] ~~remove mathjax config file~~ good for separation
+- [x] investigate disabling rouge in kramdown
+- [ ] ~~make latex double dollar signs work~~ undoable with kramdown v3+
+- [x] fix border colors of articles and codeblocks
+- [x] fix body and html size on smaller device
+- [x] add redirect to test under `/test`
+- [x] ~~set header aspect ratio instead of auto height?~~ invalid, because I use `<a>` now
+- [ ] use template inheritance
+- [x] fix pre overflow when no higlightjs is loaded
+- [ ] add collapse to code via some kind of `.collapse` class
+- [x] fix scrolls with code blocks with headers (filenames)
+- [x] fix overflow of resized nested codeblock
+- [ ] tables styling
+- [ ] custom processor for codeblocks and similar using [this guide](https://fuzyll.com/2017/changing-markdown-output-in-jekyll/)
+- [ ] SEO
+  - [ ] check why sitemap not working on google console
+  - [ ] slug optimization
+- [ ] tags and category pages
+- [ ] separate stuff from website content
+- [ ] preprocess codeblocks to compile highlight on the backend instead of frontend
+- [ ] [server side math rendering?](https://github.com/fmeum/jekyll-mathjax-csp)
+- [ ] remove experimental tailwind support, use open props + postcss jit props instead
+- [ ] Properly configure prettier, eslint, typescript, astro, postcss, open-props, vite, etc.
+- [ ] describe the stack
+  - [ ] [configure postcss-jit-props](https://github.com/GoogleChromeLabs/postcss-jit-props)
+- [ ] Consnider astro integrations
+  - [ ] storybook
+  - [ ] robots.txt
+  - [ ] seo
+  - [ ] icons
+  - [ ] compress
+  - [ ] 

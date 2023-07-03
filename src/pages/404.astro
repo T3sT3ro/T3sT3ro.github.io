@@ -1,0 +1,26 @@
+---
+import Card from '../components/Card.astro';
+import MainShell from '../layouts/MainLayout.astro';
+---
+
+<MainShell title='Oh no :(' description="With great sadness I must inform you, that this page doesn't exist :(">
+  <Card>
+    <h1>404</h1>
+    <strong>Page not found :(</strong>
+    <p>But it may fluctuate into existence someday...</p>
+  </Card>
+</MainShell>
+
+<style>
+  .card {
+    /* margin: 10px auto; max-width: 600px; */
+    text-align: center;
+
+    & h1 {
+      margin: 30px 0;
+      font-size: 4em;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+  }
+</style>

@@ -1,0 +1,73 @@
+---
+import '@fontsource-variable/source-code-pro';
+---
+
+<div id='advent'>
+  <a href='https://github.com/T3sT3ro/T3sT3ro.github.io/tree/master/algo/AoC/2022'>
+    <strong><span class='stars'>***</span> It's Advent Time! <span class='stars'>***</span></strong>
+  </a>
+</div>
+
+<style>
+  #advent {
+    --green: #00cc00;
+    --lightgreen: #99ff99;
+    --starwhite: #ffffee;
+    --staryellow: #ffff66;
+
+    grid-column-start: main-start;
+    grid-column-end: main-end;
+
+    & strong {
+      font-family: 'Source Code Pro', monospace;
+      color: $green;
+      text-shadow:
+        0 0 2px $green,
+        0 0 5px $green;
+      text-align: center;
+
+      &:hover {
+        color: $lightgreen;
+        text-shadow:
+          0 0 2px $lightgreen,
+          0 0 5px $lightgreen;
+
+        .stars {
+          color: $starwhite;
+          text-shadow: 0 0 5px $starwhite;
+        }
+      }
+
+      & .stars {
+        color: $staryellow;
+        text-shadow: 0 0 5px $staryellow;
+      }
+    }
+  }
+
+  @media (max-width: 578px) {
+    .stars {
+      display: block;
+    }
+  }
+
+  @media (min-width: 922px) {
+    #advent {
+      grid-column-start: 1;
+      grid-column-end: 2;
+      grid-row-start: 3;
+
+      & strong {
+        display: inline-block;
+        position: sticky;
+        top: 1em;
+        margin-top: 1em;
+        text-align: initial;
+
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        transform: rotate(180deg);
+      }
+    }
+  }
+</style>

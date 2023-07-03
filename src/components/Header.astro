@@ -1,0 +1,87 @@
+---
+import HeaderLink from './HeaderLink.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<header>
+  <a href='/'>
+    <svg viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg' xmlns:bx='https://boxy-svg.com' title="Tooster's site">
+      <rect
+        id='leftEye'
+        x='2'
+        y='8.506'
+        width='2'
+        height='1.5'
+        style='stroke: rgb(0 0 0); fill-rule: nonzero; stroke-width: 0;'></rect>
+      <rect id='rightEye' x='12' y='8.506' width='2' height='1.494' style='stroke-width: 0;'></rect>
+      <line id='mouth' style='stroke: rgb(0 0 0);' x1='5' y1='10.5' x2='11' y2='10.5'></line>
+    </svg>
+
+    <!-- From https://css-tricks.com/snippets/svg/svg-knockout-text/ -->
+    <!-- To check out: https://stackoverflow.com/questions/13932946/transparent-text-cut-out-of-background -->
+  </a>
+
+  <!-- <nav>
+        <HeaderLink href="/">Home</HeaderLink>
+        <HeaderLink href="/blog">Blog</HeaderLink>
+        <HeaderLink href="/about">About</HeaderLink>
+        <HeaderLink href="https://twitter.com/astrodotbuild" target="_blank">Twitter</HeaderLink>
+        <HeaderLink href="https://github.com/withastro/astro" target="_blank">GitHub</HeaderLink>
+    </nav> -->
+</header>
+
+<style>
+  header {
+    grid-area: header;
+
+    > a {
+      display: block;
+      padding: var(--size-3);
+      font-family: var(--font-serif);
+      text-align: center;
+      font-size: 1.5em;
+      font-weight: bold;
+
+      /* cutout */
+      background-color: hsla(0, 45%, 44%, 0.5);
+      color: black;
+      mix-blend-mode: screen;
+      border-radius: 50vmin;
+
+      svg {
+        height: 1.5em;
+        width: 100%;
+        display: block;
+
+        #mouth {
+          animation-duration: 0.3s;
+          animation-iteration-count: 1;
+        }
+      }
+
+      &:hover {
+        color: black;
+        transition: none;
+
+        svg #mouth {
+          animation-name: mouth-bounce;
+          animation-timing-function: ease;
+        }
+      }
+    }
+  }
+
+  @keyframes mouth-bounce {
+    0% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-1px);
+    }
+
+    100% {
+      transform: translateY(0);
+    }
+  }
+</style>

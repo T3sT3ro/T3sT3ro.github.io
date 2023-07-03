@@ -1,0 +1,18 @@
+---
+const today = new Date();
+---
+
+<footer>
+  <small>Made with Astro (and lots of love :heart:), by Yours Truly ;* &copy; {today.getFullYear()}. MIT.</small>
+</footer>
+
+<style>
+  footer {
+    grid-area: footer;
+    gap: var(--size-3);
+    color: var(--gray-6);
+    background-color: var(--gray-9);
+    backdrop-filter: blur(2px);
+    text-align: center;
+  }
+</style>

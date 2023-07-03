@@ -1,0 +1,26 @@
+---
+import FeedLayout from "../../layouts/FeedLayout.astro";
+
+const allPosts = await Astro.glob("../posts/*.mdx");
+
+export async function getStaticPaths() {
+    return [
+        { params: { tag: "jekyll" }, props: { posts: allPosts } },
+        { params: { tag: "fun" }, props: { posts: allPosts } },
+        { params: { tag: "algorithms" }, props: { posts: allPosts } },
+        { params: { tag: "algorithms" }, props: { posts: allPosts } },
+    ];
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props;
+
+const filteredPosts = posts.filter((post) => post.frontmatter.tags?.includes(tag));
+---
+
+<FeedLayout title={tag} />
+    { filteredPosts.map(p => 
+    <Post>
+        </Post>
+    ) }
+</FeedLayout>

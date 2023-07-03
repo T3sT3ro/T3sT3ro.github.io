@@ -1,0 +1,33 @@
+---
+import "../styles/default.scss";
+import "giscus";
+
+import Card from '@components/Card.astro';
+
+// using https://github.com/giscus/giscus-component
+---
+
+<Card>
+  <giscus-widget
+    id="comments"
+    repo="T3sT3ro/T3sT3ro.github.io"
+    repoid="MDEwOlJlcG9zaXRvcnk3OTc5MjkzNA=="
+    category="comments"
+    categoryid="DIC_kwDOBMGLJs4CTJba"
+    mapping="pathname"
+    strict="0"
+    reactionsenabled="1"
+    emitmetadata="0"
+    inputposition="top"
+    theme="transparent_dark"
+    lang="en"
+    loading="lazy"
+  >
+  </giscus-widget>
+</Card>
+
+<style>
+  #comments {
+    --outline-color: var(--color-secondary);
+  }
+</style>

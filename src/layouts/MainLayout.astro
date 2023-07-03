@@ -1,0 +1,67 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import FloatingWidget from "../components/FloatingWidget.astro";
+
+import "@fontsource-variable/roboto-slab";
+import "@fontsource-variable/jetbrains-mono";
+import "@fontsource/poppins";
+
+import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
+
+export interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = SITE_TITLE, description = SITE_DESCRIPTION } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <BaseHead title={title} description={description} />
+  </head>
+
+  <body>
+    <Header />
+
+    <main>
+      <slot />
+    </main>
+
+    <!-- <FloatingWidget /> -->
+
+    <Footer />
+    
+    <style>
+      body {
+        min-height: 100vh;
+        height: min-content;
+        display: grid;
+        grid-template:
+          ". header ."
+          ". main ." 1fr
+          ". footer ."
+          / 1fr min(100% - 2rem, 50rem) 1fr;
+
+        position: relative;
+        scroll-behavior: smooth;
+
+        color: var(--th-on-surface);
+
+        background: radial-gradient(var(--surface-1) 0.5px, transparent 1px), var(--surface-4);
+        background-position: left top;
+        background-size: 17px 17px;
+
+        & main {
+          grid-area: main;
+          display: flex;
+          flex-direction: column;
+          gap: 4rem;
+        }
+      }
+    </style>
+  </body>
+</html>
