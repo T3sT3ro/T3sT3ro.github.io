@@ -1,13 +1,22 @@
 {
   "extends": [
     "stylelint-config-standard",
-    "stylelint-config-astro"
+    "stylelint-config-astro",
+    "stylelint-config-recommended"
+  ],
+  "plugins": [
+    "stylelint-gamut"
   ],
   "rules": {
     "declaration-empty-line-before": null,
     "custom-property-empty-line-before": null,
     "font-family-name-quotes": "always-unless-keyword",
-    "comment-empty-line-before": null
+    "comment-empty-line-before": null,
+
+    "gamut/color-no-out-gamut-range": true,
+    "function-disallowed-list": ["rgba", "hsla", "rgb", "hsl"],
+    "color-function-notation": "modern",
+    "color-no-hex": true
   },
   "ignorePatterns": [
     "node_modules/**/*",
