@@ -1,12 +1,12 @@
 ---
 title: Templating languages
-published: 2022-09-23T09:15:14.392Z
+description: A small comparison of templating languages
 tags:
   - templates
-modified: 2022-12-19T14:15:31.551Z
+published: 2022-09-23T09:15:14.392Z
+modified: 2024-01-25T14:30:53.861Z
 last-table-update: 2022-11-02T11:40:14.174Z
 draft: true
-type: default
 ---
 
 This post serves as a reference for templating languages, comparison of their respective features and what I've learned about them so far.
