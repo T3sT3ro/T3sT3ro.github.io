@@ -1,0 +1,134 @@
+---
+title: The Good, the Bad and the Ugly of Unity
+tags:
+  - unity
+categories:
+  - sucks ass
+draft: true
+published: 2024-01-15T13:46:59.558Z
+modified: 2024-04-02T22:51:59.072Z
+type: blog
+description: "Condensed list of my complaints of unity"
+---
+
+I had a (dis)pleasure of using Unity for some time, both professionally and privately. 
+
+- projects are not indepotent — the presence of `.meta` files sometimes leads to corrupted/invalid unity state. It also creates a lot of bloat.
+- Asset Store has some beef with GPL, LGPL (even dynamically linked!) — VLC authors couldn't publish their asset to Asset Store
+- closed source means that whenever the documentation is missing (or wrong!), you have to play a guessing game why something behaves differently than expected
+- Unity hub doesn't implement editor delta patches. Each version is it's own 10 GB download without sharing dlls.
+- UI is terribly clunky and hard to look at. It became better recently, but waiting so many years to REMOVE PAID-ONLY DARK MODE?!.
+- Pretty slow to load, import, "rebuild domain"(!)
+- > "As the saying goes: there are two ways to solve any problem in unity, but one is deprecated and the others experimental." 
+  > \- _u/Bomayes_
+- Linux support is non-existent (cursor bugs, dragging bugs, gizmo bugs, camera moving bugs, support for frame debuggers, support for other compilers)
+    - cursor bugs when hovering over window/tab borders and many UI elements
+    - dragging tabs around is a huuuuge PITA (good luck with any kind of layout reordering!)
+    - there are gizmo bugs where elements don't render correctly
+    - camera was moving soooo slowly when scrolling and there is no option for zoom/mouse speed in editor
+    - frame debuggers (Renderdoc and others) are not supported on Linux. There supposedly are workarounds with custom launch parameters, but they never worked in my case. Supposedly to make it work on linux, Vulkan backend had to be used. This changes basically everything and rarely (read: never) works.
+- Can't run renderdoc easily on linux
+- Destructive editing   
+    - For example converting BRP to URP or HDRP without undo support
+- working with git is a mess (or any other version control system)
+  - There is no diffing mechanism for merging scenes/objects
+- metadata is stored in .meta files along project files which makes it a lot messier
+- things that should be basic functionality in the editor are $30 3rd party underdelivered packages without demo in asset store
+- 2D tilemap editor is plain bad
+- documentation is misleading or plain missing (HLSL [ZWrite keyword] is different than in documentation)
+- rendering paths are confusing
+- shadergraph is not good enough to be used commercially (what is this 2k lines shader output that it generates? ._.)
+- input system is yuck
+- UI is quite unreadable and thigns are hard to find
+    - ever ventured into Project Settings or Preferences?
+- ImGUI is so-so.
+- unity broke inlay code documentation. It doesn't ship `.xml` files for `netstandard.dll` or similar libraries (e.g. for `System.dll`) which makes it super awkward and hard to work with offline. It redirects to online microsoft documentation. It broke it several times in minor releases, so it's always a file hunt for that.
+- IL2CPP is not open source
+- constant bugs (you don't know if your project will even open). [For example this](https://issuetracker.unity3d.com/issues/sysrootpackage-throws-not-implement-inherited-abstract-member-errors-after-importing) and who the fuck knows what does it mean and how to fix that :)
+- a forum separate to stackoverflow, which makes the knowledge base even more segmented. Secondly, their forum is so shitty UX and content wise.
+- fucking christ, syntax generators support is so shit.
+  - Syntax generators supported by Unity use old and slow version of Roslyn (no incremental generators, old SyntaxVisitors)
+  - syntax generators break undo support in unity. For example changing a file that is depended on by syntax generator makes it impossible to undo later.
+  - They require black magic to work, the .dll tag for them looses keywords (super important to making it work...) when copied some other way than via simple `cp` or in file manager (e.g. drag and dropping from one folder to another in unity makes the dll lose it's metadata)
+  - generated syntax has problems with reporting source ranges and error messages
+- log window is terrible
+  - logs have bad hyperlinks (e.g. for generated code)
+  - very hard to read logs
+- old C version with lots of features missing
+- package system is really dumb and very slow to load
+- duplication of features and underdelivery of many of them
+- huge segmentation
+- project structure and assembly files are just dumb. Why not reuse existing structure from M$?
+- no support for nuget etc.
+- Unity GameObjects override `==` equality operator. This makes using null-coalescing operators unreliable and unusable. For example `comp ??= new Component()` won't work reliably and you have to do `if(comp != null) comp == new Component()` and similar.
+- Unity properties and project settings locations are pretty dumb and in weird places.
+- Every node has transform property. Compared to Godot, where hierarchy is more sane, this makes complex hierarchies have some overhead. Sometimes you just want to represent a structure as abstract collection of nodes with parents and children and you don't want any matrix associated with it...
+- Unity serialization is pretty dumb, and unity doesn't support serializing basic C# structures like Dictionaries, Lists, etc. Generally you have to reimplement everything from scratch
+- Property drawers are a pain to work with and many things require manual implementation of them.
+- Asset importers are hard and their documentation is very poor.
+- Unity UI elements for custom property drawers are pretty basic and bad.
+- Shaderlab (shader language) is a proprietary, poorly documented standard made by Unity which isn't flexible enough and has poor tooling support
+  - Property drawers are poorly supported and poorly documented
+  - You can only have Vector4 arguments, no Vector arguments and possible behind-the-scenes optimization
+  - Multipass shaders can't share a buffer between passes without external scripting and modifying the render pipeline or using command buffers
+- Debugging unity is pretty hard without 3rd party support — unity editor hangs because it is on a separate thread
+- C# in itself is sometimes underdeveloped and it doesn't help, that unity is still lagging behind on it's version.
+- It's hard to write type-safe code in Unity. Many types of errors are runtime errors
+- There are many underdeveloped and competing "standards":
+    - For example regular ECS vs DOTS
+    - old vs new input system
+    - old vs new UI system
+    - competing (4? more?) render pipelines
+    - old vs new particle system
+    - C# events, unity events, unity messages and idk how many others
+    - many different ImGui elements all over the place
+- Shadergraph is very hard to extend and it's source is very hard to find and read (tightly coupled with render pipelines)
+- Game object lifecycle events are hard to work with, often counterintuitive and they lack proper support
+- A lot of things are underdocumented or badly documented (that's even worse)
+- A lot of things are internal and non-modifiable (calls to C libraries).
+- API inside shaders is a mess of poorly documented mix of functions, macros and include files.
+- A lot of legacy stuff in unity, e.g. cginc shaders
+- the CEO was a fucking idiot, the new temporary CEO also has some controversies.
+- Unity editor versions don't share code and binaries, every new instance has to be downloaded separately
+- Editor versioning system is messy
+- Unity support site is an unpleasant experience to interact with. Bugs have to be voted on, sometimes are closed with wrong reasons, ignored etc.
+- Unity forums are filled with a lot of bad practices for older versions.
+- Collaboration is so fucking hard — scenes and prefab conflicts are a pain to resolve, git integration is a mess, a lot of proprietary formats competing on the scene without a proper tooling
+- default game hierarchy is pretty dumb — scenes are a separate concept than other nodes, there are no good APIs for observing and manipulating hierarchies, objects and components are tightly coupled
+- There is no good support for a more declarative and observable approach to game development.
+- Missing "Omnibar" and many UX widgets known from other modern software — CTRL+F, quick access, poor layouts and waste of monitor space, many things blend into one incoherent visual blob of widgets.
+- tilemap system and editing tools are very bad. Working with top-down unit games is a pain.
+- One monolithic scrollable inspector and lots of clutter in the UI, because things are not contextual and pinnable or tabbable properly.
+- Imperative at it's core, depends on a mutable state and checking changes manually. Something as simple as "value changed" is unnecessarily complex
+- Slow and poor in performance.
+- Animator and animation system is dumb, unreliable and requires 3rd party scripts like DoTween.
+- There are at least 3 ways for components to communicate: C# events, Unity events and messages
+- [this rant by Garry's mod author](https://garry.net/posts/unity-2020)
+- Some UI elements are locked in it's place and waste space. For example console cannot be split vertically into log and single message preview on the side
+- Also console log is so fucking bad, filtering or finding has such a poor UX...
+- Editor CRASHES when an editor script causes stack overflow. Yup. There is no such thing as StackOverflowException for editor scripts :)
+- Unity editor scripts crash... so... often... I don't know if it's Linux's fault or what, but that brings everything to 0-1 debugging
+- sometimes `this == null` is true... This is due to... C#... Visible for example when doing `OnValidate() => EditorApplication.delayCall += actOnthisComponent`...
+- script lifecycle is messy and has a lot of gotchas, where you can suddenly get an error that you do something that you are not supposed to do. It thus offloads lifecycle error checks to runtime instead of compile time
+- So... much... dependency... on... reflection...
+- Because it's closed source and a bug happens (that is unity's vault) you are at the mercy of whoever made the error message. `State comes from an incompatible keyword space` is a great example. Who knows what the fuck it means `¯\_(ツ)_/¯`
+- asset pipeline is so hard to work with... Why can't it be done similar to gradle tasks and dependencies on artifacts???
+- There is no good way to initialize a newly created scriptable object asset in the project. There is no `OnAssetCreated()` callback or anything
+- When you have a script in editor mode depending on the SO, when you update th SO, changes are not detected in the mono behavior depending on it.
+- enums are serialized as ordered int, so if you change enum definition and add or remove a value in the middle, serialized scripts can break unnoticabely.
+- unity using it's event-driven reflection based methods makes using many C# features a lot harder, and for someone who usually uses them it's just an unnecessary burden. For example constructors are avoided for `MonoBheavior`, lifecycle functions like `Awake` should be used. But this makes `readonly`, `init` only setters and possibly many more language features heavily impaired.
+- unity serialization-first architecture without any event-driven design or a lack of C# property support makes working often feel like working against unity than working with it. For example systems like Animator can update serialized fields... but not properties, so it's impossible to observe the property changes without a convoluted, error-prone and tedious process of tracking changes manually at runtime with something like `oldVal != val`. 
+- unity lifecycle events are hard to work with and they offer very poor integration API. For example hooking into shader compilation stages and customizing this process is as far as I can tell impossible
+- Unity is a mix of state-driven, event-driven, immediate-mode, data-driven, object-oriented concepts where each of those systems is poorly documented, closed, lacking and underdeveloped. For example event functions and the whole event-driven editor/runtime system is not useful enough to support more complex editor usage scenarios besides the basics. One such case can be seen when trying to augment the shader asset pipeline. Hooking into shader compilation pipeline, source assembling, detecting when the shaders are recompiled etc. is a total pain. There is no way to hook into the "event loop". The event system for the editor is non-existent.
+- "unfinished business":
+  - custom shader editor doesn't support UI toolkit ([who knows how many others as well...](https://forum.unity.com/threads/reproduce-material-shader-property-inspector-within-editorwindow.1396915/) )
+- mouse 4/5 don't work as back/forward
+- the fundamental idea of components and mono behaviors as base classes makes code unnecessarily convoluted when we have to work with another type hierarchy. If you don't think of Components/MonoBehaviors from day 1 and don't inherit them in the root, will will have a pretty bad time e.g. without full serialization support, wrapper types, interop problems with interfaces and classes.
+- tools for authoring shaders and the whole shader framework is lacking. Shaderlab and many shader include files are undocumented or have confusing/incorrect docs. Trying to adapt standard unity shading model in custom vertex+fragment shaders is impossibly hard. 
+- weird versioning scheme
+- issue tracker, forum and documentation, which are an integral part of the ecosystem, are simply bad. Some issues I have with them:
+  - ticket voting system
+  - lack of syntax highlighting in the docs!
+  - very poor search results in the docs
+  - old and hardly readable forums
+  - a lot of support given actually on discord, which is hidden from search engines.
