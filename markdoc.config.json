@@ -1,0 +1,12 @@
+[
+  {
+    "id": "t3st3ro.github.io",
+    "path": "src/content",
+    "schema": {
+      "path": "markdoc.config.mjs",
+      "type": "esm",
+      "property": "default",
+      "watch": true
+    }
+  }
+]
