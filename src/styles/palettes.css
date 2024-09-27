@@ -1,4 +1,6 @@
 /* 
+https://uicolors.app/create
+
 primary brand color: HSL(45°, 100%, 51%)   #FFC105
     closest Open Color: var(--yellow-6);
 complementary:       HSL(225°, 100%, 51%)  #0544FF
@@ -6,30 +8,33 @@ interesting red color:                     #FF2D2D
     closest Open Color: var(--red-7);
 */
 
-:root {
-    /* amber palette */
-    --amber-1:  hsl(60deg 100% 96%);
-    --amber-2:  hsl(56deg 100% 89%);
-    --amber-3:  hsl(57deg 100% 76%);
-    --amber-4:  hsl(54deg 100% 64%);
-    --amber-5:  hsl(52deg 100% 55%);
-    --amber-6:  hsl(45deg 100% 51%); /* #FFC105 */
-    --amber-7:  hsl(39deg 100% 44%);
-    --amber-8:  hsl(33deg 98% 37%);
-    --amber-9:  hsl(30deg 90% 31%);
-    --amber-10: hsl(29deg 84% 26%);
-    --amber-11: hsl(28deg 100% 14%);
+@layer base {
+    :root {
+        /* amber palette */
+        --amber-1: oklch(99.5% 0.027 106.9deg);
+        --amber-2: oklch(97.9% 0.067 104.2deg);
+        --amber-3: oklch(96.3% 0.139 106deg);
+        --amber-4: oklch(93.2% 0.175 102.8deg);
+        --amber-5: oklch(90.6% 0.184 99deg);
+        --amber-6: oklch(84.3% 0.172 84.7deg);
+        /* #FFC105 */
+        --amber-7: oklch(72.2% 0.155 71.4deg);
+        --amber-8: oklch(59.9% 0.14 59.8deg);
+        --amber-9: oklch(50.4% 0.12 56.4deg);
+        --amber-10: oklch(43.7% 0.1 56.5deg);
+        --amber-11: oklch(29.7% 0.073 56deg);
 
-    /* blues palette */
-    --jazz-blue-1:  hsl(199deg 100% 97%);
-    --jazz-blue-2:  hsl(200deg 100% 94%);
-    --jazz-blue-3:  hsl(196deg 100% 86%);
-    --jazz-blue-4:  hsl(194deg 100% 73%);
-    --jazz-blue-5:  hsl(193deg 100% 59%);
-    --jazz-blue-6:  hsl(194deg 98% 48%);
-    --jazz-blue-7:  hsl(197deg 100% 41%);
-    --jazz-blue-8:  hsl(198deg 100% 33%);
-    --jazz-blue-9:  hsl(197deg 100% 27%);
-    --jazz-blue-10: hsl(198deg 89% 24%);
-    --jazz-blue-11: hsl(200deg 90% 16%);
+        /* blues palette */
+        --jazz-blue-1: oklch(97.9% 0.013 227deg);
+        --jazz-blue-2: oklch(95.8% 0.026 229.1deg);
+        --jazz-blue-3: oklch(91.3% 0.059 222.2deg);
+        --jazz-blue-4: oklch(85.2% 0.107 220.2deg);
+        --jazz-blue-5: oklch(80.3% 0.14 222.3deg);
+        --jazz-blue-6: oklch(73.9% 0.145 228.8deg);
+        --jazz-blue-7: oklch(63.6% 0.136 235.6deg);
+        --jazz-blue-8: oklch(53.6% 0.117 237.1deg);
+        --jazz-blue-9: oklch(47% 0.099 234.4deg);
+        --jazz-blue-10: oklch(41.8% 0.085 234.6deg);
+        --jazz-blue-11: oklch(31.2% 0.065 237.1deg);
+    }
 }

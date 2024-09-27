@@ -1,10 +1,11 @@
 ---
 import HeaderLink from './HeaderLink.astro';
 import { SITE_TITLE } from '../consts';
+import 'src/styles/typography.css';
 ---
 
 <header>
-  <a href='/'>
+  <a href='/' aria-label="homepage link">
     <svg viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg' xmlns:bx='https://boxy-svg.com' title="Tooster's site">
       <rect
         id='leftEye'
@@ -43,8 +44,8 @@ import { SITE_TITLE } from '../consts';
       font-weight: bold;
 
       /* cutout */
-      background-color: hsla(0, 45%, 44%, 0.5);
-      color: black;
+      background-color: var(--text-0);
+      color: var(--text-0);
       mix-blend-mode: screen;
       border-radius: 50vmin;
 

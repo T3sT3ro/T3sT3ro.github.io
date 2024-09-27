@@ -1,0 +1,44 @@
+/* Base global styles for all elements */
+
+@import url('theme.css') layer(base);
+@import url('typography.css') layer(base);
+
+@layer base {
+  body {
+    background-color: var(--c-background-0);
+    color: var(--c-foreground);
+
+    place-content: center;
+    margin: 0;
+    scrollbar-gutter: stable both-edges;
+    min-height: 100dvh;
+    max-width: 100dvw;
+
+    font-family: var(--font-sans);
+  }
+
+  a {
+    text-decoration: none;
+    color: var(--c-brand);
+
+    &:hover,
+    &:active {
+      color: var(--c-brand-high);
+      /* filter: brightness(1.2); */
+      transition: color 0.1s;
+    }
+  }
+
+  :where(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-serif);
+  }
+
+  .font-fancy {
+    font-family: var(--font-cursive);
+  }
+
+  pre,
+  code {
+    font-family: var(--font-mono);
+  }
+}

@@ -1,35 +1,5 @@
-@import url("../../node_modules/normalize.css/normalize.css") layer(normalize);
-@import url("theme.css") layer(base);
-@import url("typography.css") layer(base);
+@layer reset, thirdparty, base, component, utils;
 
-@layer normalize, base;
-
-body {
-  background-color: var(--surface-0);
-  place-content: center;
-  margin: 0;
-  scrollbar-gutter: stable both-edges;
-  min-height: 100dvh;
-  max-width: 100dvw;
-}
-
-a {
-  text-decoration: none;
-  color: var(--text-accent);
-
-  &:hover,
-  &:active {
-    color: var(--text);
-    filter: brightness(1.2);
-    transition: color 0.1s;
-  }
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: "Roboto Slab Variable", sans-serif;
-}
+@import url("normalize.css/normalize") layer(reset);
+@import url("base.css") layer(base);
+@import url("utils.css") layer(utils);

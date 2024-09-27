@@ -1,55 +1,90 @@
 @import url("palettes.css");
-@import url("theme-light.css");
-@import url("theme-dark.css");
-@import url("../../node_modules/open-props/media.min.css");
+@import url("../../node_modules/open-props/colors.min.css");
 
 /* TODO reference the [reshaped](https://reshaped.so/content/docs/tokens/color) design system to mimick the semantic tokens */
 
-:root { 
-    /* theme-agnostic */
-    --primary-0:  var(--amber-1);
-    --primary-1:  var(--amber-2);
-    --primary-2:  var(--amber-3);
-    --primary-3:  var(--amber-4);
-    --primary-4:  var(--amber-5);
-    --primary-5:  var(--amber-6);
-    --primary-6:  var(--amber-7);
-    --primary-7:  var(--amber-8);
-    --primary-8:  var(--amber-9);
-    --primary-9:  var(--amber-10);
-    --primary-10: var(--amber-11);
-
-    --secondary-0:  var(--jazz-blue-1);
-    --secondary-1:  var(--jazz-blue-2);
-    --secondary-2:  var(--jazz-blue-3);
-    --secondary-3:  var(--jazz-blue-4);
-    --secondary-4:  var(--jazz-blue-5);
-    --secondary-5:  var(--jazz-blue-6);
-    --secondary-6:  var(--jazz-blue-7);
-    --secondary-7:  var(--jazz-blue-8);
-    --secondary-8:  var(--jazz-blue-9);
-    --secondary-9:  var(--jazz-blue-10);
-    --secondary-10: var(--jazz-blue-11);
-
-    /* theme-specific */
-    --text-0: var(--text-0-light);
-    --text-1: var(--text-1-light);
-
-    --surface-0: var(--surface-0-light);
-    --surface-1: var(--surface-1-light);
-    --surface-2: var(--surface-2-light);
-    --surface-3: var(--surface-3-light);
-}
-
-@media (--OSdark) {
+@layer base {
     :root {
-        
-        --text-0: var(--text-0-dark);
-        --text-1: var(--text-1-dark);
+        /* theme-agnostic */
+        --c-primary-0: var(--amber-1);
+        --c-primary-1: var(--amber-2);
+        --c-primary-2: var(--amber-3);
+        --c-primary-3: var(--amber-4);
+        --c-primary-4: var(--amber-5);
+        --c-primary-5: var(--amber-6);
+        --c-primary-6: var(--amber-7);
+        --c-primary-7: var(--amber-8);
+        --c-primary-8: var(--amber-9);
+        --c-primary-9: var(--amber-10);
+        --c-primary-10: var(--amber-11);
 
-        --surface-0: var(--surface-0-dark);
-        --surface-1: var(--surface-1-dark);
-        --surface-2: var(--surface-2-dark);
-        --surface-3: var(--surface-3-dark);
+        --c-secondary-0: var(--jazz-blue-1);
+        --c-secondary-1: var(--jazz-blue-2);
+        --c-secondary-2: var(--jazz-blue-3);
+        --c-secondary-3: var(--jazz-blue-4);
+        --c-secondary-4: var(--jazz-blue-5);
+        --c-secondary-5: var(--jazz-blue-6);
+        --c-secondary-6: var(--jazz-blue-7);
+        --c-secondary-7: var(--jazz-blue-8);
+        --c-secondary-8: var(--jazz-blue-9);
+        --c-secondary-9: var(--jazz-blue-10);
+        --c-secondary-10: var(--jazz-blue-11);
+
+        --c-background-0: var(--gray-11);
+        --c-background-1: var(--gray-10);
+        --c-background-2: var(--gray-9);
+        --c-background-3: var(--gray-8);
+
+        --c-foreground-dim: var(--gray-6);
+        --c-foreground: var(--gray-3);
+
+        --c-brand-dim: var(--amber-9);
+        --c-brand: var(--amber-6);
+        --c-brand-high: var(--amber-3);
+
+        --c-alternative-dim: var(--c-secondary-9);
+        --c-alternative: var(--c-secondary-6);
+        --c-alternative-high: var(--c-secondary-3);
+
+        --c-white: #fff;
+        --c-black: #010100;
+
+        /* Inspiration taken from Matcha.mizu.sh: https://matcha.mizu.sh/ */
+        --default: #e6edf3;
+        --subtle: #e6edf3;
+        --contrast: #1f2328;
+        --muted: #848d97;
+        --accent: #4493f8;
+        --active: #a371f7;
+        --variant: #db61a2;
+        --success: #3fb950;
+        --attention: #d29922;
+        --severe: #db6d28;
+        --danger: #f85149;
+
+
+        /* HP scale  */
+        --hp-0: rgb(255 102 0);
+        --hp-1: rgb(222 74 0);
+        --hp-2: rgb(190 45 0);
+        --hp-3: rgb(154 7 0);
+        --hp-4: rgb(126 0 0);
+        --hp-5: rgb(95 0 0);
+        --hp-6: rgb(66 0 2);
+        --hp-7: rgb(36 0 1);
+        --hp-8: rgb(0 0 0);
+    }
+    
+    .hp {
+        background: linear-gradient(to right,
+                var(--hp-0) 0%,
+                var(--hp-1) 12.5%,
+                var(--hp-2) 25%,
+                var(--hp-3) 37.5%,
+                var(--hp-4) 50%,
+                var(--hp-5) 62.5%,
+                var(--hp-6) 75%,
+                var(--hp-7) 87.5%,
+                var(--hp-8) 100%);
     }
 }

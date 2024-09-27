@@ -183,3 +183,17 @@ kbd {
     font-weight: bold;
     filter: invert(100%) drop-shadow(1px 3px 0px slategray);
 }
+
+
+/* fix highlight selection */
+.hljs ::selection, .hljs::selection {
+    background-color: #214283 !important;
+    color: unset !important;
+}
+
+.hljs-ln .mark-line {
+    background-color: #484848;
+    border-width: 1px 0;
+    border-style: solid;
+}
+

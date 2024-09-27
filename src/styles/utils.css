@@ -1,7 +1,9 @@
-/* gives inset shadows a little bit more depth */
-.subtle-border-highlight {
+@layer utils {
+
+  /* gives inset shadows a little bit more depth */
+  .subtle-border-highlight {
     background: hsl(200deg 15% 10%);
-    box-shadow: 
+    box-shadow:
       /* regular nice inset shadow */
       inset 0 1px 4px 0 hsl(200deg 15% 7%),
       /* 
@@ -11,13 +13,14 @@
       */
       inset 0 1px 0 0 hsl(200deg 15% 2%),
       inset 0 -1px 0 0 hsl(200deg 15% 22%);
-}
+  }
 
-/* Gives top glow and bottom shadow making it subtly *pop* */
-.highlighted-text-shadow {
+  /* Gives top glow and bottom shadow making it subtly *pop* */
+  .highlighted-text-shadow {
     text-shadow:
       /* regular text-shadow */
       0 .15ch 15px var(--shadow),
       /* text-shadow highlight */
       0 -2px 0 var(--highlight);
   }
+}
