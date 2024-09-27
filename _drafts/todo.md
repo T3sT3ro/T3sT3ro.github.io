@@ -1,10 +1,14 @@
 ---
 title: TODO
-layout: post
+description: TODO list for the side
 permalink: /todo
-lastmod: 2022-12-19T13:41:06.481Z
+published: 2022-12-19T13:41:06.481Z
+draft: true
+modified: 2024-09-27T18:00:45.150Z
+layout: post
 ---
 
+- [ ] USE "N00BS" or "NOBS" or some other name for the site! It's intent is "No BS" where no-bs, meaty articles are without the fluff. You have a problem and you have a solution without fancy paragraphs and stories.
 - [x] time using `<time>`
 - [ ] links and buttons
   - [ ] codepen
@@ -64,3 +68,14 @@ lastmod: 2022-12-19T13:41:06.481Z
 - [ ] separate stuff from website content
 - [ ] preprocess codeblocks to compile highlight on the backend instead of frontend
 - [ ] [server side math rendering?](https://github.com/fmeum/jekyll-mathjax-csp)
+- [ ] remove experimental tailwind support, use open props + postcss jit props instead
+- [ ] Properly configure prettier, eslint, typescript, astro, postcss, open-props, vite, etc.
+- [ ] describe the stack
+  - [ ] [configure postcss-jit-props](https://github.com/GoogleChromeLabs/postcss-jit-props)
+- [ ] Consnider astro integrations
+  - [ ] storybook
+  - [ ] robots.txt
+  - [ ] seo
+  - [ ] icons
+  - [ ] compress
+  - [ ] [add interactive code snippets](https://antonz.org/in-browser-code-playgrounds/)
