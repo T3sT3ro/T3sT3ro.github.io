@@ -11,11 +11,7 @@ module.exports = {
         require('postcss-mixins'),
         require('postcss-preset-env'),
         require('postcss-custom-media'),
-        require('postcss-combine-media-query'),
-        require('postcss-combine-duplicated-selectors')({
-            removeDuplicatedProperties: true,
-            removeDuplicatedValues: false
-        }),
+        require('postcss-combine-media-query'), 
         require('autoprefixer'),
         require('cssnano')({ preset: 'advanced' }),
         require('postcss-reporter'),
