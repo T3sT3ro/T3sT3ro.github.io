@@ -1,13 +1,14 @@
 ---
 title: TODO
-layout: post
+description: TODO list for the side
 permalink: /todo
-lastmod: 2022-12-19T13:41:06.481Z
+published: 2022-12-19T13:41:06.481Z
 draft: true
-description: TOD list for the side
-modified: 2023-11-11T20:56:56.745Z
+modified: 2024-09-27T18:00:45.150Z
+layout: post
 ---
 
+- [ ] USE "N00BS" or "NOBS" or some other name for the site! It's intent is "No BS" where no-bs, meaty articles are without the fluff. You have a problem and you have a solution without fancy paragraphs and stories.
 - [x] time using `<time>`
 - [ ] links and buttons
   - [ ] codepen
@@ -78,4 +79,4 @@ modified: 2023-11-11T20:56:56.745Z
   - [ ] seo
   - [ ] icons
   - [ ] compress
-  - [ ] 
+  - [ ] [add interactive code snippets](https://antonz.org/in-browser-code-playgrounds/)
