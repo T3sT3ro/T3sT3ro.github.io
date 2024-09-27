@@ -1,0 +1,41 @@
+---
+title: Why C# sucks
+description: Some of the complains I have over the years of working with C#. It gets a bit personal.
+draft: true
+published: 2024-01-06T22:33:01.424Z
+modified: 2024-01-25T14:28:54.566Z
+type: blog
+---
+
+This blog post focuses only on annoying and painful sides of C#. Although I appreciate other things, this is not a topic for this post. 
+
+- Declaration type variance prevents from pattern matching over unknown but essentially unneeded types. For example in Java you could match `List<*>` without specifying the type of list elements (aka match any list). This is a valid use case if you don't care about elements contained in the list but the structure itself. In C# it is impossible without specifying type parameter for `List<T>` in the method declaration. This is a problem when you don't know what type is `T` and can't call the method. for example:
+    ```ca
+    public void DoThing<T>(BaseType base) {
+        base match 
+    }
+    ```
+- uncomplete APIs, for example:
+    - read only collections arent a subset of collections
+    - `IReadOnlyList` doesn't have `LastIndexOf`
+    - there are nonsensical differences between collections. E.g. there is an `Array.FindLastIndex` accepting predicate parameter, but there is no such thing for `List` or `ReadOnlyList`
+- explicit interface implementations itnroduce a lot of boilerplate. It's understandable that it's to "future proof" by avoiding name clashes and avoiding silent errors when base classes would add methods with names already existing in child classes.
+- non-virtual by default makes extending existing types harder without hacking your way in
+- underdeveloped and underdelivered features
+    - records, for example, would CRASH THE DEBUGGER when they are cyclic, but they don't produce any warning or error.
+- properties are often abused and have side effects, which are harder to debug
+- there is no proper read-only data structure and immutability support
+- nullability support is subpar
+- operator overloading leads to bad code - see Unity's GameObject `==` overload
+- covariant return types only in recent versions and still not well supported
+- can't override property if it's defined in base with only getter but you want getter and setter in child. Can't do partial properties as well
+- `init` only properties are a joke
+- primary constructors are a joke as well
+- some language features are implemented as 
+- no proper algebraic type system
+- pattern matching over enum is not exhaustive, default branch is required.
+- enum is basically a typealias for `int`. It is not as useful as it is in Java for example.
+- default interface methods suck ass. They are not available on a type unless the type is referred to by the interface. So when you pass `Iface` type, then the method call is dispatched to default implementation instead of the override. Maybe if they are implemented explicitly?
+- explicit iheritance and the lack of covariant return types till C#9 (i.e. Unity doesn't have it...) is a real PITA.
+- Void is not a valid generic type. Coupled with the lack of Unit or Nothing this makes writing generics harder, for example Visitor and Visitor\<R\> is harder
+- [sometimes `this == null`...](https://stackoverflow.com/questions/10625326/this-null-inside-net-instance-method-why-is-that-possible)
