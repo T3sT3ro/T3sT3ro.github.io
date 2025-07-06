@@ -21,7 +21,6 @@ export default defineConfig({
     enabled: true
   },
   experimental: {
-    contentCollectionCache: true,
     contentIntellisense: true,
   }
 });

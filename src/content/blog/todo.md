@@ -1,11 +1,9 @@
 ---
 title: TODO
 description: TODO list for the side
-permalink: /todo
 published: 2022-12-19T13:41:06.481Z
 draft: true
-modified: 2024-09-27T18:00:45.150Z
-layout: post
+modified: 2025-07-06T18:37:06.679Z
 ---
 
 - [ ] USE "N00BS" or "NOBS" or some other name for the site! It's intent is "No BS" where no-bs, meaty articles are without the fluff. You have a problem and you have a solution without fancy paragraphs and stories.
