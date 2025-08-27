@@ -1,0 +1,1367 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tilemap Water Pumping</title>
+    <link rel="stylesheet" href="https://unpkg.com/open-props">
+    <style>
+        :root {
+            /* Sizing constraints not provided by Open Props */
+            --max-height-octave: 200px;
+            --max-height-debug: 300px;
+            --min-width-value: 50px;
+            --min-width-octave-value: 40px;
+            --min-width-canvas-container: 200px;
+        }
+
+        body {
+            font-family: var(--font-sans), system-ui, Arial, sans-serif;
+            margin: var(--size-2);
+            display: flex;
+            gap: var(--size-2);
+            height: calc(100vh - var(--size-4));
+            overflow: hidden;
+        }
+
+        canvas {
+            border: var(--border-size-1) solid var(--text-1);
+            display: block;
+        }
+
+        .control-box {
+            display: flex;
+            flex-direction: column;
+            padding: var(--size-2);
+            border: var(--border-size-1) solid var(--gray-5);
+            background: var(--surface-2);
+            min-width: 0;
+        }
+
+        .control-box h4 {
+            margin: 0 0 var(--size-2) 0;
+            font-size: var(--font-size-0);
+            font-weight: bold;
+        }
+
+        #controls {
+            display: flex;
+            flex-direction: column;
+            row-gap: var(--size-1);
+            flex: 1;
+            min-width: var(--min-width-canvas-container);
+        }
+
+        #topControls {
+            display: flex;
+            gap: var(--size-1);
+            align-items: stretch;
+        }
+
+        #buttons {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #buttons .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--size-1);
+            flex-wrap: wrap;
+        }
+
+        #noiseControls { flex: 3; }
+
+        #bottomControls {
+            display: flex;
+            gap: var(--size-1);
+            align-items: stretch;
+        }
+
+        #controlsBox {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            column-gap: var(--size-2);
+            align-items: center;
+            flex: 1;
+        }
+
+        #legendItems {
+            display: flex;
+            flex-direction: row;
+            gap: var(--size-1);
+            margin-right: var(--size-4);
+        }
+
+        .legend-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: var(--font-size-0);
+            gap: var(--size-1);
+        }
+
+        .legend-color {
+            width: var(--size-3);
+            height: var(--size-3);
+            border: var(--border-size-1) solid var(--text-1);
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: var(--size-1);
+            margin-right: var(--size-2);
+            line-height: 0.9;
+            font-size: var(--font-size-0);
+        }
+
+        button, select {
+            padding: var(--size-2) var(--size-3);
+        }
+
+        #noiseMainControls {
+            display: flex;
+            flex-direction: column;
+            gap: var(--size-1);
+            margin-bottom: var(--size-2);
+        }
+
+        #noiseControlsContainer {
+            display: flex;
+            gap: var(--size-3);
+        }
+
+        #octaveControls {
+            flex: 1;
+            max-height: var(--max-height-octave);
+            overflow-y: auto;
+            border: var(--border-size-1) solid var(--gray-4);
+            background: var(--surface-1);
+            padding: var(--size-1);
+        }
+
+        #noiseControls label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: var(--font-size-0);
+            margin: var(--size-1) 0;
+        }
+
+        #noiseControls input[type="range"] {
+            flex: 1;
+            margin: 0 var(--size-2);
+        }
+
+        .value-display {
+            min-width: var(--min-width-value);
+            text-align: right;
+            font-family: var(--font-mono), 'Courier New', monospace;
+            font-size: var(--font-size-0);
+            color: var(--text-2);
+        }
+
+        .control-item code {
+            background: var(--gray-4);
+            padding: var(--size-1) var(--size-3);
+            border-radius: var(--radius-2);
+            font-family: var(--font-mono), 'Courier New', monospace;
+            font-size: var(--font-size-0);
+            display: inline-block;
+            text-align: center;
+        }
+
+        .octave-controls {
+            border: var(--border-size-1) solid var(--gray-4);
+            padding: var(--size-1);
+            margin: var(--size-1) 0;
+            background: var(--surface-1);
+            border-radius: var(--radius-2);
+        }
+
+        .octave-controls h5 {
+            margin: 0 0 var(--size-1) 0;
+            font-size: var(--font-size-0);
+            font-weight: bold;
+            color: var(--text-2);
+        }
+
+        .octave-controls label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: var(--font-size-0);
+            margin: var(--size-1) 0;
+        }
+
+        .octave-controls input[type="range"] {
+            flex: 1;
+            margin: 0 var(--size-1);
+        }
+
+        .octave-controls .value-display {
+            min-width: var(--min-width-octave-value);
+            font-size: var(--font-size-00);
+        }
+
+        #info {
+            font-size: var(--font-size-0);
+            line-height: 1.6;
+            margin: var(--size-2) var(--size-2) 0;
+        }
+
+        #info code {
+            background: var(--gray-4);
+            padding: var(--size-1) var(--size-2);
+            border-radius: var(--radius-2);
+            font-family: var(--font-mono), 'Courier New', monospace;
+            font-size: var(--font-size-1);
+        }
+
+        #debugContainer {
+            display: flex;
+            gap: var(--size-1);
+            flex: 1;
+            min-height: 0;
+        }
+
+        #basinsDebug, #reservoirsDebug {
+            flex: 1;
+            border: var(--border-size-1) solid var(--gray-5);
+            background: var(--surface-2);
+            padding: var(--size-2);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        #basinsDebug h4, #reservoirsDebug h4 {
+            margin: 0 0 var(--size-2) 0;
+            font-size: var(--font-size-2);
+            border-bottom: var(--border-size-1) solid var(--gray-4);
+            padding-bottom: var(--size-1);
+            flex-shrink: 0;
+        }
+
+        #basinsText, #reservoirsText {
+            flex: 1;
+            overflow-y: auto;
+            line-height: 1.3;
+            font-family: var(--font-mono), 'Courier New', monospace;
+            min-height: 0;
+            white-space: pre;
+            font-size: var(--font-size-0);
+        }
+
+        .basin-line {
+            cursor: pointer;
+            padding: var(--size-1) 0;
+        }
+
+        .basin-line:hover {
+            background-color: var(--gray-4);
+        }
+
+        .basin-line.highlighted {
+            background-color: var(--yellow-2);
+            font-weight: bold;
+        }
+
+        #debugText {
+            max-height: var(--max-height-debug);
+            overflow-y: auto;
+            font-size: var(--font-size-0);
+            line-height: 1.3;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <canvas id="canvas"></canvas>
+    </div>
+    <div id="controls">
+        <div id="topControls">
+            <div id="buttons" class="control-box">
+                <h4>Actions</h4>
+                <div class="button-group">
+                    <button id="tickBtn">Tick</button>
+                    <button id="randomizeBtn">Randomize Heights</button>
+                    <button id="clearPumps">Clear Pumps</button>
+                    <button id="clearWater">Clear All Water</button>
+                </div>
+            </div>
+            <div id="noiseControls" class="control-box">
+                <h4>Noise Controls</h4>
+                <div id="noiseControlsContainer">
+                    <div id="noiseMainControls">
+                        <label>Base Freq: <input id="noiseFreq" type="range" min="0.005" max="0.1" step="0.005" value="0.02"><span class="value-display" id="noiseFreqValue">0.02</span></label>
+                        <label>Octaves: <input id="noiseOctaves" type="range" min="1" max="6" step="1" value="3"><span class="value-display" id="noiseOctavesValue">3</span></label>
+                        <label>Persistence: <input id="noisePersistence" type="range" min="0.1" max="0.9" step="0.1" value="0.5"><span class="value-display" id="noisePersistenceValue">0.5</span></label>
+                        <label>Offset: <input id="noiseOffset" type="range" min="-1.0" max="1.0" step="0.05" value="0.3"><span class="value-display" id="noiseOffsetValue">0.3</span></label>
+                    </div>
+                    <div id="octaveControls"></div>
+                </div>
+            </div>
+        </div>
+        <div id="bottomControls">
+            <div id="legend" class="control-box">
+                <h4>Legend</h4>
+                <div id="legendItems"></div>
+            </div>
+            <div id="controlsBox" class="control-box">
+                <div class="control-item"><code>LMB</code> Set depth=0</div>
+                <div class="control-item"><code>RMB</code> Set to min neighbor</div>
+                <div class="control-item"><code>ALT+LMB</code> Increase depth</div>
+                <div class="control-item"><code>ALT+RMB</code> Decrease depth</div>
+                <div class="control-item"><code>SHIFT+LMB</code> Add outlet pump</div>
+                <div class="control-item"><code>SHIFT+RMB</code> Add inlet pump</div>
+                <div class="control-item"><code>SHIFT+CTRL+LMB</code> Link pump to reservoir</div>
+                <div class="control-item"><code>CTRL+LMB</code> Flood fill</div>
+                <div class="control-item"><code>CTRL+RMB</code> Flood empty</div>
+            </div>
+            <div id="labelControls" class="control-box">
+                <h4>Drawing Labels</h4>
+                <div class="control-item">
+                    <label><input type="checkbox" id="showDepthLabels" checked> Show Depth</label>
+                </div>
+                <div class="control-item">
+                    <label><input type="checkbox" id="showPumpLabels" checked> Show Pump IDs</label>
+                </div>
+                <div class="control-item">
+                    <label><input type="checkbox" id="showBasinLabels"> Show Basin IDs</label>
+                </div>
+            </div>
+        </div>
+                <div id="debugContainer">
+            <div id="basinsDebug" class="control-box">
+                <h4 id="basinsTitle">Basins
+                </h4>
+                <div id="basinsText"></div>
+            </div>
+            <div id="reservoirsDebug" class="control-box">
+                <h4>Pumps 
+                    <label style="font-weight: normal; font-size: var(--font-size-0); margin-left: var(--size-2);">
+                        Select Reservoir: <input type="number" id="reservoirInput" min="0" value="0" style="width: 60px;" placeholder="ID">
+                    </label>
+                </h4>
+                <div id="reservoirsText"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // --- CONFIG ---
+        const CHUNK_SIZE = 16;
+        const CHUNKS_X = 10, CHUNKS_Y = 10;
+        const TILE_SIZE = 6; // pixels
+        const MAX_DEPTH = 9;
+        const VOLUME_UNIT = 1;
+        const PUMP_RATE = 1; // volume per tick
+
+        const WORLD_W = CHUNKS_X * CHUNK_SIZE;
+        const WORLD_H = CHUNKS_Y * CHUNK_SIZE;
+
+        // canvas setup
+        const canvas = document.getElementById('canvas');
+        canvas.width = WORLD_W * TILE_SIZE;
+        canvas.height = WORLD_H * TILE_SIZE;
+        const ctx = canvas.getContext('2d');
+
+        // state
+        let heights = new Array(WORLD_H);
+        for (let y = 0; y < WORLD_H; y++) heights[y] = new Array(WORLD_W).fill(0);
+        let basinIdOf = new Array(WORLD_H); for (let y = 0; y < WORLD_H; y++) basinIdOf[y] = new Array(WORLD_W).fill(0);
+        let basins = new Map(); // id -> {tiles: Set of 'x,y', volume, level}
+        let nextBasinId = 1;
+        let pumps = []; // {x,y,mode,reservoirId}
+        let reservoirs = new Map(); let nextReservoirId = 1;
+        let highlightedBasin = null; // For basin highlighting on map
+        let selectedReservoirId = null; // For linking pumps to the same reservoir
+
+        // Perlin noise implementation
+        function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+        function lerp(t, a, b) { return a + t * (b - a); }
+        function grad(hash, x, y) {
+            const h = hash & 15;
+            const u = h < 8 ? x : y;
+            const v = h < 4 ? y : h == 12 || h == 14 ? x : 0;
+            return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+        }
+
+        // Permutation table for Perlin noise
+        const p = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+                   190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,
+                   174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,
+                   133,230,220,105,92,41,55,46,245,40,244,102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208,
+                   89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
+                   5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,
+                   248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,129,22,39,253, 19,98,108,110,79,113,224,
+                   232,178,185, 112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,
+                   249,14,239,107,49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,138,
+                   236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
+        
+        // Duplicate permutation table
+        for(let i = 0; i < 256; i++) p[256 + i] = p[i];
+
+        function noise2D(x, y) {
+            const X = Math.floor(x) & 255;
+            const Y = Math.floor(y) & 255;
+            x -= Math.floor(x);
+            y -= Math.floor(y);
+            const u = fade(x);
+            const v = fade(y);
+            const A = p[X] + Y, AA = p[A], AB = p[A + 1];
+            const B = p[X + 1] + Y, BA = p[B], BB = p[B + 1];
+            return lerp(v, lerp(u, grad(p[AA], x, y), grad(p[BA], x - 1, y)),
+                          lerp(u, grad(p[AB], x, y - 1), grad(p[BB], x - 1, y - 1)));
+        }
+
+        function generateHeights(seedOffset = 0) {
+            const baseFreq = parseFloat(document.getElementById('noiseFreq').value);
+            const octaves = parseInt(document.getElementById('noiseOctaves').value);
+            const persistence = parseFloat(document.getElementById('noisePersistence').value);
+            const offset = parseFloat(document.getElementById('noiseOffset').value);
+            
+            for (let y = 0; y < WORLD_H; y++) {
+                for (let x = 0; x < WORLD_W; x++) {
+                    let value = 0;
+                    let maxValue = 0;
+                    
+                    // Generate octaves of noise with individual controls
+                    for (let i = 0; i < octaves; i++) {
+                        const octaveFreqElement = document.getElementById(`octaveFreq${i}`);
+                        const octaveAmpElement = document.getElementById(`octaveAmp${i}`);
+                        
+                        let frequency, amplitude;
+                        
+                        if (octaveFreqElement && octaveAmpElement) {
+                            // Use individual controls if available
+                            frequency = parseFloat(octaveFreqElement.value);
+                            amplitude = parseFloat(octaveAmpElement.value);
+                        } else {
+                            // Fall back to traditional calculation
+                            frequency = baseFreq * Math.pow(2, i);
+                            amplitude = Math.pow(persistence, i);
+                        }
+                        
+                        const n = noise2D(x * frequency + seedOffset, y * frequency - seedOffset);
+                        value += n * amplitude;
+                        maxValue += amplitude;
+                    }
+                    
+                    // Normalize and scale with offset
+                    value = value / maxValue; // -1..1
+                    value = (value + offset) * 0.5 + 0.5; // Apply offset and normalize to 0..1
+                    value = Math.max(0, Math.min(1, value)); // Clamp to 0-1 range
+                    heights[y][x] = Math.floor(value * (MAX_DEPTH + 1));
+                }
+            }
+        }
+
+        function createOctaveControls() {
+            const octaves = parseInt(document.getElementById('noiseOctaves').value);
+            const baseFreq = parseFloat(document.getElementById('noiseFreq').value);
+            const persistence = parseFloat(document.getElementById('noisePersistence').value);
+            const container = document.getElementById('octaveControls');
+            
+            container.innerHTML = '';
+            
+            for (let i = 0; i < octaves; i++) {
+                const octaveDiv = document.createElement('div');
+                octaveDiv.className = 'octave-controls';
+                
+                const title = document.createElement('h5');
+                title.textContent = `Octave ${i + 1}`;
+                octaveDiv.appendChild(title);
+                
+                // Default frequency and amplitude based on traditional calculation
+                const defaultFreq = baseFreq * Math.pow(2, i);
+                const defaultAmp = Math.pow(persistence, i);
+                
+                // Frequency control
+                const freqLabel = document.createElement('label');
+                freqLabel.innerHTML = `Frequency: <input id="octaveFreq${i}" type="range" min="0.001" max="0.5" step="0.001" value="${defaultFreq.toFixed(3)}"><span class="value-display" id="octaveFreq${i}Value">${defaultFreq.toFixed(3)}</span>`;
+                octaveDiv.appendChild(freqLabel);
+                
+                // Amplitude control
+                const ampLabel = document.createElement('label');
+                ampLabel.innerHTML = `Amplitude: <input id="octaveAmp${i}" type="range" min="0" max="2" step="0.01" value="${defaultAmp.toFixed(2)}"><span class="value-display" id="octaveAmp${i}Value">${defaultAmp.toFixed(2)}</span>`;
+                octaveDiv.appendChild(ampLabel);
+                
+                container.appendChild(octaveDiv);
+                
+                // Add event listeners for real-time updates
+                document.getElementById(`octaveFreq${i}`).addEventListener('input', (e) => {
+                    document.getElementById(`octaveFreq${i}Value`).textContent = e.target.value;
+                    saveNoiseSettings();
+                    generateHeights(0);
+                    recomputeAll();
+                });
+                
+                document.getElementById(`octaveAmp${i}`).addEventListener('input', (e) => {
+                    document.getElementById(`octaveAmp${i}Value`).textContent = e.target.value;
+                    saveNoiseSettings();
+                    generateHeights(0);
+                    recomputeAll();
+                });
+            }
+        }
+
+        // basin computation
+        function computeBasins() {
+            basinIdOf.forEach(row => row.fill(0));
+            basins.clear(); nextBasinId = 1;
+            const visited = new Array(WORLD_H);
+            for (let y = 0; y < WORLD_H; y++) { visited[y] = new Array(WORLD_W).fill(false); }
+            
+            // Group basins by height level
+            const basinsByLevel = new Map();
+            
+            for (let y = 0; y < WORLD_H; y++) {
+                for (let x = 0; x < WORLD_W; x++) {
+                    if (visited[y][x]) continue;
+                    const height = heights[y][x];
+                    
+                    // Skip depth 0 (land/surface) - no basins on land
+                    if (height === 0) {
+                        visited[y][x] = true;
+                        continue;
+                    }
+                    
+                    const tiles = new Set();
+                    const stack = [[x, y]];
+                    while (stack.length) {
+                        const [cx, cy] = stack.pop();
+                        if (cx < 0 || cy < 0 || cx >= WORLD_W || cy >= WORLD_H) continue;
+                        if (visited[cy][cx]) continue;
+                        if (heights[cy][cx] === 0) continue; // Skip land tiles in flood fill too
+                        visited[cy][cx] = true;
+                        tiles.add(cx + "," + cy);
+                        const h = heights[cy][cx];
+                        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+                            const nx = cx + dx, ny = cy + dy;
+                            if (nx < 0 || ny < 0 || nx >= WORLD_W || ny >= WORLD_H) return;
+                            if (visited[ny][nx]) return;
+                            if (heights[ny][nx] <= h && heights[ny][nx] > 0) stack.push([nx, ny]); // Only add water tiles
+                        });
+                    }
+                    
+                    // Only create basins for water tiles (depth > 0)
+                    if (tiles.size > 0 && height > 0) {
+                        // Group by height level
+                        if (!basinsByLevel.has(height)) {
+                            basinsByLevel.set(height, []);
+                        }
+                        basinsByLevel.get(height).push({ tiles, height });
+                    }
+                }
+            }
+            
+            // Assign IDs in format level#letters
+            basinsByLevel.forEach((basinsAtLevel, level) => {
+                basinsAtLevel.forEach((basinData, index) => {
+                    const letters = generateLetterSequence(index);
+                    const id = `${level}#${letters}`;
+                    basins.set(id, { tiles: basinData.tiles, volume: 0, level: 0, height: level });
+                    basinData.tiles.forEach(k => {
+                        const [tx, ty] = k.split(',').map(Number);
+                        basinIdOf[ty][tx] = id;
+                    });
+                });
+            });
+        }
+
+        // Generate letter sequence: a, b, c, ..., z, aa, ab, ac, ...
+        function generateLetterSequence(index) {
+            let result = '';
+            let num = index;
+            
+            do {
+                result = String.fromCharCode(97 + (num % 26)) + result;
+                num = Math.floor(num / 26) - 1;
+            } while (num >= 0);
+            
+            return result;
+        }
+
+        function getHeightColor(depth) {
+            // Only depth 0 = surface (brown), all others = gray
+            if (depth === 0) {
+                return 'rgb(139, 69, 19)'; // Brown for surface only
+            } else {
+                // Gray gradient for all depths > 0
+                const ratio = depth / MAX_DEPTH;
+                const v = Math.floor(220 - ratio * 180); // 220 (light gray) -> 40 (dark gray)
+                return `rgb(${v},${v},${v})`;
+            }
+        }
+
+        function createLegend() {
+            const legendItems = document.getElementById('legendItems');
+            legendItems.innerHTML = '';
+            
+            for (let depth = 0; depth <= MAX_DEPTH; depth++) {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                
+                const colorBox = document.createElement('div');
+                colorBox.className = 'legend-color';
+                colorBox.style.backgroundColor = getHeightColor(depth);
+                
+                const label = document.createElement('span');
+                label.textContent = `${depth}`;
+                
+                item.appendChild(label);
+                item.appendChild(colorBox);
+                legendItems.appendChild(item);
+            }
+        }
+
+        function recomputeAll() {
+            computeBasins();
+            updateReservoirControls();
+            draw();
+        }
+
+        function createReservoir() { const id = nextReservoirId++; reservoirs.set(id, { volume: 0 }); return id; }
+
+        function addPumpAt(x, y, mode, linkToReservoir = false) {
+            const basinId = basinIdOf[y][x];
+            if (!basinId) return;
+            
+            let reservoirId;
+            if (linkToReservoir && selectedReservoirId && reservoirs.has(selectedReservoirId)) {
+                reservoirId = selectedReservoirId;
+            } else {
+                reservoirId = createReservoir();
+            }
+            
+            pumps.push({ x, y, mode, reservoirId: reservoirId });
+            updateReservoirControls();
+            return reservoirId;
+        }
+
+        function linkPumpToReservoir(x, y) {
+            // Find existing pump at this location to get its reservoir, or find nearby pumps
+            const existingPump = pumps.find(p => p.x === x && p.y === y);
+            if (existingPump) {
+                selectedReservoirId = existingPump.reservoirId;
+                console.log(`Selected reservoir ${selectedReservoirId} for linking`);
+                updateReservoirControls();
+                return true;
+            }
+            
+            // If no pump at exact location, find the nearest pump within a small radius
+            const nearbyPumps = pumps.filter(p => Math.abs(p.x - x) <= 1 && Math.abs(p.y - y) <= 1);
+            if (nearbyPumps.length > 0) {
+                selectedReservoirId = nearbyPumps[0].reservoirId;
+                console.log(`Selected reservoir ${selectedReservoirId} for linking (from nearby pump)`);
+                updateReservoirControls();
+                return true;
+            }
+            
+            return false;
+        }
+
+        function clearPumps() { 
+            pumps = []; 
+            reservoirs.clear(); 
+            nextReservoirId = 1; 
+            selectedReservoirId = null;
+            updateReservoirControls();
+        }
+
+        function clearAllWater() {
+            basins.forEach(basin => {
+                basin.volume = 0;
+                basin.level = 0;
+            });
+            reservoirs.forEach(reservoir => {
+                reservoir.volume = 0;
+            });
+            draw();
+        }
+
+        function tick() {
+            for (let p of pumps) {
+                const b = basins.get(basinIdOf[p.y][p.x]);
+                const r = reservoirs.get(p.reservoirId);
+                if (!b || !r) continue;
+                if (p.mode === 'inlet') {
+                    const take = Math.min(PUMP_RATE, b.volume);
+                    b.volume -= take; r.volume += take;
+                } else {
+                    const give = Math.min(PUMP_RATE, Math.max(0, r.volume));
+                    r.volume -= give; b.volume += give;
+                }
+            }
+            basins.forEach(b => {
+                const capacityPerLevel = b.tiles.size * VOLUME_UNIT;
+                b.level = Math.floor(b.volume / capacityPerLevel);
+                if (b.level < 0) b.level = 0;
+                if (b.level > MAX_DEPTH) b.level = MAX_DEPTH;
+            });
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let y = 0; y < WORLD_H; y++) {
+                for (let x = 0; x < WORLD_W; x++) {
+                    const d = heights[y][x];
+                    ctx.fillStyle = getHeightColor(d);
+                    ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                }
+            }
+            for (let [id, b] of basins) {
+                if (b.level <= 0) continue;
+                const alpha = Math.min(0.7, 0.12 + b.level * 0.06);
+                ctx.fillStyle = `rgba(50,120,200,${alpha})`;
+                b.tiles.forEach(k => {
+                    const [tx, ty] = k.split(',').map(Number);
+                    if (b.level > heights[ty][tx]) ctx.fillRect(tx * TILE_SIZE, ty * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                });
+            }
+            for (let p of pumps) {
+                const cx = p.x * TILE_SIZE + TILE_SIZE / 2;
+                const cy = p.y * TILE_SIZE + TILE_SIZE / 2;
+                
+                // Highlight pumps in selected reservoir with a thicker circle
+                if (selectedReservoirId && p.reservoirId === selectedReservoirId) {
+                    ctx.beginPath(); 
+                    ctx.arc(cx, cy, TILE_SIZE * 1.8, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)'; // Yellow highlight
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+                
+                ctx.beginPath(); 
+                ctx.arc(cx, cy, TILE_SIZE * 1.4, 0, Math.PI * 2);
+                ctx.strokeStyle = (p.mode === 'inlet') ? 'red' : 'green';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.lineWidth = 1;
+            }
+            
+            // Draw connections between pumps in the same reservoir
+            const reservoirConnections = new Map();
+            pumps.forEach(pump => {
+                if (!reservoirConnections.has(pump.reservoirId)) {
+                    reservoirConnections.set(pump.reservoirId, []);
+                }
+                reservoirConnections.get(pump.reservoirId).push(pump);
+            });
+            
+            // Draw lines between pumps in the same reservoir (if more than 1)
+            reservoirConnections.forEach((pumpsInReservoir, reservoirId) => {
+                if (pumpsInReservoir.length > 1) {
+                    ctx.strokeStyle = 'rgba(0, 0, 255, 0.6)'; // Blue connections
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 5]); // Dashed line
+                    
+                    // Connect pumps in a chain (not all-to-all to avoid clutter)
+                    for (let i = 0; i < pumpsInReservoir.length - 1; i++) {
+                        const pump1 = pumpsInReservoir[i];
+                        const pump2 = pumpsInReservoir[i + 1];
+                        
+                        const x1 = pump1.x * TILE_SIZE + TILE_SIZE / 2;
+                        const y1 = pump1.y * TILE_SIZE + TILE_SIZE / 2;
+                        const x2 = pump2.x * TILE_SIZE + TILE_SIZE / 2;
+                        const y2 = pump2.y * TILE_SIZE + TILE_SIZE / 2;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                    }
+                    
+                    ctx.setLineDash([]); // Reset to solid lines
+                    ctx.lineWidth = 1;
+                }
+            });
+            // draw chunk boundaries
+            ctx.strokeStyle = 'rgba(255,0,0)';
+            for (let cx = 0; cx <= WORLD_W; cx += CHUNK_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(cx * TILE_SIZE, 0);
+                ctx.lineTo(cx * TILE_SIZE, WORLD_H * TILE_SIZE);
+                ctx.stroke();
+            }
+            for (let cy = 0; cy <= WORLD_H; cy += CHUNK_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(0, cy * TILE_SIZE);
+                ctx.lineTo(WORLD_W * TILE_SIZE, cy * TILE_SIZE);
+                ctx.stroke();
+            }
+            
+            // Draw labels based on checkbox settings
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Draw depth labels
+            if (document.getElementById('showDepthLabels').checked) {
+                for (let y = 0; y < WORLD_H; y++) {
+                    for (let x = 0; x < WORLD_W; x++) {
+                        const depth = heights[y][x];
+                        if (depth > 0) { // Only show depth for non-land tiles
+                            const labelX = x * TILE_SIZE + TILE_SIZE / 2;
+                            const labelY = y * TILE_SIZE + TILE_SIZE / 2;
+                            
+                            // Choose text color based on background
+                            const grayValue = Math.floor(220 - (depth / MAX_DEPTH) * 180);
+                            if (grayValue > 130) {
+                                ctx.strokeStyle = 'white';
+                                ctx.fillStyle = 'black';
+                            } else {
+                                ctx.strokeStyle = 'black';
+                                ctx.fillStyle = 'white';
+                            }
+                            
+                            ctx.lineWidth = 1;
+                            ctx.strokeText(depth.toString(), labelX, labelY);
+                            ctx.fillText(depth.toString(), labelX, labelY);
+                        }
+                    }
+                }
+            }
+            
+            // Draw basin labels
+            if (document.getElementById('showBasinLabels').checked) {
+                basins.forEach((basin, id) => {
+                    // Find a representative tile (roughly center) for each basin
+                    const tiles = Array.from(basin.tiles);
+                    if (tiles.length === 0) return;
+                    
+                    // Calculate centroid
+                    let sumX = 0, sumY = 0;
+                    tiles.forEach(tileKey => {
+                        const [x, y] = tileKey.split(',').map(Number);
+                        sumX += x;
+                        sumY += y;
+                    });
+                    const centerX = Math.round(sumX / tiles.length);
+                    const centerY = Math.round(sumY / tiles.length);
+                    
+                    // Get the height at the center to determine background color
+                    const centerHeight = heights[centerY] ? heights[centerY][centerX] : 0;
+                    
+                    // Draw label with proper contrast
+                    const labelX = centerX * TILE_SIZE + TILE_SIZE / 2;
+                    const labelY = centerY * TILE_SIZE + TILE_SIZE / 2;
+                    
+                    // Create label text showing basin ID (already includes level)
+                    const labelText = `${id}`;
+                    
+                    // Choose text color based on background for contrast
+                    if (centerHeight === 0) {
+                        // Brown background - use white text with black outline
+                        ctx.strokeStyle = 'black';
+                        ctx.fillStyle = 'white';
+                    } else {
+                        // Gray background - use black text with white outline for lighter grays, white text with black outline for darker grays
+                        const grayValue = Math.floor(220 - (centerHeight / MAX_DEPTH) * 180);
+                        if (grayValue > 130) {
+                            // Light gray background
+                            ctx.strokeStyle = 'white';
+                            ctx.fillStyle = 'black';
+                        } else {
+                            // Dark gray background
+                            ctx.strokeStyle = 'black';
+                            ctx.fillStyle = 'white';
+                        }
+                    }
+                    
+                    ctx.lineWidth = 2;
+                    ctx.strokeText(labelText, labelX, labelY);
+                    ctx.lineWidth = 1;
+                    ctx.fillText(labelText, labelX, labelY);
+                });
+            }
+            
+            // Draw pump labels
+            if (document.getElementById('showPumpLabels').checked) {
+                for (let i = 0; i < pumps.length; i++) {
+                    const p = pumps[i];
+                    const labelX = p.x * TILE_SIZE + TILE_SIZE / 2;
+                    const labelY = p.y * TILE_SIZE + TILE_SIZE / 2 - TILE_SIZE * 2; // Position above pump
+                    
+                    const pumpText = `P${i} R${p.reservoirId || '?'}`;
+                    
+                    // Use pump color scheme for text
+                    ctx.strokeStyle = 'white';
+                    ctx.fillStyle = (p.mode === 'inlet') ? 'green' : 'red';
+                    
+                    ctx.lineWidth = 2;
+                    ctx.strokeText(pumpText, labelX, labelY);
+                    ctx.lineWidth = 1;
+                    ctx.fillText(pumpText, labelX, labelY);
+                }
+            }
+            
+            // Draw highlights for selected basin (always show regardless of label setting)
+            basins.forEach((basin, id) => {
+                if (highlightedBasin === id) {
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(255, 255, 0, 0.5)'; // Yellow highlight
+                    ctx.strokeStyle = 'orange';
+                    ctx.lineWidth = 3;
+                    
+                    // Draw highlight around basin area
+                    basin.tiles.forEach(tileKey => {
+                        const [tx, ty] = tileKey.split(',').map(Number);
+                        const x = tx * TILE_SIZE;
+                        const y = ty * TILE_SIZE;
+                        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+                        ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+                    });
+                    
+                    ctx.restore();
+                }
+            });
+            // debug text - show basin tree structure
+            let basinsDbg = "";
+            let reservoirsDbg = "";
+            
+            // Build connection graph
+            const connections = new Map();
+            const basinArray = Array.from(basins.entries()).sort((a, b) => {
+                // Sort by level first, then by letter sequence
+                const [levelA, lettersA] = a[0].split('#');
+                const [levelB, lettersB] = b[0].split('#');
+                if (levelA !== levelB) return parseInt(levelA) - parseInt(levelB);
+                return lettersA.localeCompare(lettersB);
+            });
+            
+            basinArray.forEach(([id, b]) => {
+                connections.set(id, new Set());
+                b.tiles.forEach(tileKey => {
+                    const [tx, ty] = tileKey.split(',').map(Number);
+                    // Check neighbors for connections
+                    [[tx-1, ty], [tx+1, ty], [tx, ty-1], [tx, ty+1]].forEach(([nx, ny]) => {
+                        if (nx >= 0 && ny >= 0 && nx < WORLD_W && ny < WORLD_H) {
+                            const neighborBasinId = basinIdOf[ny][nx];
+                            if (neighborBasinId && neighborBasinId !== id) {
+                                connections.get(id).add(neighborBasinId);
+                            }
+                        }
+                    });
+                });
+            });
+            
+            // Calculate statistics for basin debug display
+            const basinCount = basins.size;
+            const maxDepth = basinArray.length > 0 ? Math.max(...basinArray.map(([id]) => parseInt(id.split('#')[0]))) : 0;
+            
+            // Calculate highest degree (most connections)
+            let maxDegree = 0;
+            connections.forEach((connectionSet) => {
+                maxDegree = Math.max(maxDegree, connectionSet.size);
+            });
+            
+            // Build tree structure - find root basins (those with no higher neighbors)
+            const visited = new Set();
+            const printBasin = (id, depth = 0) => {
+                if (visited.has(id)) return;
+                visited.add(id);
+                
+                const indent = "  ".repeat(depth);
+                const basin = basins.get(id);
+                if (!basin) return;
+                
+                const maxCapacity = basin.tiles.size * VOLUME_UNIT * MAX_DEPTH;
+                basinsDbg += `${indent}${id}: ${basin.tiles.size} tiles, vol=${basin.volume}/${maxCapacity}, water_lvl=${basin.level}\n`;
+                
+                // Find children (connected basins that haven't been visited)
+                const children = Array.from(connections.get(id) || [])
+                    .filter(childId => !visited.has(childId))
+                    .sort();
+                
+                children.forEach(childId => {
+                    printBasin(childId, depth + 1);
+                });
+            };
+            
+            // Start with unvisited basins (creates forest if disconnected components exist)
+            basinArray.forEach(([id]) => {
+                if (!visited.has(id)) {
+                    printBasin(id);
+                }
+            });
+            
+            // Pumps info grouped by reservoir
+            reservoirsDbg += selectedReservoirId !== null ? `Selected Reservoir: #${selectedReservoirId}\n\n` : 'No reservoir selected\n\n';
+            
+            // Group pumps by reservoir
+            const pumpsByReservoir = new Map();
+            pumps.forEach((pump, index) => {
+                if (!pumpsByReservoir.has(pump.reservoirId)) {
+                    pumpsByReservoir.set(pump.reservoirId, []);
+                }
+                pumpsByReservoir.get(pump.reservoirId).push({...pump, index});
+            });
+            
+            pumpsByReservoir.forEach((pumpsInReservoir, reservoirId) => {
+                const reservoir = reservoirs.get(reservoirId);
+                reservoirsDbg += `Reservoir #${reservoirId}: vol=${reservoir ? reservoir.volume : 0}\n`;
+                
+                pumpsInReservoir.forEach(pump => {
+                    const colorPrefix = pump.mode === 'inlet' ? '🔴' : '🟢'; // Green for inlet, Red for outlet (matches map)
+                    reservoirsDbg += `  ${colorPrefix} P${pump.index} (${pump.x},${pump.y}) ${pump.mode}\n`;
+                });
+                reservoirsDbg += '\n';
+            });
+            
+            // Create interactive basin display
+            createInteractiveBasinDisplay(basinsDbg);
+            
+            // Update basin title with statistics
+            document.getElementById('basinsTitle').textContent = `Basins (${basinCount}, deg≤${maxDegree}, d≤${maxDepth})`;
+            
+            document.getElementById('reservoirsText').textContent = reservoirsDbg;
+        }
+
+        function createInteractiveBasinDisplay(basinsText) {
+            const basinsContainer = document.getElementById('basinsText');
+            basinsContainer.innerHTML = '';
+            
+            const lines = basinsText.split('\n');
+            lines.forEach(line => {
+                if (line.trim() === '') {
+                    basinsContainer.appendChild(document.createTextNode('\n'));
+                    return;
+                }
+                
+                const lineDiv = document.createElement('div');
+                lineDiv.textContent = line;
+                
+                // Check if this line contains a basin ID
+                const basinMatch = line.match(/(\d+#\w+):/);
+                if (basinMatch) {
+                    const basinId = basinMatch[1];
+                    lineDiv.className = 'basin-line';
+                    lineDiv.dataset.basinId = basinId;
+                    
+                    lineDiv.addEventListener('click', () => {
+                        highlightedBasin = highlightedBasin === basinId ? null : basinId;
+                        updateBasinHighlights();
+                        draw();
+                    });
+                    
+                    lineDiv.addEventListener('mouseenter', () => {
+                        if (highlightedBasin !== basinId) {
+                            highlightedBasin = basinId;
+                            draw();
+                        }
+                    });
+                    
+                    lineDiv.addEventListener('mouseleave', () => {
+                        // Only clear highlight if it's not permanently selected
+                        const permanentHighlight = document.querySelector('.basin-line.highlighted');
+                        if (!permanentHighlight) {
+                            highlightedBasin = null;
+                            draw();
+                        }
+                    });
+                }
+                
+                basinsContainer.appendChild(lineDiv);
+            });
+        }
+
+        function updateBasinHighlights() {
+            document.querySelectorAll('.basin-line').forEach(line => {
+                line.classList.remove('highlighted');
+                if (line.dataset.basinId === highlightedBasin) {
+                    line.classList.add('highlighted');
+                }
+            });
+        }
+
+        // Load saved noise settings from localStorage
+        function loadNoiseSettings() {
+            const freq = localStorage.getItem('noiseFreq');
+            const octaves = localStorage.getItem('noiseOctaves');
+            const persistence = localStorage.getItem('noisePersistence');
+            const offset = localStorage.getItem('noiseOffset');
+            
+            if (freq) document.getElementById('noiseFreq').value = freq;
+            if (octaves) document.getElementById('noiseOctaves').value = octaves;
+            if (persistence) document.getElementById('noisePersistence').value = persistence;
+            if (offset) document.getElementById('noiseOffset').value = offset;
+            
+            // Load label control settings
+            const showDepthLabels = localStorage.getItem('showDepthLabels');
+            const showPumpLabels = localStorage.getItem('showPumpLabels');
+            const showBasinLabels = localStorage.getItem('showBasinLabels');
+            
+            if (showDepthLabels !== null) document.getElementById('showDepthLabels').checked = showDepthLabels === 'true';
+            if (showPumpLabels !== null) document.getElementById('showPumpLabels').checked = showPumpLabels === 'true';
+            if (showBasinLabels !== null) document.getElementById('showBasinLabels').checked = showBasinLabels === 'true';
+            
+            // Load octave-specific settings
+            createOctaveControls();
+            const octaveCount = parseInt(octaves || 3);
+            for (let i = 0; i < octaveCount; i++) {
+                const savedFreq = localStorage.getItem(`octaveFreq${i}`);
+                const savedAmp = localStorage.getItem(`octaveAmp${i}`);
+                
+                if (savedFreq) {
+                    const freqElement = document.getElementById(`octaveFreq${i}`);
+                    if (freqElement) freqElement.value = savedFreq;
+                }
+                if (savedAmp) {
+                    const ampElement = document.getElementById(`octaveAmp${i}`);
+                    if (ampElement) ampElement.value = savedAmp;
+                }
+            }
+        }
+        
+        // Save noise settings to localStorage
+        function saveNoiseSettings() {
+            localStorage.setItem('noiseFreq', document.getElementById('noiseFreq').value);
+            localStorage.setItem('noiseOctaves', document.getElementById('noiseOctaves').value);
+            localStorage.setItem('noisePersistence', document.getElementById('noisePersistence').value);
+            localStorage.setItem('noiseOffset', document.getElementById('noiseOffset').value);
+            
+            // Save label control settings
+            localStorage.setItem('showDepthLabels', document.getElementById('showDepthLabels').checked.toString());
+            localStorage.setItem('showPumpLabels', document.getElementById('showPumpLabels').checked.toString());
+            localStorage.setItem('showBasinLabels', document.getElementById('showBasinLabels').checked.toString());
+            
+            // Save octave-specific settings
+            const octaves = parseInt(document.getElementById('noiseOctaves').value);
+            for (let i = 0; i < octaves; i++) {
+                const freqElement = document.getElementById(`octaveFreq${i}`);
+                const ampElement = document.getElementById(`octaveAmp${i}`);
+                
+                if (freqElement) localStorage.setItem(`octaveFreq${i}`, freqElement.value);
+                if (ampElement) localStorage.setItem(`octaveAmp${i}`, ampElement.value);
+            }
+        }
+
+        // UI
+        // Tick button with hold-to-continue functionality
+        let tickTimer = null;
+        let tickInterval = null;
+        
+        const tickBtn = document.getElementById('tickBtn');
+        
+        tickBtn.onmousedown = () => {
+            tick(); // Execute immediately on mousedown
+            
+            // Start timer for continuous ticking after a delay
+            tickTimer = setTimeout(() => {
+                tickInterval = setInterval(() => {
+                    tick();
+                }, 100); // Tick every 100ms when held
+            }, 500); // Wait 500ms before starting continuous ticking
+        };
+        
+        const stopTicking = () => {
+            if (tickTimer) {
+                clearTimeout(tickTimer);
+                tickTimer = null;
+            }
+            if (tickInterval) {
+                clearInterval(tickInterval);
+                tickInterval = null;
+            }
+        };
+        
+        tickBtn.onmouseup = stopTicking;
+        tickBtn.onmouseleave = stopTicking; // Stop if mouse leaves button
+        
+        document.getElementById('randomizeBtn').onclick = () => { generateHeights(Math.random() * 1000); recomputeAll(); };
+        document.getElementById('clearPumps').onclick = () => { clearPumps(); draw(); };
+        document.getElementById('clearWater').onclick = () => clearAllWater();
+        // Label control event listeners
+        document.getElementById('showDepthLabels').onchange = () => { saveNoiseSettings(); draw(); };
+        document.getElementById('showPumpLabels').onchange = () => { saveNoiseSettings(); draw(); };
+        document.getElementById('showBasinLabels').onchange = () => { saveNoiseSettings(); draw(); };
+        
+        // Reservoir number input control
+        document.getElementById('reservoirInput').oninput = (e) => {
+            const value = e.target.value;
+            if (value === '' || value === '0') {
+                selectedReservoirId = null;
+            } else {
+                const id = parseInt(value);
+                // Only set if the reservoir exists or allow creating new ones
+                if (id > 0) {
+                    selectedReservoirId = id;
+                } else {
+                    selectedReservoirId = null;
+                }
+            }
+            draw();
+        };
+        
+        function updateReservoirControls() {
+            // Update the reservoir number input to show selected reservoir
+            const input = document.getElementById('reservoirInput');
+            if (selectedReservoirId !== null) {
+                input.value = selectedReservoirId;
+            } else {
+                input.value = 0;
+            }
+        }
+        
+        // Noise control event listeners
+        document.getElementById('noiseFreq').addEventListener('input', (e) => { 
+            document.getElementById('noiseFreqValue').textContent = e.target.value;
+            createOctaveControls(); // Recreate octave controls with new base frequency
+            saveNoiseSettings(); 
+            generateHeights(0); 
+            recomputeAll(); 
+        });
+        document.getElementById('noiseOctaves').addEventListener('input', (e) => { 
+            document.getElementById('noiseOctavesValue').textContent = e.target.value;
+            createOctaveControls(); // Recreate octave controls when count changes
+            saveNoiseSettings(); 
+            generateHeights(0); 
+            recomputeAll(); 
+        });
+        document.getElementById('noisePersistence').addEventListener('input', (e) => { 
+            document.getElementById('noisePersistenceValue').textContent = e.target.value;
+            createOctaveControls(); // Recreate octave controls with new persistence
+            saveNoiseSettings(); 
+            generateHeights(0); 
+            recomputeAll(); 
+        });
+        document.getElementById('noiseOffset').addEventListener('input', (e) => { 
+            document.getElementById('noiseOffsetValue').textContent = e.target.value;
+            saveNoiseSettings(); 
+            generateHeights(0); 
+            recomputeAll(); 
+        });
+
+        function getMinNeighborHeight(x, y) {
+            let minHeight = MAX_DEPTH + 1; // Start with impossible high value
+            const neighbors = [[x-1, y], [x+1, y], [x, y-1], [x, y+1]];
+            
+            for (let [nx, ny] of neighbors) {
+                if (nx >= 0 && ny >= 0 && nx < WORLD_W && ny < WORLD_H) {
+                    minHeight = Math.min(minHeight, heights[ny][nx]);
+                }
+            }
+            
+            // If no valid neighbors found, return current height
+            return minHeight <= MAX_DEPTH ? minHeight : heights[y][x];
+        }
+
+        function floodFill(startX, startY, fillWithWater) {
+            const startBasinId = basinIdOf[startY][startX];
+            if (!startBasinId) return;
+            
+            const basin = basins.get(startBasinId);
+            if (!basin) return;
+            
+            if (fillWithWater) {
+                // Fill with maximum water
+                basin.volume = basin.tiles.size * VOLUME_UNIT * MAX_DEPTH;
+            } else {
+                // Empty all water
+                basin.volume = 0;
+            }
+            
+            // Update water levels immediately
+            const capacityPerLevel = basin.tiles.size * VOLUME_UNIT;
+            basin.level = Math.floor(basin.volume / capacityPerLevel);
+            if (basin.level < 0) basin.level = 0;
+            if (basin.level > MAX_DEPTH) basin.level = MAX_DEPTH;
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mx = Math.floor((e.clientX - rect.left) / TILE_SIZE);
+            const my = Math.floor((e.clientY - rect.top) / TILE_SIZE);
+            
+            if (mx < 0 || my < 0 || mx >= WORLD_W || my >= WORLD_H) return;
+            
+            // Prevent context menu for right-click
+            if (e.button === 2) {
+                e.preventDefault();
+            }
+            
+            if (e.altKey) {
+                if (e.button === 0) { // ALT + LMB - increase depth
+                    heights[my][mx] = Math.min(MAX_DEPTH, heights[my][mx] + 1);
+                    recomputeAll();
+                } else if (e.button === 2) { // ALT + RMB - decrease depth
+                    heights[my][mx] = Math.max(0, heights[my][mx] - 1);
+                    recomputeAll();
+                }
+                return;
+            }
+            
+            if (e.ctrlKey) {
+                if (e.shiftKey) {
+                    if (e.button === 0) { // SHIFT + CTRL + LMB - link pump to reservoir
+                        if (linkPumpToReservoir(mx, my)) {
+                            console.log(`Reservoir ${selectedReservoirId} selected for linking future pumps`);
+                        } else {
+                            console.log('No pump found at this location to link to');
+                        }
+                        draw();
+                    }
+                    return;
+                }
+                
+                if (e.button === 0) { // CTRL + LMB - flood fill
+                    floodFill(mx, my, true);
+                } else if (e.button === 2) { // CTRL + RMB - flood empty
+                    floodFill(mx, my, false);
+                }
+                draw();
+                return;
+            }
+            
+            if (e.shiftKey) {
+                if (e.button === 0) { // SHIFT + LMB - add outlet pump
+                    const reservoirId = addPumpAt(mx, my, 'outlet', selectedReservoirId !== null); 
+                    if (selectedReservoirId === null) {
+                        selectedReservoirId = reservoirId; // Auto-select new reservoir for easy chaining
+                    }
+                    draw(); 
+                } else if (e.button === 2) { // SHIFT + RMB - add inlet pump
+                    const reservoirId = addPumpAt(mx, my, 'inlet', selectedReservoirId !== null); 
+                    if (selectedReservoirId === null) {
+                        selectedReservoirId = reservoirId; // Auto-select new reservoir for easy chaining
+                    }
+                    draw(); 
+                }
+                return;
+            }
+            
+            // Basic tile operations
+            if (e.button === 0) { // Left mouse button - set depth to 0
+                heights[my][mx] = 0;
+                selectedReservoirId = null; // Clear reservoir selection
+                recomputeAll();
+            } else if (e.button === 2) { // Right mouse button - set to min neighbor height
+                heights[my][mx] = getMinNeighborHeight(mx, my);
+                selectedReservoirId = null; // Clear reservoir selection
+                recomputeAll();
+            }
+        });
+
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault(); // Prevent right-click context menu
+        });
+
+        // init
+        loadNoiseSettings(); // Load saved settings first
+        createOctaveControls(); // Create octave controls
+        generateHeights(0);
+        computeBasins();
+        createLegend();
+        updateReservoirControls(); // Initialize reservoir controls
+        draw();
+    </script>
+</body>
+</html>
