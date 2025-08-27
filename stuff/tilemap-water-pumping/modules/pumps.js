@@ -46,6 +46,14 @@ export class ReservoirManager {
     getAllReservoirs() {
         return this.reservoirs;
     }
+
+    removeReservoir(id) {
+        if (this.reservoirs.has(id)) {
+            this.reservoirs.delete(id);
+            return true;
+        }
+        return false;
+    }
 }
 
 export class PumpManager {
@@ -63,6 +71,9 @@ export class PumpManager {
         const selectedId = this.reservoirManager.getSelectedReservoir();
         
         if (linkToReservoir && selectedId && this.reservoirManager.exists(selectedId)) {
+            reservoirId = selectedId;
+        } else if (selectedId && selectedId > 0 && this.reservoirManager.exists(selectedId)) {
+            // Use currently selected reservoir if it exists
             reservoirId = selectedId;
         } else {
             reservoirId = this.reservoirManager.createReservoir();
@@ -123,6 +134,24 @@ export class PumpManager {
 
     getAllPumps() {
         return this.pumps;
+    }
+
+    removePump(index) {
+        if (index >= 0 && index < this.pumps.length) {
+            this.pumps.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
+
+    removePumpAt(x, y) {
+        for (let i = 0; i < this.pumps.length; i++) {
+            if (this.pumps[i].x === x && this.pumps[i].y === y) {
+                this.pumps.splice(i, 1);
+                return true;
+            }
+        }
+        return false;
     }
 
     // Get pumps grouped by reservoir for debugging

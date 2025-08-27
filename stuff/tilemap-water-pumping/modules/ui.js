@@ -220,19 +220,125 @@ export class DebugDisplay {
         
         pumpsByReservoir.forEach((pumpsInReservoir, reservoirId) => {
             const reservoir = reservoirs.get(reservoirId);
-            reservoirsDbg += `Reservoir #${reservoirId}: vol=${reservoir ? reservoir.volume : 0}\n`;
+            reservoirsDbg += `Reservoir #${reservoirId}: vol=${reservoir ? reservoir.volume.toFixed(1) : 0}\n`;
             
             pumpsInReservoir.forEach(pump => {
                 const colorPrefix = pump.mode === 'inlet' ? '🔴' : '🟢';
-                reservoirsDbg += `  ${colorPrefix} P${pump.index} (${pump.x},${pump.y}) ${pump.mode}\n`;
+                reservoirsDbg += `  ${colorPrefix} P${pump.index} (${pump.x},${pump.y}) ${pump.mode} `;
+                reservoirsDbg += `[Remove]\n`;
             });
-            reservoirsDbg += '\n';
+            reservoirsDbg += `[Remove Reservoir #${reservoirId}]\n\n`;
         });
         
         const reservoirsTextEl = document.getElementById('reservoirsText');
         if (reservoirsTextEl) {
-            reservoirsTextEl.textContent = reservoirsDbg;
+            this.createInteractiveReservoirDisplay(reservoirsDbg, reservoirs, pumps, selectedReservoirId);
         }
+    }
+
+    // Update tick counter display
+    updateTickCounter(tickCount) {
+        const display = document.getElementById('tickCounterDisplay');
+        if (display) {
+            display.textContent = `Tick: ${tickCount}`;
+        }
+    }
+
+    createInteractiveReservoirDisplay(reservoirsText, reservoirs, pumps, selectedReservoirId) {
+        const reservoirsContainer = document.getElementById('reservoirsText');
+        if (!reservoirsContainer) return;
+        
+        reservoirsContainer.innerHTML = '';
+        
+        // Add selected reservoir info
+        if (selectedReservoirId !== null) {
+            const selectedDiv = document.createElement('div');
+            selectedDiv.textContent = `Selected Reservoir: #${selectedReservoirId}`;
+            selectedDiv.style.fontWeight = 'bold';
+            selectedDiv.style.marginBottom = '10px';
+            reservoirsContainer.appendChild(selectedDiv);
+        }
+        
+        // Group pumps by reservoir
+        const pumpsByReservoir = new Map();
+        pumps.forEach((pump, index) => {
+            if (!pumpsByReservoir.has(pump.reservoirId)) {
+                pumpsByReservoir.set(pump.reservoirId, []);
+            }
+            pumpsByReservoir.get(pump.reservoirId).push({...pump, index});
+        });
+        
+        // Create interactive display for each reservoir
+        pumpsByReservoir.forEach((pumpsInReservoir, reservoirId) => {
+            const reservoir = reservoirs.get(reservoirId);
+            
+            const reservoirDiv = document.createElement('div');
+            reservoirDiv.style.marginBottom = '10px';
+            reservoirDiv.style.padding = '5px';
+            reservoirDiv.style.border = '1px solid #ddd';
+            
+            const reservoirHeader = document.createElement('div');
+            reservoirHeader.style.display = 'flex';
+            reservoirHeader.style.justifyContent = 'space-between';
+            reservoirHeader.style.alignItems = 'center';
+            
+            const reservoirInfo = document.createElement('span');
+            reservoirInfo.innerHTML = `<strong>Reservoir #${reservoirId}:</strong> ${reservoir ? Math.floor(reservoir.volume) : 0} units`;
+            reservoirHeader.appendChild(reservoirInfo);
+            
+            // Add reservoir removal button (inline, on the right)
+            const removeReservoirButton = document.createElement('button');
+            removeReservoirButton.textContent = 'Remove';
+            removeReservoirButton.style.padding = '2px 6px';
+            removeReservoirButton.style.fontSize = '0.8em';
+            removeReservoirButton.onclick = () => {
+                // Remove all pumps linked to this reservoir first
+                const pumpsToRemove = pumps.filter(pump => pump.reservoirId === reservoirId);
+                pumpsToRemove.forEach(pump => {
+                    const pumpIndex = pumps.findIndex(p => p.x === pump.x && p.y === pump.y);
+                    if (pumpIndex >= 0) {
+                        window.tilemapApp.gameState.getPumpManager().removePump(pumpIndex);
+                    }
+                });
+                
+                // Remove the reservoir
+                window.tilemapApp.gameState.getReservoirManager().removeReservoir(reservoirId);
+                window.tilemapApp.updateReservoirControls();
+                window.tilemapApp.updateDebugDisplays();
+                window.tilemapApp.draw();
+            };
+            reservoirHeader.appendChild(removeReservoirButton);
+            
+            reservoirDiv.appendChild(reservoirHeader);
+            
+            // Add pumps for this reservoir
+            pumpsInReservoir.forEach(pump => {
+                const pumpDiv = document.createElement('div');
+                pumpDiv.style.marginLeft = '15px';
+                pumpDiv.style.fontSize = '0.9em';
+                
+                const colorPrefix = pump.mode === 'inlet' ? '🔴' : '🟢';
+                const pumpText = document.createElement('span');
+                pumpText.textContent = `${colorPrefix} P${pump.index} (${pump.x},${pump.y}) ${pump.mode} `;
+                pumpDiv.appendChild(pumpText);
+                
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Remove';
+                removeButton.style.marginLeft = '5px';
+                removeButton.style.padding = '1px 4px';
+                removeButton.style.fontSize = '0.7em';
+                removeButton.onclick = () => {
+                    window.tilemapApp.gameState.getPumpManager().removePump(pump.index);
+                    window.tilemapApp.updateDebugDisplays();
+                    window.tilemapApp.draw();
+                };
+                pumpDiv.appendChild(removeButton);
+                
+                reservoirDiv.appendChild(pumpDiv);
+            });
+            
+            reservoirsContainer.appendChild(reservoirDiv);
+        });
     }
 
     createInteractiveBasinDisplay(basinsText) {

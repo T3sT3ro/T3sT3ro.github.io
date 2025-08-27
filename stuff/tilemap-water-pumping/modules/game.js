@@ -12,6 +12,9 @@ export class GameState {
         this.reservoirManager = new ReservoirManager();
         this.pumpManager = new PumpManager(this.reservoirManager, this.basinManager);
         
+        // Initialize tick counter
+        this.tickCounter = 0;
+        
         // Initialize terrain
         this.heights = this.heightGenerator.generate(0);
         this.basinManager.computeBasins(this.heights);
@@ -69,8 +72,9 @@ export class GameState {
     // Pump operations
     addPump(x, y, mode, linkToExisting = false) {
         const reservoirId = this.pumpManager.addPumpAt(x, y, mode, linkToExisting);
-        if (reservoirId && !linkToExisting) {
-            this.reservoirManager.setSelectedReservoir(reservoirId);
+        // Don't auto-select reservoir when linking to existing or when one is already selected
+        if (reservoirId && !linkToExisting && this.getSelectedReservoir() === null) {
+            this.setSelectedReservoir(reservoirId);
         }
         return reservoirId;
     }
@@ -95,6 +99,7 @@ export class GameState {
 
     // Simulation tick
     tick() {
+        this.tickCounter++;
         this.pumpManager.tick();
     }
 
@@ -127,6 +132,7 @@ export class GameState {
     getPumps() { return this.pumpManager.getAllPumps(); }
     getReservoirs() { return this.reservoirManager.getAllReservoirs(); }
     getPumpsByReservoir() { return this.pumpManager.getPumpsByReservoir(); }
+    getTickCounter() { return this.tickCounter; }
     
     // Getters for managers (for UI access)
     getBasinManager() { return this.basinManager; }

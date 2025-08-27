@@ -1,6 +1,7 @@
 // Rendering and drawing functionality
 
 import { CONFIG } from './config.js';
+import { BasinLabelManager } from './labels.js';
 
 export function getHeightColor(depth) {
     // Only depth 0 = surface (brown), all others = gray
@@ -18,6 +19,7 @@ export class Renderer {
     constructor(canvas, ctx) {
         this.canvas = canvas;
         this.ctx = ctx;
+        this.basinLabelManager = new BasinLabelManager();
     }
 
     clear() {
@@ -69,14 +71,14 @@ export class Renderer {
             if (selectedReservoirId && pump.reservoirId === selectedReservoirId) {
                 this.ctx.beginPath(); 
                 this.ctx.arc(cx, cy, CONFIG.TILE_SIZE * 1.8, 0, Math.PI * 2);
-                this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)'; // Yellow highlight
+                this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)'; // Yellow highlight
                 this.ctx.lineWidth = 3;
                 this.ctx.stroke();
             }
             
             this.ctx.beginPath(); 
-            this.ctx.arc(cx, cy, CONFIG.TILE_SIZE * 1.4, 0, Math.PI * 2);
-            this.ctx.strokeStyle = (pump.mode === 'inlet') ? 'red' : 'green';
+            this.ctx.arc(cx, cy, CONFIG.TILE_SIZE * 1, 0, Math.PI * 2);
+            this.ctx.strokeStyle = (pump.mode === 'inlet') ? 'rgba(200, 0, 0, 0.7)' : 'rgba(0, 255, 0, 0.7)';
             this.ctx.lineWidth = 2;
             this.ctx.stroke();
             this.ctx.lineWidth = 1;
@@ -138,22 +140,22 @@ export class Renderer {
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         
-        // Draw depth labels
+        // Draw depth labels (original system)
         if (labelSettings.showDepthLabels) {
             this.drawDepthLabels(heights);
         }
         
-        // Draw basin labels
+        // Draw basin labels with smart positioning
         if (labelSettings.showBasinLabels) {
-            this.drawBasinLabels(basins, heights);
+            this.basinLabelManager.draw(this.ctx, basins, heights);
         }
         
-        // Draw pump labels
+        // Draw pump labels (original system)
         if (labelSettings.showPumpLabels) {
             this.drawPumpLabels(pumps);
         }
     }
-
+    
     drawDepthLabels(heights) {
         for (let y = 0; y < CONFIG.WORLD_H; y++) {
             for (let x = 0; x < CONFIG.WORLD_W; x++) {
@@ -178,53 +180,6 @@ export class Renderer {
                 }
             }
         }
-    }
-
-    drawBasinLabels(basins, heights) {
-        basins.forEach((basin, id) => {
-            // Find a representative tile (roughly center) for each basin
-            const tiles = Array.from(basin.tiles);
-            if (tiles.length === 0) return;
-            
-            // Calculate centroid
-            let sumX = 0, sumY = 0;
-            tiles.forEach(tileKey => {
-                const [x, y] = tileKey.split(',').map(Number);
-                sumX += x;
-                sumY += y;
-            });
-            const centerX = Math.round(sumX / tiles.length);
-            const centerY = Math.round(sumY / tiles.length);
-            
-            // Get the height at the center to determine background color
-            const centerHeight = heights[centerY] ? heights[centerY][centerX] : 0;
-            
-            // Draw label with proper contrast
-            const labelX = centerX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-            const labelY = centerY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-            
-            const labelText = `${id}`;
-            
-            // Choose text color based on background for contrast
-            if (centerHeight === 0) {
-                this.ctx.strokeStyle = 'black';
-                this.ctx.fillStyle = 'white';
-            } else {
-                const grayValue = Math.floor(220 - (centerHeight / CONFIG.MAX_DEPTH) * 180);
-                if (grayValue > 130) {
-                    this.ctx.strokeStyle = 'white';
-                    this.ctx.fillStyle = 'black';
-                } else {
-                    this.ctx.strokeStyle = 'black';
-                    this.ctx.fillStyle = 'white';
-                }
-            }
-            
-            this.ctx.lineWidth = 2;
-            this.ctx.strokeText(labelText, labelX, labelY);
-            this.ctx.lineWidth = 1;
-            this.ctx.fillText(labelText, labelX, labelY);
-        });
     }
 
     drawPumpLabels(pumps) {

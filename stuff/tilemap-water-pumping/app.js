@@ -1,6 +1,5 @@
 // Main application controller - orchestrates all modules
 
-import { TEST_CONSTANT, testFunction } from './test.js';
 import { setupCanvas } from './modules/config.js';
 import { GameState } from './modules/game.js';
 import { Renderer, LegendRenderer } from './modules/renderer.js';
@@ -8,19 +7,13 @@ import { UISettings, NoiseControlUI, DebugDisplay } from './modules/ui.js';
 
 class TilemapWaterPumpingApp {
     constructor() {
-        console.log('TilemapWaterPumpingApp constructor called');
-        console.log('Test module:', TEST_CONSTANT);
-        testFunction();
-        
         // Setup canvas and rendering
         const { canvas, ctx } = setupCanvas();
-        console.log('Canvas setup completed:', canvas.width, 'x', canvas.height);
         this.canvas = canvas;
         this.renderer = new Renderer(canvas, ctx);
         
         // Initialize game state
         this.gameState = new GameState();
-        console.log('Game state initialized');
         
         // Initialize UI components
         this.uiSettings = new UISettings();
@@ -37,12 +30,10 @@ class TilemapWaterPumpingApp {
         this.tickTimer = null;
         this.tickInterval = null;
         
-        console.log('About to call initialize');
         this.initialize();
     }
 
     initialize() {
-        console.log('Initialize called');
         // Setup UI controls
         this.setupEventHandlers();
         this.setupCanvasEventHandlers();
@@ -56,9 +47,7 @@ class TilemapWaterPumpingApp {
         this.updateReservoirControls();
         
         // Initial render
-        console.log('About to call initial draw');
         this.draw();
-        console.log('Initial draw completed');
     }
 
     onNoiseSettingsChanged() {
@@ -275,18 +264,14 @@ class TilemapWaterPumpingApp {
             this.gameState.getPumps(),
             this.gameState.getSelectedReservoir()
         );
+        this.debugDisplay.updateTickCounter(this.gameState.getTickCounter());
     }
 
     draw() {
-        console.log('Draw called');
         this.renderer.clear();
-        console.log('Canvas cleared');
         
         // Draw terrain
-        const heights = this.gameState.getHeights();
-        console.log('Got heights array:', heights ? heights.length : 'null', heights && heights[0] ? heights[0].length : 'null');
-        this.renderer.drawTerrain(heights);
-        console.log('Terrain drawn');
+        this.renderer.drawTerrain(this.gameState.getHeights());
         
         // Draw water
         this.renderer.drawWater(this.gameState.getBasins());
@@ -316,18 +301,10 @@ class TilemapWaterPumpingApp {
             this.gameState.getBasins(),
             this.gameState.getHighlightedBasin()
         );
-        
-        console.log('Draw completed');
     }
 }
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, initializing app');
-    try {
-        window.tilemapApp = new TilemapWaterPumpingApp();
-        console.log('App initialized successfully');
-    } catch (error) {
-        console.error('Error initializing app:', error);
-    }
+    window.tilemapApp = new TilemapWaterPumpingApp();
 });
