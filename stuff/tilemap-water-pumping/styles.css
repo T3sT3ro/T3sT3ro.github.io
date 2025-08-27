@@ -1,0 +1,270 @@
+:root {
+    /* Sizing constraints not provided by Open Props */
+    --max-height-octave: 200px;
+    --max-height-debug: 300px;
+    --min-width-value: 50px;
+    --min-width-octave-value: 40px;
+    --min-width-canvas-container: 200px;
+}
+
+body {
+    font-family: var(--font-sans), system-ui, Arial, sans-serif;
+    margin: var(--size-2);
+    display: flex;
+    gap: var(--size-2);
+    height: calc(100vh - var(--size-4));
+    overflow: hidden;
+}
+
+canvas {
+    border: var(--border-size-1) solid var(--text-1);
+    display: block;
+}
+
+.control-box {
+    display: flex;
+    flex-direction: column;
+    padding: var(--size-2);
+    border: var(--border-size-1) solid var(--gray-5);
+    background: var(--surface-2);
+    min-width: 0;
+}
+
+.control-box h4 {
+    margin: 0 0 var(--size-2) 0;
+    font-size: var(--font-size-0);
+    font-weight: bold;
+}
+
+#controls {
+    display: flex;
+    flex-direction: column;
+    row-gap: var(--size-1);
+    flex: 1;
+    min-width: var(--min-width-canvas-container);
+}
+
+#topControls {
+    display: flex;
+    gap: var(--size-1);
+    align-items: stretch;
+}
+
+#buttons {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#buttons .button-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-1);
+    flex-wrap: wrap;
+}
+
+#noiseControls { flex: 3; }
+
+#bottomControls {
+    display: flex;
+    gap: var(--size-1);
+    align-items: stretch;
+}
+
+#controlsBox {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: var(--size-2);
+    align-items: center;
+    flex: 1;
+}
+
+#legendItems {
+    display: flex;
+    flex-direction: row;
+    gap: var(--size-1);
+    margin-right: var(--size-4);
+}
+
+.legend-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: var(--font-size-0);
+    gap: var(--size-1);
+}
+
+.legend-color {
+    width: var(--size-3);
+    height: var(--size-3);
+    border: var(--border-size-1) solid var(--text-1);
+}
+
+.control-item {
+    display: flex;
+    align-items: center;
+    gap: var(--size-1);
+    margin-right: var(--size-2);
+    line-height: 0.9;
+    font-size: var(--font-size-0);
+}
+
+button, select {
+    padding: var(--size-2) var(--size-3);
+}
+
+#noiseMainControls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-1);
+    margin-bottom: var(--size-2);
+}
+
+#noiseControlsContainer {
+    display: flex;
+    gap: var(--size-3);
+}
+
+#octaveControls {
+    flex: 1;
+    max-height: var(--max-height-octave);
+    overflow-y: auto;
+    border: var(--border-size-1) solid var(--gray-4);
+    background: var(--surface-1);
+    padding: var(--size-1);
+}
+
+#noiseControls label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--font-size-0);
+    margin: var(--size-1) 0;
+}
+
+#noiseControls input[type="range"] {
+    flex: 1;
+    margin: 0 var(--size-2);
+}
+
+.value-display {
+    min-width: var(--min-width-value);
+    text-align: right;
+    font-family: var(--font-mono), 'Courier New', monospace;
+    font-size: var(--font-size-0);
+    color: var(--text-2);
+}
+
+.control-item code {
+    background: var(--gray-4);
+    padding: var(--size-1) var(--size-3);
+    border-radius: var(--radius-2);
+    font-family: var(--font-mono), 'Courier New', monospace;
+    font-size: var(--font-size-0);
+    display: inline-block;
+    text-align: center;
+}
+
+.octave-controls {
+    border: var(--border-size-1) solid var(--gray-4);
+    padding: var(--size-1);
+    margin: var(--size-1) 0;
+    background: var(--surface-1);
+    border-radius: var(--radius-2);
+}
+
+.octave-controls h5 {
+    margin: 0 0 var(--size-1) 0;
+    font-size: var(--font-size-0);
+    font-weight: bold;
+    color: var(--text-2);
+}
+
+.octave-controls label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--font-size-0);
+    margin: var(--size-1) 0;
+}
+
+.octave-controls input[type="range"] {
+    flex: 1;
+    margin: 0 var(--size-1);
+}
+
+.octave-controls .value-display {
+    min-width: var(--min-width-octave-value);
+    font-size: var(--font-size-00);
+}
+
+#info {
+    font-size: var(--font-size-0);
+    line-height: 1.6;
+    margin: var(--size-2) var(--size-2) 0;
+}
+
+#info code {
+    background: var(--gray-4);
+    padding: var(--size-1) var(--size-2);
+    border-radius: var(--radius-2);
+    font-family: var(--font-mono), 'Courier New', monospace;
+    font-size: var(--font-size-1);
+}
+
+#debugContainer {
+    display: flex;
+    gap: var(--size-1);
+    flex: 1;
+    min-height: 0;
+}
+
+#basinsDebug, #reservoirsDebug {
+    flex: 1;
+    border: var(--border-size-1) solid var(--gray-5);
+    background: var(--surface-2);
+    padding: var(--size-2);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#basinsDebug h4, #reservoirsDebug h4 {
+    margin: 0 0 var(--size-2) 0;
+    font-size: var(--font-size-2);
+    border-bottom: var(--border-size-1) solid var(--gray-4);
+    padding-bottom: var(--size-1);
+    flex-shrink: 0;
+}
+
+#basinsText, #reservoirsText {
+    flex: 1;
+    overflow-y: auto;
+    line-height: 1.3;
+    font-family: var(--font-mono), 'Courier New', monospace;
+    min-height: 0;
+    white-space: pre;
+    font-size: var(--font-size-0);
+}
+
+.basin-line {
+    cursor: pointer;
+    padding: var(--size-1) 0;
+}
+
+.basin-line:hover {
+    background-color: var(--gray-4);
+}
+
+.basin-line.highlighted {
+    background-color: var(--yellow-2);
+    font-weight: bold;
+}
+
+#debugText {
+    max-height: var(--max-height-debug);
+    overflow-y: auto;
+    font-size: var(--font-size-0);
+    line-height: 1.3;
+}
