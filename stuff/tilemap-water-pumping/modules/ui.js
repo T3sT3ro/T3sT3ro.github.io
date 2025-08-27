@@ -120,12 +120,13 @@ export class NoiseControlUI {
         const gainEl = document.getElementById('noiseGain');
         const noiseTypeEl = document.getElementById('noiseType');
         const warpEl = document.getElementById('noiseWarpStrength');
+        const warpIterationsEl = document.getElementById('noiseWarpIterations');
+        const fbmHEl = document.getElementById('noiseFbmH');
 
         if (freqEl) {
             freqEl.addEventListener('input', (e) => { 
                 document.getElementById('noiseFreqValue').textContent = e.target.value;
                 this.noiseSettings.baseFreq = parseFloat(e.target.value);
-                console.log('Base frequency changed to:', this.noiseSettings.baseFreq);
                 // Update existing octave settings with new base frequency
                 for (let i = 0; i < this.noiseSettings.octaves; i++) {
                     if (!this.noiseSettings.octaveSettings[i]) {
@@ -153,7 +154,6 @@ export class NoiseControlUI {
             persistenceEl.addEventListener('input', (e) => { 
                 document.getElementById('noisePersistenceValue').textContent = e.target.value;
                 this.noiseSettings.persistence = parseFloat(e.target.value);
-                console.log('Persistence changed to:', this.noiseSettings.persistence);
                 // Update existing octave settings with new persistence
                 for (let i = 0; i < this.noiseSettings.octaves; i++) {
                     if (!this.noiseSettings.octaveSettings[i]) {
@@ -214,6 +214,24 @@ export class NoiseControlUI {
             warpEl.addEventListener('input', (e) => { 
                 document.getElementById('noiseWarpStrengthValue').textContent = parseFloat(e.target.value).toFixed(2);
                 this.noiseSettings.warpStrength = parseFloat(e.target.value);
+                this.noiseSettings.saveSettings(); 
+                this.onSettingsChange();
+            });
+        }
+
+        if (warpIterationsEl) {
+            warpIterationsEl.addEventListener('input', (e) => { 
+                document.getElementById('noiseWarpIterationsValue').textContent = e.target.value;
+                this.noiseSettings.warpIterations = parseInt(e.target.value);
+                this.noiseSettings.saveSettings(); 
+                this.onSettingsChange();
+            });
+        }
+
+        if (fbmHEl) {
+            fbmHEl.addEventListener('input', (e) => { 
+                document.getElementById('noiseFbmHValue').textContent = parseFloat(e.target.value).toFixed(2);
+                this.noiseSettings.fbmH = parseFloat(e.target.value);
                 this.noiseSettings.saveSettings(); 
                 this.onSettingsChange();
             });

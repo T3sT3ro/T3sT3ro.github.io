@@ -32,7 +32,6 @@ export class GameState {
 
     // Regenerate terrain with current seed but updated noise settings
     regenerateWithCurrentSettings() {
-        console.log('regenerateWithCurrentSettings called with seed:', this.currentSeed);
         this.heights = this.heightGenerator.generate(this.currentSeed);
         this.recomputeAll();
     }

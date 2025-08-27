@@ -51,7 +51,6 @@ class TilemapWaterPumpingApp {
     }
 
     onNoiseSettingsChanged() {
-        console.log('onNoiseSettingsChanged called');
         this.gameState.regenerateWithCurrentSettings();
         this.draw();
         this.updateDebugDisplays();

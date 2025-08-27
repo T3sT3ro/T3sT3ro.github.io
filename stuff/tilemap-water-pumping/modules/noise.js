@@ -109,6 +109,44 @@ export function billowyNoise2D(x, y) {
     return Math.abs(noise2D(x, y));
 }
 
+// Recursive domain warping (Book of Shaders style)
+// f(p) = fbm( p + fbm( p + fbm( p ) ) )
+export function warpedNoise2D(x, y, noiseFunc, octaves, lacunarity, persistence, gain, iterations = 2, warpStrength = 1.0, baseFreq = 1.0) {
+    let px = x * baseFreq;
+    let py = y * baseFreq;
+    
+    // Apply recursive domain warping
+    for (let i = 0; i < iterations; i++) {
+        const warpScale = warpStrength / Math.pow(2, i); // Reduce strength each iteration
+        const freq = baseFreq * Math.pow(2, i); // Increase frequency each iteration
+        
+        // Generate warp offsets using noise
+        const warpX = noise2D(px * freq, py * freq) * warpScale;
+        const warpY = noise2D(px * freq + 100, py * freq + 100) * warpScale;
+        
+        // Apply warp
+        px += warpX;
+        py += warpY;
+    }
+    
+    // Now generate octaves of noise at the warped coordinates
+    let value = 0;
+    let maxValue = 0;
+    let frequency = 1.0;
+    let amplitude = 1.0;
+    
+    for (let i = 0; i < octaves; i++) {
+        const n = noiseFunc(px * frequency, py * frequency);
+        value += n * amplitude * gain;
+        maxValue += amplitude;
+        
+        frequency *= lacunarity;
+        amplitude *= persistence;
+    }
+    
+    return maxValue > 0 ? value / maxValue : 0;
+}
+
 // Enhanced noise settings management
 export class NoiseSettings {
     constructor() {
@@ -124,6 +162,7 @@ export class NoiseSettings {
         const gain = localStorage.getItem('noiseGain');
         const noiseType = localStorage.getItem('noiseType');
         const warpStrength = localStorage.getItem('noiseWarpStrength');
+        const warpIterations = localStorage.getItem('noiseWarpIterations');
         
         this.baseFreq = freq ? parseFloat(freq) : 0.02;
         this.octaves = octaves ? parseInt(octaves) : 3;
@@ -133,6 +172,7 @@ export class NoiseSettings {
         this.gain = gain ? parseFloat(gain) : 1.0;
         this.noiseType = noiseType || 'perlin'; // perlin, simplex, ridged, billowy
         this.warpStrength = warpStrength ? parseFloat(warpStrength) : 0.0;
+        this.warpIterations = warpIterations ? parseInt(warpIterations) : 1;
         
         // Update UI elements if they exist
         this.updateUI();
@@ -159,6 +199,7 @@ export class NoiseSettings {
         localStorage.setItem('noiseGain', this.gain.toString());
         localStorage.setItem('noiseType', this.noiseType);
         localStorage.setItem('noiseWarpStrength', this.warpStrength.toString());
+        localStorage.setItem('noiseWarpIterations', this.warpIterations.toString());
         
         // Save octave-specific settings
         for (let i = 0; i < this.octaves; i++) {
@@ -178,6 +219,7 @@ export class NoiseSettings {
         const gainEl = document.getElementById('noiseGain');
         const noiseTypeEl = document.getElementById('noiseType');
         const warpEl = document.getElementById('noiseWarpStrength');
+        const warpIterationsEl = document.getElementById('noiseWarpIterations');
         
         if (freqEl) freqEl.value = this.baseFreq;
         if (octavesEl) octavesEl.value = this.octaves;
@@ -187,6 +229,7 @@ export class NoiseSettings {
         if (gainEl) gainEl.value = this.gain;
         if (noiseTypeEl) noiseTypeEl.value = this.noiseType;
         if (warpEl) warpEl.value = this.warpStrength;
+        if (warpIterationsEl) warpIterationsEl.value = this.warpIterations;
         
         // Update value displays
         const freqValueEl = document.getElementById('noiseFreqValue');
@@ -196,6 +239,7 @@ export class NoiseSettings {
         const offsetValueEl = document.getElementById('noiseOffsetValue');
         const gainValueEl = document.getElementById('noiseGainValue');
         const warpValueEl = document.getElementById('noiseWarpStrengthValue');
+        const warpIterationsValueEl = document.getElementById('noiseWarpIterationsValue');
         
         if (freqValueEl) freqValueEl.textContent = this.baseFreq;
         if (octavesValueEl) octavesValueEl.textContent = this.octaves;
@@ -204,6 +248,7 @@ export class NoiseSettings {
         if (offsetValueEl) offsetValueEl.textContent = this.offset;
         if (gainValueEl) gainValueEl.textContent = this.gain.toFixed(2);
         if (warpValueEl) warpValueEl.textContent = this.warpStrength.toFixed(2);
+        if (warpIterationsValueEl) warpIterationsValueEl.textContent = this.warpIterations;
     }
 }
 
@@ -234,8 +279,75 @@ export class HeightGenerator {
         for (let y = 0; y < this.worldH; y++) {
             for (let x = 0; x < this.worldW; x++) {
                 let value = 0;
-                let maxValue = 0;
                 
+                // Apply recursive domain warping if enabled
+                if (this.noiseSettings.warpStrength > 0 && this.noiseSettings.warpIterations > 1) {
+                    // Use recursive warping with proper octaves
+                    value = warpedNoise2D(
+                        x, y,
+                        noiseFunc,
+                        this.noiseSettings.octaves,
+                        this.noiseSettings.lacunarity,
+                        this.noiseSettings.persistence,
+                        this.noiseSettings.gain,
+                        this.noiseSettings.warpIterations,
+                        this.noiseSettings.warpStrength,
+                        this.noiseSettings.baseFreq
+                    );
+                } else {
+                    // Standard octave generation with optional simple warping
+                    let warpX = x;
+                    let warpY = y;
+                    if (this.noiseSettings.warpStrength > 0) {
+                        warpX += noise2D(x * 0.01 + seedOffset, y * 0.01) * this.noiseSettings.warpStrength;
+                        warpY += noise2D(x * 0.01, y * 0.01 + seedOffset) * this.noiseSettings.warpStrength;
+                    }
+                    
+                    // Generate octaves with enhanced controls
+                    let maxValue = 0;
+                    let frequency = this.noiseSettings.baseFreq;
+                    let amplitude = 1.0;
+                    
+                    for (let i = 0; i < this.noiseSettings.octaves; i++) {
+                        // Use custom octave settings if available
+                        if (this.noiseSettings.octaveSettings[i]) {
+                            frequency = this.noiseSettings.octaveSettings[i].frequency;
+                            amplitude = this.noiseSettings.octaveSettings[i].amplitude;
+                        } else {
+                            // Use lacunarity and persistence
+                            frequency = this.noiseSettings.baseFreq * Math.pow(this.noiseSettings.lacunarity, i);
+                            amplitude = Math.pow(this.noiseSettings.persistence, i);
+                        }
+                        
+                        const n = noiseFunc(warpX * frequency + seedOffset, warpY * frequency - seedOffset);
+                        value += n * amplitude * this.noiseSettings.gain;
+                        maxValue += amplitude;
+                    }
+                    
+                    // Normalize 
+                    if (maxValue > 0) {
+                        value = value / maxValue;
+                    }
+                }
+                
+                // Apply offset and final scaling
+                value = (value + this.noiseSettings.offset) * 0.5 + 0.5; // Apply offset and normalize to 0..1
+                value = Math.max(0, Math.min(1, value)); // Clamp to 0-1 range
+                heights[y][x] = Math.floor(value * (this.maxDepth + 1));
+            }
+        }
+        
+        return heights;
+    }
+    
+    generateFBM(seedOffset = 0) {
+        const heights = new Array(this.worldH);
+        for (let y = 0; y < this.worldH; y++) {
+            heights[y] = new Array(this.worldW).fill(0);
+        }
+        
+        for (let y = 0; y < this.worldH; y++) {
+            for (let x = 0; x < this.worldW; x++) {
                 // Apply domain warping if enabled
                 let warpX = x;
                 let warpY = y;
@@ -244,32 +356,20 @@ export class HeightGenerator {
                     warpY += noise2D(x * 0.01, y * 0.01 + seedOffset) * this.noiseSettings.warpStrength;
                 }
                 
-                // Generate octaves with enhanced controls
-                let frequency = this.noiseSettings.baseFreq;
-                let amplitude = 1.0;
+                // Generate FBM with specialized parameters
+                let value = fbmNoise2D(
+                    warpX * this.noiseSettings.baseFreq + seedOffset, 
+                    warpY * this.noiseSettings.baseFreq - seedOffset,
+                    this.noiseSettings.octaves,
+                    this.noiseSettings.lacunarity,
+                    this.noiseSettings.persistence,
+                    this.noiseSettings.fbmH
+                );
                 
-                for (let i = 0; i < this.noiseSettings.octaves; i++) {
-                    // Use custom octave settings if available
-                    if (this.noiseSettings.octaveSettings[i]) {
-                        frequency = this.noiseSettings.octaveSettings[i].frequency;
-                        amplitude = this.noiseSettings.octaveSettings[i].amplitude;
-                    } else {
-                        // Use lacunarity instead of fixed doubling
-                        frequency = this.noiseSettings.baseFreq * Math.pow(this.noiseSettings.lacunarity, i);
-                        amplitude = Math.pow(this.noiseSettings.persistence, i);
-                    }
-                    
-                    const n = noiseFunc(warpX * frequency + seedOffset, warpY * frequency - seedOffset);
-                    value += n * amplitude * this.noiseSettings.gain;
-                    maxValue += amplitude;
-                }
-                
-                // Normalize and scale with offset
-                if (maxValue > 0) {
-                    value = value / maxValue; // -1..1
-                }
-                value = (value + this.noiseSettings.offset) * 0.5 + 0.5; // Apply offset and normalize to 0..1
-                value = Math.max(0, Math.min(1, value)); // Clamp to 0-1 range
+                // Apply gain and offset
+                value *= this.noiseSettings.gain;
+                value = (value + this.noiseSettings.offset) * 0.5 + 0.5;
+                value = Math.max(0, Math.min(1, value));
                 heights[y][x] = Math.floor(value * (this.maxDepth + 1));
             }
         }
