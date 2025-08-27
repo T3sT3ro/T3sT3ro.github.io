@@ -9,8 +9,8 @@ export class BasinLabelManager {
     }
 
     // Generate deterministic positions for basin labels
-    generateBasinLabels(basins, heights) {
-        const basinHash = this.createBasinHash(basins);
+    generateBasinLabels(basins, heights, pumps = []) {
+        const basinHash = this.createBasinHash(basins, pumps);
         if (basinHash === this.lastBasinHash) {
             return; // No change, reuse existing positions
         }
@@ -20,6 +20,14 @@ export class BasinLabelManager {
         
         const labels = [];
         const lineLength = 30;
+        
+        // Create pump obstacle positions
+        const obstacles = [];
+        pumps.forEach((pump, index) => {
+            const pumpLabelX = pump.x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+            const pumpLabelY = pump.y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2 - CONFIG.TILE_SIZE * 2;
+            obstacles.push({ x: pumpLabelX, y: pumpLabelY, type: 'pump' });
+        });
         
         // Create initial label positions
         basins.forEach((basin, id) => {
@@ -39,66 +47,118 @@ export class BasinLabelManager {
             const anchorX = centerX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
             const anchorY = centerY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
             
-            // Initial label position with deterministic offset based on basin ID
-            const hash = this.hashString(id);
-            const angle = (hash % 8) * (Math.PI / 4); // 8 directions
-            const labelX = anchorX + Math.cos(angle) * lineLength;
-            const labelY = anchorY + Math.sin(angle) * lineLength;
-            
+            // Start label at origin point - force simulation will push it away naturally
             labels.push({
                 id: id,
                 anchorX: anchorX,
                 anchorY: anchorY,
-                labelX: labelX,
-                labelY: labelY,
-                text: id
+                labelX: anchorX,
+                labelY: anchorY,
+                text: id,
+                lineLength: 30 // Will be adjusted during simulation
             });
         });
         
-        // Apply simple repulsion to avoid overlaps (one-time calculation)
-        for (let iteration = 0; iteration < 10; iteration++) {
+        // Apply repulsion to avoid overlaps (one-time calculation)
+        const minLineLength = 15;
+        const maxLineLength = 45;
+        
+        for (let iteration = 0; iteration < 20; iteration++) {
             let moved = false;
             
             for (let i = 0; i < labels.length; i++) {
-                for (let j = i + 1; j < labels.length; j++) {
-                    const label1 = labels[i];
-                    const label2 = labels[j];
+                const label = labels[i];
+                let pushX = 0, pushY = 0;
+                
+                // Repulsion from other basin labels
+                for (let j = 0; j < labels.length; j++) {
+                    if (i === j) continue;
                     
-                    const dx = label2.labelX - label1.labelX;
-                    const dy = label2.labelY - label1.labelY;
+                    const other = labels[j];
+                    const dx = label.labelX - other.labelX;
+                    const dy = label.labelY - other.labelY;
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     
-                    const minDistance = 25; // Minimum distance between labels
+                    const minDistance = 25; // Minimum distance between basin labels
                     if (distance < minDistance && distance > 0) {
-                        const pushDistance = (minDistance - distance) / 2;
-                        const pushX = (dx / distance) * pushDistance;
-                        const pushY = (dy / distance) * pushDistance;
-                        
-                        label1.labelX -= pushX;
-                        label1.labelY -= pushY;
-                        label2.labelX += pushX;
-                        label2.labelY += pushY;
-                        
+                        const pushDistance = (minDistance - distance) * 0.5;
+                        pushX += (dx / distance) * pushDistance;
+                        pushY += (dy / distance) * pushDistance;
                         moved = true;
                     }
                 }
+                
+                // Repulsion from other basin label line endpoints
+                for (let j = 0; j < labels.length; j++) {
+                    if (i === j) continue;
+                    
+                    const other = labels[j];
+                    const dx = label.labelX - other.labelX;
+                    const dy = label.labelY - other.labelY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    const minLineDistance = 20;
+                    if (distance < minLineDistance && distance > 0) {
+                        const pushDistance = (minLineDistance - distance) * 0.3;
+                        pushX += (dx / distance) * pushDistance;
+                        pushY += (dy / distance) * pushDistance;
+                        moved = true;
+                    }
+                }
+                
+                // Repulsion from pump labels
+                for (const obstacle of obstacles) {
+                    const dx = label.labelX - obstacle.x;
+                    const dy = label.labelY - obstacle.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    const minObstacleDistance = 30; // Keep further away from pump labels
+                    if (distance < minObstacleDistance && distance > 0) {
+                        const pushDistance = (minObstacleDistance - distance) * 0.4;
+                        pushX += (dx / distance) * pushDistance;
+                        pushY += (dy / distance) * pushDistance;
+                        moved = true;
+                    }
+                }
+                
+                // Apply accumulated push
+                label.labelX += pushX;
+                label.labelY += pushY;
                 
                 // Keep labels within canvas bounds
                 const margin = 15;
                 const maxX = CONFIG.WORLD_W * CONFIG.TILE_SIZE - margin;
                 const maxY = CONFIG.WORLD_H * CONFIG.TILE_SIZE - margin;
                 
-                labels[i].labelX = Math.max(margin, Math.min(maxX, labels[i].labelX));
-                labels[i].labelY = Math.max(margin, Math.min(maxY, labels[i].labelY));
+                label.labelX = Math.max(margin, Math.min(maxX, label.labelX));
+                label.labelY = Math.max(margin, Math.min(maxY, label.labelY));
                 
-                // Maintain fixed line length from anchor
-                const anchorDx = labels[i].labelX - labels[i].anchorX;
-                const anchorDy = labels[i].labelY - labels[i].anchorY;
+                // Calculate current distance from anchor
+                const anchorDx = label.labelX - label.anchorX;
+                const anchorDy = label.labelY - label.anchorY;
                 const anchorDistance = Math.sqrt(anchorDx * anchorDx + anchorDy * anchorDy);
                 
+                // Adjust line length within bounds and update position
                 if (anchorDistance > 0) {
-                    labels[i].labelX = labels[i].anchorX + (anchorDx / anchorDistance) * lineLength;
-                    labels[i].labelY = labels[i].anchorY + (anchorDy / anchorDistance) * lineLength;
+                    // Determine optimal line length based on current position
+                    let targetLength = Math.max(minLineLength, Math.min(maxLineLength, anchorDistance));
+                    
+                    // If there's strong repulsion, allow longer lines up to max
+                    if (anchorDistance > maxLineLength) {
+                        targetLength = maxLineLength;
+                    }
+                    
+                    // Update label position to maintain target line length
+                    label.labelX = label.anchorX + (anchorDx / anchorDistance) * targetLength;
+                    label.labelY = label.anchorY + (anchorDy / anchorDistance) * targetLength;
+                    label.lineLength = targetLength;
+                } else {
+                    // If label is exactly at anchor, give it a small push based on basin ID
+                    const hash = this.hashString(label.id);
+                    const angle = (hash % 8) * (Math.PI / 4);
+                    label.labelX = label.anchorX + Math.cos(angle) * minLineLength;
+                    label.labelY = label.anchorY + Math.sin(angle) * minLineLength;
+                    label.lineLength = minLineLength;
                 }
             }
             
@@ -112,8 +172,8 @@ export class BasinLabelManager {
     }
 
     // Draw basin labels with connecting lines
-    draw(ctx, basins, heights) {
-        this.generateBasinLabels(basins, heights);
+    draw(ctx, basins, heights, pumps = []) {
+        this.generateBasinLabels(basins, heights, pumps);
         
         if (this.basinLabels.size === 0) return;
         
@@ -166,12 +226,19 @@ export class BasinLabelManager {
         });
     }
     
-    createBasinHash(basins) {
-        // Create hash to detect basin changes
+    createBasinHash(basins, pumps = []) {
+        // Create hash to detect basin and pump changes
         let hash = `count:${basins.size}`;
         basins.forEach((basin, id) => {
             hash += `|${id}:${basin.tiles.size}`;
         });
+        
+        // Include pump positions in hash since they affect label positioning
+        hash += `|pumps:${pumps.length}`;
+        pumps.forEach((pump, index) => {
+            hash += `|p${index}:${pump.x},${pump.y}`;
+        });
+        
         return hash;
     }
     

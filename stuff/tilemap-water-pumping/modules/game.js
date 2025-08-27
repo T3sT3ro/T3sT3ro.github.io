@@ -15,14 +15,25 @@ export class GameState {
         // Initialize tick counter
         this.tickCounter = 0;
         
+        // Track current seed for noise regeneration
+        this.currentSeed = 0;
+        
         // Initialize terrain
-        this.heights = this.heightGenerator.generate(0);
+        this.heights = this.heightGenerator.generate(this.currentSeed);
         this.basinManager.computeBasins(this.heights);
     }
 
     // Terrain operations
     randomizeHeights() {
-        this.heights = this.heightGenerator.generate(Math.random() * 1000);
+        this.currentSeed = Math.random() * 1000;
+        this.heights = this.heightGenerator.generate(this.currentSeed);
+        this.recomputeAll();
+    }
+
+    // Regenerate terrain with current seed but updated noise settings
+    regenerateWithCurrentSettings() {
+        console.log('regenerateWithCurrentSettings called with seed:', this.currentSeed);
+        this.heights = this.heightGenerator.generate(this.currentSeed);
         this.recomputeAll();
     }
 

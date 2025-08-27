@@ -147,7 +147,7 @@ export class Renderer {
         
         // Draw basin labels with smart positioning
         if (labelSettings.showBasinLabels) {
-            this.basinLabelManager.draw(this.ctx, basins, heights);
+            this.basinLabelManager.draw(this.ctx, basins, heights, pumps);
         }
         
         // Draw pump labels (original system)

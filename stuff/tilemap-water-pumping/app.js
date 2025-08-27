@@ -51,7 +51,8 @@ class TilemapWaterPumpingApp {
     }
 
     onNoiseSettingsChanged() {
-        this.gameState.randomizeHeights();
+        console.log('onNoiseSettingsChanged called');
+        this.gameState.regenerateWithCurrentSettings();
         this.draw();
         this.updateDebugDisplays();
     }

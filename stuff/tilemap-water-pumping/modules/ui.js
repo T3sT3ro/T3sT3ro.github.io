@@ -72,11 +72,14 @@ export class NoiseControlUI {
             title.textContent = `Octave ${i + 1}`;
             octaveDiv.appendChild(title);
             
-            // Get settings for this octave
-            const settings = this.noiseSettings.octaveSettings[i] || {
-                frequency: this.noiseSettings.baseFreq * Math.pow(2, i),
-                amplitude: Math.pow(this.noiseSettings.persistence, i)
-            };
+            // Get or create settings for this octave
+            if (!this.noiseSettings.octaveSettings[i]) {
+                this.noiseSettings.octaveSettings[i] = {
+                    frequency: this.noiseSettings.baseFreq * Math.pow(this.noiseSettings.lacunarity, i),
+                    amplitude: Math.pow(this.noiseSettings.persistence, i)
+                };
+            }
+            const settings = this.noiseSettings.octaveSettings[i];
             
             // Frequency control
             const freqLabel = document.createElement('label');
@@ -108,16 +111,28 @@ export class NoiseControlUI {
     }
 
     setupMainNoiseControls() {
-        // Noise control event listeners
+        // Enhanced noise control event listeners
         const freqEl = document.getElementById('noiseFreq');
         const octavesEl = document.getElementById('noiseOctaves');
         const persistenceEl = document.getElementById('noisePersistence');
+        const lacunarityEl = document.getElementById('noiseLacunarity');
         const offsetEl = document.getElementById('noiseOffset');
+        const gainEl = document.getElementById('noiseGain');
+        const noiseTypeEl = document.getElementById('noiseType');
+        const warpEl = document.getElementById('noiseWarpStrength');
 
         if (freqEl) {
             freqEl.addEventListener('input', (e) => { 
                 document.getElementById('noiseFreqValue').textContent = e.target.value;
                 this.noiseSettings.baseFreq = parseFloat(e.target.value);
+                console.log('Base frequency changed to:', this.noiseSettings.baseFreq);
+                // Update existing octave settings with new base frequency
+                for (let i = 0; i < this.noiseSettings.octaves; i++) {
+                    if (!this.noiseSettings.octaveSettings[i]) {
+                        this.noiseSettings.octaveSettings[i] = {};
+                    }
+                    this.noiseSettings.octaveSettings[i].frequency = this.noiseSettings.baseFreq * Math.pow(this.noiseSettings.lacunarity, i);
+                }
                 this.createOctaveControls(); // Recreate octave controls with new base frequency
                 this.noiseSettings.saveSettings(); 
                 this.onSettingsChange();
@@ -138,6 +153,14 @@ export class NoiseControlUI {
             persistenceEl.addEventListener('input', (e) => { 
                 document.getElementById('noisePersistenceValue').textContent = e.target.value;
                 this.noiseSettings.persistence = parseFloat(e.target.value);
+                console.log('Persistence changed to:', this.noiseSettings.persistence);
+                // Update existing octave settings with new persistence
+                for (let i = 0; i < this.noiseSettings.octaves; i++) {
+                    if (!this.noiseSettings.octaveSettings[i]) {
+                        this.noiseSettings.octaveSettings[i] = {};
+                    }
+                    this.noiseSettings.octaveSettings[i].amplitude = Math.pow(this.noiseSettings.persistence, i);
+                }
                 this.createOctaveControls(); // Recreate octave controls with new persistence
                 this.noiseSettings.saveSettings(); 
                 this.onSettingsChange();
@@ -148,6 +171,49 @@ export class NoiseControlUI {
             offsetEl.addEventListener('input', (e) => { 
                 document.getElementById('noiseOffsetValue').textContent = e.target.value;
                 this.noiseSettings.offset = parseFloat(e.target.value);
+                this.noiseSettings.saveSettings(); 
+                this.onSettingsChange();
+            });
+        }
+
+        if (lacunarityEl) {
+            lacunarityEl.addEventListener('input', (e) => { 
+                document.getElementById('noiseLacunarityValue').textContent = parseFloat(e.target.value).toFixed(2);
+                this.noiseSettings.lacunarity = parseFloat(e.target.value);
+                // Update existing octave settings with new lacunarity
+                for (let i = 0; i < this.noiseSettings.octaves; i++) {
+                    if (!this.noiseSettings.octaveSettings[i]) {
+                        this.noiseSettings.octaveSettings[i] = {};
+                    }
+                    this.noiseSettings.octaveSettings[i].frequency = this.noiseSettings.baseFreq * Math.pow(this.noiseSettings.lacunarity, i);
+                }
+                this.createOctaveControls(); // Recreate octave controls with new lacunarity
+                this.noiseSettings.saveSettings(); 
+                this.onSettingsChange();
+            });
+        }
+
+        if (gainEl) {
+            gainEl.addEventListener('input', (e) => { 
+                document.getElementById('noiseGainValue').textContent = parseFloat(e.target.value).toFixed(2);
+                this.noiseSettings.gain = parseFloat(e.target.value);
+                this.noiseSettings.saveSettings(); 
+                this.onSettingsChange();
+            });
+        }
+
+        if (noiseTypeEl) {
+            noiseTypeEl.addEventListener('change', (e) => { 
+                this.noiseSettings.noiseType = e.target.value;
+                this.noiseSettings.saveSettings(); 
+                this.onSettingsChange();
+            });
+        }
+
+        if (warpEl) {
+            warpEl.addEventListener('input', (e) => { 
+                document.getElementById('noiseWarpStrengthValue').textContent = parseFloat(e.target.value).toFixed(2);
+                this.noiseSettings.warpStrength = parseFloat(e.target.value);
                 this.noiseSettings.saveSettings(); 
                 this.onSettingsChange();
             });
