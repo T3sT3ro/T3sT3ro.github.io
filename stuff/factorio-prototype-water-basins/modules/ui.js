@@ -230,12 +230,14 @@ export class NoiseControlUI {
 }
 
 export class DebugDisplay {
-    constructor(basinManager) {
+    constructor(basinManager, gameState) {
         this.basinManager = basinManager;
+        this.gameState = gameState;
     }
 
     updateBasinsDisplay() {
-        const debugInfo = this.basinManager.getDebugInfo();
+        const heights = this.gameState.getHeights();
+        const debugInfo = this.basinManager.getDebugInfo(heights);
         let basinsDbg = "";
         
         // Build tree structure - find root basins (those with no higher neighbors)

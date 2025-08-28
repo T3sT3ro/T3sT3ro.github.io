@@ -21,7 +21,7 @@ class TilemapWaterPumpingApp {
             this.gameState.getHeightGenerator().getNoiseSettings(),
             () => this.onNoiseSettingsChanged()
         );
-        this.debugDisplay = new DebugDisplay(this.gameState.getBasinManager());
+        this.debugDisplay = new DebugDisplay(this.gameState.getBasinManager(), this.gameState);
         
         // Setup callbacks
         this.debugDisplay.setBasinHighlightChangeCallback((basinId) => this.draw());

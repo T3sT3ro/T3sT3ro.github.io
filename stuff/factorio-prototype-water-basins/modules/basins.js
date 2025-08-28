@@ -61,11 +61,38 @@ export class BasinManager {
                     visited[cy][cx] = true;
                     tiles.add(cx + "," + cy);
                     const h = heights[cy][cx];
-                    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+                    
+                    // Check all 8 directions (4 cardinal + 4 diagonal)
+                    const directions = [
+                        [1, 0], [-1, 0], [0, 1], [0, -1], // Cardinal directions
+                        [1, 1], [-1, -1], [1, -1], [-1, 1] // Diagonal directions
+                    ];
+                    
+                    directions.forEach(([dx, dy]) => {
                         const nx = cx + dx, ny = cy + dy;
                         if (nx < 0 || ny < 0 || nx >= CONFIG.WORLD_W || ny >= CONFIG.WORLD_H) return;
                         if (visited[ny][nx]) return;
-                        if (heights[ny][nx] <= h && heights[ny][nx] > 0) stack.push([nx, ny]); // Only add water tiles
+                        if (heights[ny][nx] <= h && heights[ny][nx] > 0) {
+                            // For diagonal connections, check if the diagonal crossing is blocked by land
+                            const isDiagonal = Math.abs(dx) + Math.abs(dy) === 2;
+                            if (isDiagonal) {
+                                // Check the two orthogonal neighbors that form the "crossing"
+                                const cross1x = cx + dx, cross1y = cy;
+                                const cross2x = cx, cross2y = cy + dy;
+                                
+                                // If both crossing tiles are within bounds and at least one is land, block diagonal connection
+                                if (cross1x >= 0 && cross1x < CONFIG.WORLD_W && cross1y >= 0 && cross1y < CONFIG.WORLD_H &&
+                                    cross2x >= 0 && cross2x < CONFIG.WORLD_W && cross2y >= 0 && cross2y < CONFIG.WORLD_H) {
+                                    const cross1IsLand = heights[cross1y][cross1x] === 0;
+                                    const cross2IsLand = heights[cross2y][cross2x] === 0;
+                                    
+                                    // Block diagonal if both crossing tiles are land (complete blockage)
+                                    if (cross1IsLand && cross2IsLand) return;
+                                }
+                            }
+                            
+                            stack.push([nx, ny]); // Only add water tiles
+                        }
                     });
                 }
                 
@@ -154,7 +181,7 @@ export class BasinManager {
     }
 
     // Get debug information about basins
-    getDebugInfo() {
+    getDebugInfo(heights) {
         const connections = new Map();
         const basinArray = Array.from(this.basins.entries()).sort((a, b) => {
             // Sort by level first, then by letter sequence
@@ -169,11 +196,35 @@ export class BasinManager {
             connections.set(id, new Set());
             basin.tiles.forEach(tileKey => {
                 const [tx, ty] = tileKey.split(',').map(Number);
-                // Check neighbors for connections
-                [[tx-1, ty], [tx+1, ty], [tx, ty-1], [tx, ty+1]].forEach(([nx, ny]) => {
+                // Check all 8 directions for connections
+                const directions = [
+                    [1, 0], [-1, 0], [0, 1], [0, -1], // Cardinal directions
+                    [1, 1], [-1, -1], [1, -1], [-1, 1] // Diagonal directions
+                ];
+                
+                directions.forEach(([dx, dy]) => {
+                    const nx = tx + dx, ny = ty + dy;
                     if (nx >= 0 && ny >= 0 && nx < CONFIG.WORLD_W && ny < CONFIG.WORLD_H) {
                         const neighborBasinId = this.basinIdOf[ny][nx];
                         if (neighborBasinId && neighborBasinId !== id) {
+                            // For diagonal connections, check if the diagonal crossing is blocked
+                            const isDiagonal = Math.abs(dx) + Math.abs(dy) === 2;
+                            if (isDiagonal && heights) {
+                                // Check the two orthogonal neighbors that form the "crossing"
+                                const cross1x = tx + dx, cross1y = ty;
+                                const cross2x = tx, cross2y = ty + dy;
+                                
+                                // Check for land blocking the diagonal
+                                if (cross1x >= 0 && cross1x < CONFIG.WORLD_W && cross1y >= 0 && cross1y < CONFIG.WORLD_H &&
+                                    cross2x >= 0 && cross2x < CONFIG.WORLD_W && cross2y >= 0 && cross2y < CONFIG.WORLD_H) {
+                                    const cross1IsLand = heights[cross1y][cross1x] === 0;
+                                    const cross2IsLand = heights[cross2y][cross2x] === 0;
+                                    
+                                    // Block diagonal if both crossing tiles are land (complete blockage)
+                                    if (cross1IsLand && cross2IsLand) return;
+                                }
+                            }
+                            
                             connections.get(id).add(neighborBasinId);
                         }
                     }
