@@ -121,7 +121,6 @@ export class NoiseControlUI {
         const noiseTypeEl = document.getElementById('noiseType');
         const warpEl = document.getElementById('noiseWarpStrength');
         const warpIterationsEl = document.getElementById('noiseWarpIterations');
-        const fbmHEl = document.getElementById('noiseFbmH');
 
         if (freqEl) {
             freqEl.addEventListener('input', (e) => { 
@@ -223,15 +222,6 @@ export class NoiseControlUI {
             warpIterationsEl.addEventListener('input', (e) => { 
                 document.getElementById('noiseWarpIterationsValue').textContent = e.target.value;
                 this.noiseSettings.warpIterations = parseInt(e.target.value);
-                this.noiseSettings.saveSettings(); 
-                this.onSettingsChange();
-            });
-        }
-
-        if (fbmHEl) {
-            fbmHEl.addEventListener('input', (e) => { 
-                document.getElementById('noiseFbmHValue').textContent = parseFloat(e.target.value).toFixed(2);
-                this.noiseSettings.fbmH = parseFloat(e.target.value);
                 this.noiseSettings.saveSettings(); 
                 this.onSettingsChange();
             });

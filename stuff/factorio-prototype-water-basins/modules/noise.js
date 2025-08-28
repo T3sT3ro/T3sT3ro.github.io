@@ -340,43 +340,6 @@ export class HeightGenerator {
         return heights;
     }
     
-    generateFBM(seedOffset = 0) {
-        const heights = new Array(this.worldH);
-        for (let y = 0; y < this.worldH; y++) {
-            heights[y] = new Array(this.worldW).fill(0);
-        }
-        
-        for (let y = 0; y < this.worldH; y++) {
-            for (let x = 0; x < this.worldW; x++) {
-                // Apply domain warping if enabled
-                let warpX = x;
-                let warpY = y;
-                if (this.noiseSettings.warpStrength > 0) {
-                    warpX += noise2D(x * 0.01 + seedOffset, y * 0.01) * this.noiseSettings.warpStrength;
-                    warpY += noise2D(x * 0.01, y * 0.01 + seedOffset) * this.noiseSettings.warpStrength;
-                }
-                
-                // Generate FBM with specialized parameters
-                let value = fbmNoise2D(
-                    warpX * this.noiseSettings.baseFreq + seedOffset, 
-                    warpY * this.noiseSettings.baseFreq - seedOffset,
-                    this.noiseSettings.octaves,
-                    this.noiseSettings.lacunarity,
-                    this.noiseSettings.persistence,
-                    this.noiseSettings.fbmH
-                );
-                
-                // Apply gain and offset
-                value *= this.noiseSettings.gain;
-                value = (value + this.noiseSettings.offset) * 0.5 + 0.5;
-                value = Math.max(0, Math.min(1, value));
-                heights[y][x] = Math.floor(value * (this.maxDepth + 1));
-            }
-        }
-        
-        return heights;
-    }
-    
     getNoiseSettings() {
         return this.noiseSettings;
     }
