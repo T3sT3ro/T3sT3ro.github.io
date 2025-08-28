@@ -351,8 +351,12 @@ class TilemapWaterPumpingApp {
     draw() {
         this.renderer.clear();
         
-        // Draw terrain
-        this.renderer.drawTerrain(this.gameState.getHeights());
+        // Draw terrain with integrated highlighting
+        this.renderer.drawTerrain(
+            this.gameState.getHeights(),
+            this.gameState.getBasinManager(),
+            this.gameState.getHighlightedBasin()
+        );
         
         // Draw water
         this.renderer.drawWater(this.gameState.getBasins());
@@ -375,12 +379,6 @@ class TilemapWaterPumpingApp {
             this.gameState.getBasins(),
             this.gameState.getPumps(),
             this.uiSettings
-        );
-        
-        // Draw basin highlight
-        this.renderer.drawBasinHighlight(
-            this.gameState.getBasins(),
-            this.gameState.getHighlightedBasin()
         );
     }
 }
