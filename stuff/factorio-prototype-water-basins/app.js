@@ -257,8 +257,8 @@ class TilemapWaterPumpingApp {
                 this.gameState.setDepthAt(mx, my, 0);
                 this.gameState.setSelectedReservoir(null); // Clear reservoir selection
                 this.updateReservoirControls();
-            } else if (e.button === 2) { // Right mouse button - set to min neighbor height
-                this.gameState.setToMinNeighborHeight(mx, my);
+            } else if (e.button === 2) { // Right mouse button - set depth to 1
+                this.gameState.setDepthAt(mx, my, 1);
                 this.gameState.setSelectedReservoir(null); // Clear reservoir selection
                 this.updateReservoirControls();
             }
@@ -267,13 +267,13 @@ class TilemapWaterPumpingApp {
             this.updateDebugDisplays();
         });
 
-        // Mouse move event for panning
+        // Mouse move event for panning and tile info
         this.canvas.addEventListener('mousemove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            
             if (isPanning) {
-                const rect = this.canvas.getBoundingClientRect();
-                const screenX = e.clientX - rect.left;
-                const screenY = e.clientY - rect.top;
-                
                 const deltaX = screenX - lastPanX;
                 const deltaY = screenY - lastPanY;
                 
@@ -283,6 +283,14 @@ class TilemapWaterPumpingApp {
                 lastPanY = screenY;
                 
                 this.draw();
+            } else {
+                // Update tile info when not panning
+                const worldPos = this.renderer.screenToWorld(screenX, screenY);
+                const tileX = Math.floor(worldPos.x / CONFIG.TILE_SIZE);
+                const tileY = Math.floor(worldPos.y / CONFIG.TILE_SIZE);
+                
+                const tileInfo = this.getTileInfo(tileX, tileY);
+                this.updateZoomIndicator(tileInfo);
             }
         });
 
@@ -294,12 +302,14 @@ class TilemapWaterPumpingApp {
             }
         });
 
-        // Mouse leave event to stop panning
+        // Mouse leave event to stop panning and reset tile info
         this.canvas.addEventListener('mouseleave', () => {
             if (isPanning) {
                 isPanning = false;
                 this.canvas.style.cursor = 'default';
             }
+            // Reset to just zoom info when mouse leaves canvas
+            this.updateZoomIndicator();
         });
 
         // Wheel event for zooming
@@ -322,12 +332,58 @@ class TilemapWaterPumpingApp {
         });
     }
 
-    updateZoomIndicator() {
+    updateZoomIndicator(tileInfo = null) {
         const zoomIndicator = document.getElementById('zoomIndicator');
         if (zoomIndicator) {
             const zoomPercentage = Math.round(this.renderer.camera.zoom * 100);
-            zoomIndicator.textContent = `Zoom: ${zoomPercentage}%`;
+            let displayText = `Zoom: ${zoomPercentage}%`;
+            
+            if (tileInfo) {
+                const { x, y, depth, basinId, pumpInfo } = tileInfo;
+                displayText += ` | Tile: (${x}, ${y})`;
+                
+                if (depth === 0) {
+                    displayText += ` Land`;
+                } else {
+                    displayText += ` Depth: ${depth}`;
+                }
+                
+                if (basinId) {
+                    displayText += ` Basin: ${basinId}`;
+                }
+                
+                if (pumpInfo) {
+                    displayText += ` | ${pumpInfo.mode} Pump R${pumpInfo.reservoirId || '?'}`;
+                }
+            }
+            
+            zoomIndicator.textContent = displayText;
         }
+    }
+
+    getTileInfo(x, y) {
+        if (x < 0 || y < 0 || x >= CONFIG.WORLD_W || y >= CONFIG.WORLD_H) {
+            return null;
+        }
+        
+        const heights = this.gameState.getHeights();
+        const basinManager = this.gameState.getBasinManager();
+        const pumps = this.gameState.getPumps();
+        
+        const depth = heights[y][x];
+        const basinId = basinManager.getBasinIdAt(x, y);
+        
+        // Check if there's a pump at this location
+        const pump = pumps.find(p => p.x === x && p.y === y);
+        const pumpInfo = pump ? { mode: pump.mode, reservoirId: pump.reservoirId } : null;
+        
+        return {
+            x,
+            y,
+            depth,
+            basinId,
+            pumpInfo
+        };
     }
 
     updateReservoirControls() {

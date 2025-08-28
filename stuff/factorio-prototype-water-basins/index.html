@@ -14,13 +14,17 @@
 </head>
 
 <body>
-    <div>
-        <canvas id="canvas">
-        </canvas>
-        <div id="zoomIndicator">
-            Zoom: 100%
+    <main>
+        <div id="insights">
+            <div id="zoomIndicator">
+                Zoom: 100%
+            </div>
         </div>
-    </div>
+
+        <div id="canvasContainer">
+            <canvas id="canvas"></canvas>
+        </div>
+    </main>
     <div id="controls">
         <div id="topControls">
             <div id="buttons" class="control-box">
@@ -66,7 +70,7 @@
             </div>
             <div id="controlsBox" class="control-box">
                 <div class="control-item"><code>LMB</code> Set depth=0</div>
-                <div class="control-item"><code>RMB</code> Set to min neighbor</div>
+                <div class="control-item"><code>RMB</code> Set depth=1</div>
                 <div class="control-item"><code>ALT+LMB</code> Increase depth</div>
                 <div class="control-item"><code>ALT+RMB</code> Decrease depth</div>
                 <div class="control-item"><code>SHIFT+LMB</code> Add outlet pump</div>
@@ -74,6 +78,7 @@
                 <div class="control-item"><code>SHIFT+CTRL+LMB</code> Link pump to reservoir</div>
                 <div class="control-item"><code>CTRL+LMB</code> Flood fill</div>
                 <div class="control-item"><code>CTRL+RMB</code> Flood empty</div>
+                <div class="control-item"><code>MMB</code> Pan and zoom</div>
             </div>
             <div id="labelControls" class="control-box">
                 <h4>Drawing Labels</h4>
