@@ -34,18 +34,37 @@ export class BasinLabelManager {
             const tiles = Array.from(basin.tiles);
             if (tiles.length === 0) return;
             
-            // Calculate centroid
-            let sumX = 0, sumY = 0;
-            tiles.forEach(tileKey => {
-                const [x, y] = tileKey.split(',').map(Number);
-                sumX += x;
-                sumY += y;
-            });
-            const centerX = Math.round(sumX / tiles.length);
-            const centerY = Math.round(sumY / tiles.length);
+            // Find a representative tile that belongs to this basin (not centroid)
+            // Use the first tile, or preferably one close to the center if basin is large
+            let representativeTile;
+            if (tiles.length === 1) {
+                representativeTile = tiles[0];
+            } else {
+                // Calculate centroid to find the tile closest to center
+                let sumX = 0, sumY = 0;
+                tiles.forEach(tileKey => {
+                    const [x, y] = tileKey.split(',').map(Number);
+                    sumX += x;
+                    sumY += y;
+                });
+                const centerX = sumX / tiles.length;
+                const centerY = sumY / tiles.length;
+                
+                // Find the actual tile closest to the centroid
+                let minDistance = Infinity;
+                tiles.forEach(tileKey => {
+                    const [x, y] = tileKey.split(',').map(Number);
+                    const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        representativeTile = tileKey;
+                    }
+                });
+            }
             
-            const anchorX = centerX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-            const anchorY = centerY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+            const [tileX, tileY] = representativeTile.split(',').map(Number);
+            const anchorX = tileX * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+            const anchorY = tileY * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
             
             // Start label at origin point - force simulation will push it away naturally
             labels.push({
@@ -60,8 +79,8 @@ export class BasinLabelManager {
         });
         
         // Apply repulsion to avoid overlaps (one-time calculation)
-        const minLineLength = 15;
-        const maxLineLength = 45;
+        const minLineLength = 30;
+        const maxLineLength = 60;
         
         for (let iteration = 0; iteration < 20; iteration++) {
             let moved = false;
