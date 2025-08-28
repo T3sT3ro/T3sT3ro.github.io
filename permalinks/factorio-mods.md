@@ -1,6 +1,6 @@
 ---
 layout: redirect
 sitemap: true
-permalink: /permalinks/factorio-prototype-water-basins/
+permalink: /permalinks/factorio-mods/
 redirect_to: https://mods.factorio.com/user/Tooster
 ---

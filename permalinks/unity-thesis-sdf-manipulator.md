@@ -1,6 +1,6 @@
 ---
 layout: redirect
 sitemap: true
-permalink: /permalinks/unity-thesis-sdf-manipulator
+permalink: /permalinks/unity-thesis-sdf-manipulator/
 redirect_to: https://github.com/T3sT3ro/SdfManipulator
 ---
