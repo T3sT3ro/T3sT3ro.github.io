@@ -119,20 +119,35 @@ button, select {
     flex-direction: column;
     gap: var(--size-1);
     margin-bottom: var(--size-2);
+    flex: 1 1 0;
+    min-height: 0;
 }
 
 #noiseControlsContainer {
     display: flex;
     gap: var(--size-3);
+    align-items: stretch;
+    height: 100%;
+    min-height: 0;
 }
 
-#octaveControls {
-    flex: 1;
-    max-height: var(--max-height-octave);
+#octaveControlsContainer {
+    flex: 1 1 0;
+    max-height: 100%;
     overflow-y: auto;
     border: var(--border-size-1) solid var(--gray-4);
     background: var(--surface-1);
     padding: var(--size-1);
+    position: relative;
+}
+
+#octaveControls {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: inherit;
 }
 
 #noiseControls label {
