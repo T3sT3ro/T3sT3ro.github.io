@@ -28,7 +28,7 @@ body {
     row-gap: 2em;
     grid-template:
         ". header ."
-        ". toolbox ."
+        ". nav ."
         ". main ." 1fr
         ". footer ."
         / 1fr MIN(700px, calc(100vw - 16px)) 1fr;
@@ -136,13 +136,17 @@ nav {
 
             a {
                 display: block;
-                padding: 1em 1em;
+                padding: .1em 1em;
                 transition: all .2s ease-out;
+                border-radius: 9999px;
+                font-weight: 900;
+                color: white;
+                text-transform: uppercase;
 
                 &:hover {
                     opacity: 100%;
                     color: var(--th-background);
-                    background-color: var((--th-on-surface));
+                    background-color: var(--th-P-normal);
                 }
             }
         }
@@ -247,7 +251,6 @@ footer {
 
     .preview {
         max-height: 300px;
-        min-height: fit-content;
         display: block;
         overflow: hidden;
         position: relative;
@@ -264,8 +267,9 @@ footer {
 
     .read-more {
         margin-top: 1em;
-        padding: .5em;
+        padding-block: .5em;
         display: block;
+        text-align: end;
     }
 }
 

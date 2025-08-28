@@ -12,19 +12,6 @@
       "path": "[[workspace]]/_posts"
     }
   ],
-  "frontMatter.taxonomy.tags": [
-    "a",
-    "docker",
-    "e",
-    "fun",
-    "jekyll",
-    "l",
-    "m",
-    "p",
-    "s",
-    "t"
-  ],
-  "frontMatter.taxonomy.categories": [],
   "frontMatter.taxonomy.contentTypes": [
     {
       "name": "default",
