@@ -1,6 +1,6 @@
 // Main application controller - orchestrates all modules
 
-import { setupCanvas } from './modules/config.js';
+import { setupCanvas, CONFIG } from './modules/config.js';
 import { GameState } from './modules/game.js';
 import { Renderer, LegendRenderer } from './modules/renderer.js';
 import { UISettings, NoiseControlUI, DebugDisplay } from './modules/ui.js';
@@ -45,6 +45,9 @@ class TilemapWaterPumpingApp {
         
         // Update reservoir controls
         this.updateReservoirControls();
+        
+        // Update zoom indicator
+        this.updateZoomIndicator();
         
         // Initial render
         this.draw();
@@ -165,12 +168,32 @@ class TilemapWaterPumpingApp {
     }
 
     setupCanvasEventHandlers() {
+        let isPanning = false;
+        let lastPanX = 0;
+        let lastPanY = 0;
+
+        // Mouse down event
         this.canvas.addEventListener('mousedown', (e) => {
             const rect = this.canvas.getBoundingClientRect();
-            const mx = Math.floor((e.clientX - rect.left) / 6); // TILE_SIZE = 6
-            const my = Math.floor((e.clientY - rect.top) / 6);
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
             
-            if (mx < 0 || my < 0 || mx >= 160 || my >= 160) return; // WORLD_W/H = 160
+            // Handle middle mouse button for panning
+            if (e.button === 1) { // Middle mouse button
+                isPanning = true;
+                lastPanX = screenX;
+                lastPanY = screenY;
+                this.canvas.style.cursor = 'grabbing';
+                e.preventDefault();
+                return;
+            }
+            
+            // Convert screen coordinates to world coordinates for game logic
+            const worldPos = this.renderer.screenToWorld(screenX, screenY);
+            const mx = Math.floor(worldPos.x / CONFIG.TILE_SIZE);
+            const my = Math.floor(worldPos.y / CONFIG.TILE_SIZE);
+            
+            if (mx < 0 || my < 0 || mx >= CONFIG.WORLD_W || my >= CONFIG.WORLD_H) return;
             
             // Prevent context menu for right-click
             if (e.button === 2) {
@@ -244,9 +267,67 @@ class TilemapWaterPumpingApp {
             this.updateDebugDisplays();
         });
 
+        // Mouse move event for panning
+        this.canvas.addEventListener('mousemove', (e) => {
+            if (isPanning) {
+                const rect = this.canvas.getBoundingClientRect();
+                const screenX = e.clientX - rect.left;
+                const screenY = e.clientY - rect.top;
+                
+                const deltaX = screenX - lastPanX;
+                const deltaY = screenY - lastPanY;
+                
+                this.renderer.pan(-deltaX, -deltaY);
+                
+                lastPanX = screenX;
+                lastPanY = screenY;
+                
+                this.draw();
+            }
+        });
+
+        // Mouse up event
+        this.canvas.addEventListener('mouseup', (e) => {
+            if (e.button === 1 && isPanning) { // Middle mouse button
+                isPanning = false;
+                this.canvas.style.cursor = 'default';
+            }
+        });
+
+        // Mouse leave event to stop panning
+        this.canvas.addEventListener('mouseleave', () => {
+            if (isPanning) {
+                isPanning = false;
+                this.canvas.style.cursor = 'default';
+            }
+        });
+
+        // Wheel event for zooming
+        this.canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            
+            const rect = this.canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            this.renderer.zoomAt(screenX, screenY, zoomFactor);
+            
+            this.updateZoomIndicator();
+            this.draw();
+        });
+
         this.canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault(); // Prevent right-click context menu
         });
+    }
+
+    updateZoomIndicator() {
+        const zoomIndicator = document.getElementById('zoomIndicator');
+        if (zoomIndicator) {
+            const zoomPercentage = Math.round(this.renderer.camera.zoom * 100);
+            zoomIndicator.textContent = `Zoom: ${zoomPercentage}%`;
+        }
     }
 
     updateReservoirControls() {

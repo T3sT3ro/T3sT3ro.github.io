@@ -191,18 +191,23 @@ export class BasinLabelManager {
     }
 
     // Draw basin labels with connecting lines
-    draw(ctx, basins, heights, pumps = []) {
+    draw(ctx, basins, heights, pumps = [], zoom = 1) {
         this.generateBasinLabels(basins, heights, pumps);
         
         if (this.basinLabels.size === 0) return;
         
-        ctx.font = '10px Arial';
+        // Simplified font scaling - only scale at extreme zoom levels
+        const fontSize = zoom < 0.5 ? Math.max(8, 10 / zoom) : 10;
+        ctx.font = `${fontSize}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
-        // Draw connecting lines
+        // Draw connecting lines - simplified scaling
+        const lineWidth = zoom < 0.5 ? 2 : 1;
+        const dotRadius = zoom < 0.5 ? 3 : 2;
+        
         ctx.strokeStyle = 'rgba(100, 100, 100, 0.6)';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = lineWidth;
         ctx.setLineDash([]);
         
         this.basinLabels.forEach(label => {
@@ -216,7 +221,7 @@ export class BasinLabelManager {
         ctx.fillStyle = 'rgba(80, 80, 80, 0.7)';
         this.basinLabels.forEach(label => {
             ctx.beginPath();
-            ctx.arc(label.anchorX, label.anchorY, 2, 0, 2 * Math.PI);
+            ctx.arc(label.anchorX, label.anchorY, dotRadius, 0, 2 * Math.PI);
             ctx.fill();
         });
         

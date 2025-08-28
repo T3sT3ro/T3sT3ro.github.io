@@ -20,10 +20,61 @@ export class Renderer {
         this.canvas = canvas;
         this.ctx = ctx;
         this.basinLabelManager = new BasinLabelManager();
+        
+        // Camera/viewport system for pan and zoom
+        this.camera = {
+            x: 0,
+            y: 0,
+            zoom: 1,
+            minZoom: 0.25,
+            maxZoom: 4
+        };
+    }
+
+    // Apply camera transformation to context
+    applyCameraTransform() {
+        this.ctx.setTransform(
+            this.camera.zoom, 0, 0, this.camera.zoom,
+            -this.camera.x * this.camera.zoom,
+            -this.camera.y * this.camera.zoom
+        );
+    }
+
+    // Reset camera transformation
+    resetTransform() {
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
+    // Convert screen coordinates to world coordinates
+    screenToWorld(screenX, screenY) {
+        return {
+            x: (screenX / this.camera.zoom) + this.camera.x,
+            y: (screenY / this.camera.zoom) + this.camera.y
+        };
+    }
+
+    // Pan camera by given offset
+    pan(deltaX, deltaY) {
+        this.camera.x += deltaX / this.camera.zoom;
+        this.camera.y += deltaY / this.camera.zoom;
+    }
+
+    // Zoom camera at given point
+    zoomAt(screenX, screenY, zoomFactor) {
+        const worldBefore = this.screenToWorld(screenX, screenY);
+        
+        this.camera.zoom *= zoomFactor;
+        this.camera.zoom = Math.max(this.camera.minZoom, Math.min(this.camera.maxZoom, this.camera.zoom));
+        
+        const worldAfter = this.screenToWorld(screenX, screenY);
+        this.camera.x += (worldBefore.x - worldAfter.x);
+        this.camera.y += (worldBefore.y - worldAfter.y);
     }
 
     clear() {
+        this.resetTransform();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.applyCameraTransform();
     }
 
     drawTerrain(heights) {
@@ -63,6 +114,8 @@ export class Renderer {
     }
 
     drawPumps(pumps, selectedReservoirId) {
+        const scaledLineWidth = this.getScaledLineWidth(2);
+        
         for (let pump of pumps) {
             const cx = pump.x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
             const cy = pump.y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
@@ -72,28 +125,29 @@ export class Renderer {
                 this.ctx.beginPath(); 
                 this.ctx.arc(cx, cy, CONFIG.TILE_SIZE * 1.8, 0, Math.PI * 2);
                 this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)'; // Yellow highlight
-                this.ctx.lineWidth = 3;
+                this.ctx.lineWidth = scaledLineWidth + 1;
                 this.ctx.stroke();
             }
             
             this.ctx.beginPath(); 
             this.ctx.arc(cx, cy, CONFIG.TILE_SIZE * 1, 0, Math.PI * 2);
             this.ctx.strokeStyle = (pump.mode === 'inlet') ? 'rgba(200, 0, 0, 0.7)' : 'rgba(0, 255, 0, 0.7)';
-            this.ctx.lineWidth = 2;
+            this.ctx.lineWidth = scaledLineWidth;
             this.ctx.stroke();
-            this.ctx.lineWidth = 1;
         }
     }
 
     drawPumpConnections(pumpsByReservoir) {
         // Draw lines between pumps in the same reservoir (if more than 1)
-        pumpsByReservoir.forEach((pumpsInReservoir) => {
+        const scaledLineWidth = this.getScaledLineWidth(2);
+        const dashPattern = this.camera.zoom < 0.5 ? [10, 6] : [5, 3];
+        
+        pumpsByReservoir.forEach((pumpsInReservoir, reservoirId) => {
             if (pumpsInReservoir.length > 1) {
-                this.ctx.strokeStyle = 'rgba(0, 0, 255, 0.6)'; // Blue connections
-                this.ctx.lineWidth = 2;
-                this.ctx.setLineDash([5, 5]); // Dashed line
+                this.ctx.strokeStyle = 'red';
+                this.ctx.lineWidth = scaledLineWidth;
+                this.ctx.setLineDash(dashPattern);
                 
-                // Connect pumps in a chain (not all-to-all to avoid clutter)
                 for (let i = 0; i < pumpsInReservoir.length - 1; i++) {
                     const pump1 = pumpsInReservoir[i];
                     const pump2 = pumpsInReservoir[i + 1];
@@ -110,13 +164,13 @@ export class Renderer {
                 }
                 
                 this.ctx.setLineDash([]); // Reset to solid lines
-                this.ctx.lineWidth = 1;
             }
         });
     }
 
     drawChunkBoundaries() {
-        this.ctx.strokeStyle = 'rgba(255,0,0)';
+        this.ctx.strokeStyle = 'rgba(255,0,0,0.5)';
+        this.ctx.lineWidth = this.getScaledLineWidth(1);
         
         // Vertical lines
         for (let cx = 0; cx <= CONFIG.WORLD_W; cx += CONFIG.CHUNK_SIZE) {
@@ -135,8 +189,26 @@ export class Renderer {
         }
     }
 
+    // Get appropriate font size based on zoom level to keep text readable
+    getScaledFontSize(baseFontSize = 10) {
+        // Simplified scaling - only scale at extreme zoom levels
+        if (this.camera.zoom < 0.5) {
+            return Math.max(8, baseFontSize / this.camera.zoom);
+        } else if (this.camera.zoom > 2) {
+            return Math.min(16, baseFontSize);
+        }
+        return baseFontSize;
+    }
+
+    // Get scaled line width for better visibility at different zoom levels
+    getScaledLineWidth(baseWidth = 1) {
+        // Only scale line width at very low zoom levels
+        return this.camera.zoom < 0.5 ? Math.max(0.5, baseWidth / this.camera.zoom) : baseWidth;
+    }
+
     drawLabels(heights, basins, pumps, labelSettings) {
-        this.ctx.font = '10px Arial';
+        const fontSize = this.getScaledFontSize();
+        this.ctx.font = `${fontSize}px Arial`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         
@@ -147,7 +219,7 @@ export class Renderer {
         
         // Draw basin labels with smart positioning
         if (labelSettings.showBasinLabels) {
-            this.basinLabelManager.draw(this.ctx, basins, heights, pumps);
+            this.basinLabelManager.draw(this.ctx, basins, heights, pumps, this.camera.zoom);
         }
         
         // Draw pump labels (original system)
@@ -183,6 +255,10 @@ export class Renderer {
     }
 
     drawPumpLabels(pumps) {
+        const fontSize = this.getScaledFontSize();
+        this.ctx.font = `${fontSize}px Arial`;
+        const scaledLineWidth = this.getScaledLineWidth(1);
+        
         for (let i = 0; i < pumps.length; i++) {
             const pump = pumps[i];
             const labelX = pump.x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
@@ -193,9 +269,9 @@ export class Renderer {
             this.ctx.strokeStyle = 'white';
             this.ctx.fillStyle = (pump.mode === 'inlet') ? 'green' : 'red';
             
-            this.ctx.lineWidth = 2;
+            this.ctx.lineWidth = scaledLineWidth * 2;
             this.ctx.strokeText(pumpText, labelX, labelY);
-            this.ctx.lineWidth = 1;
+            this.ctx.lineWidth = scaledLineWidth;
             this.ctx.fillText(pumpText, labelX, labelY);
         }
     }

@@ -17,8 +17,20 @@ body {
 }
 
 canvas {
-    border: var(--border-size-1) solid var(--text-1);
+    border: var(--border-size-1) solid var(--gray-5);
     display: block;
+}
+
+/* Zoom indicator overlay */
+#zoomIndicator {
+    background: var(--surface-3);
+    color: var(--text-1);
+    padding: var(--size-1) var(--size-2);
+    border-radius: var(--radius-2);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-0);
+    width: fit-content;
+    border: var(--border-size-1) solid var(--gray-6);
 }
 
 .control-box {
@@ -34,6 +46,35 @@ canvas {
     margin: 0 0 var(--size-2) 0;
     font-size: var(--font-size-0);
     font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Tick counter display */
+#tickCounterDisplay {
+    font-weight: normal;
+    font-size: inherit;
+}
+
+/* Reservoir input styling */
+.reservoir-input-label {
+    font-weight: normal;
+    font-size: var(--font-size-0);
+    margin-left: var(--size-2);
+    display: flex;
+    align-items: center;
+    gap: var(--size-1);
+}
+
+#reservoirInput {
+    width: var(--size-9);
+    padding: var(--size-1);
+    border: var(--border-size-1) solid var(--gray-4);
+    border-radius: var(--radius-1);
+    background: var(--surface-1);
+    color: var(--text-1);
+    font-size: var(--font-size-0);
 }
 
 #controls {
