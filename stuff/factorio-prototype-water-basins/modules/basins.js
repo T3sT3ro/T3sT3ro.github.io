@@ -37,8 +37,9 @@ export class BasinManager {
             visited[y] = new Array(CONFIG.WORLD_W).fill(false); 
         }
         
-        // Group basins by height level
+        // First pass: identify all potential basin tiles and their connectivity
         const basinsByLevel = new Map();
+        const tileToBasin = new Map(); // Maps "x,y" to basin data
         
         for (let y = 0; y < CONFIG.WORLD_H; y++) {
             for (let x = 0; x < CONFIG.WORLD_W; x++) {
@@ -51,16 +52,16 @@ export class BasinManager {
                     continue;
                 }
                 
+                // Flood fill to find all connected tiles at the current depth
                 const tiles = new Set();
                 const stack = [[x, y]];
                 while (stack.length) {
                     const [cx, cy] = stack.pop();
                     if (cx < 0 || cy < 0 || cx >= CONFIG.WORLD_W || cy >= CONFIG.WORLD_H) continue;
                     if (visited[cy][cx]) continue;
-                    if (heights[cy][cx] === 0) continue; // Skip land tiles in flood fill too
+                    if (heights[cy][cx] !== height) continue; // Only same depth for this basin
                     visited[cy][cx] = true;
                     tiles.add(cx + "," + cy);
-                    const h = heights[cy][cx];
                     
                     // Check all 8 directions (4 cardinal + 4 diagonal)
                     const directions = [
@@ -72,56 +73,114 @@ export class BasinManager {
                         const nx = cx + dx, ny = cy + dy;
                         if (nx < 0 || ny < 0 || nx >= CONFIG.WORLD_W || ny >= CONFIG.WORLD_H) return;
                         if (visited[ny][nx]) return;
-                        if (heights[ny][nx] <= h && heights[ny][nx] > 0) {
-                            // For diagonal connections, check if the diagonal crossing is blocked by land
-                            const isDiagonal = Math.abs(dx) + Math.abs(dy) === 2;
-                            if (isDiagonal) {
-                                // Check the two orthogonal neighbors that form the "crossing"
-                                const cross1x = cx + dx, cross1y = cy;
-                                const cross2x = cx, cross2y = cy + dy;
-                                
-                                // If both crossing tiles are within bounds and at least one is land, block diagonal connection
-                                if (cross1x >= 0 && cross1x < CONFIG.WORLD_W && cross1y >= 0 && cross1y < CONFIG.WORLD_H &&
-                                    cross2x >= 0 && cross2x < CONFIG.WORLD_W && cross2y >= 0 && cross2y < CONFIG.WORLD_H) {
-                                    const cross1IsLand = heights[cross1y][cross1x] === 0;
-                                    const cross2IsLand = heights[cross2y][cross2x] === 0;
-                                    
-                                    // Block diagonal if both crossing tiles are land (complete blockage)
-                                    if (cross1IsLand && cross2IsLand) return;
-                                }
-                            }
+                        if (heights[ny][nx] !== height) return; // Only same depth connections
+                        
+                        // For diagonal connections, check if the diagonal crossing is blocked by land
+                        const isDiagonal = Math.abs(dx) + Math.abs(dy) === 2;
+                        if (isDiagonal) {
+                            // Check the two orthogonal neighbors that form the "crossing"
+                            const cross1x = cx + dx, cross1y = cy;
+                            const cross2x = cx, cross2y = cy + dy;
                             
-                            stack.push([nx, ny]); // Only add water tiles
+                            // If both crossing tiles are within bounds, check for land blocking
+                            if (cross1x >= 0 && cross1x < CONFIG.WORLD_W && cross1y >= 0 && cross1y < CONFIG.WORLD_H &&
+                                cross2x >= 0 && cross2x < CONFIG.WORLD_W && cross2y >= 0 && cross2y < CONFIG.WORLD_H) {
+                                const cross1IsLand = heights[cross1y][cross1x] === 0;
+                                const cross2IsLand = heights[cross2y][cross2x] === 0;
+                                
+                                // Block diagonal if both crossing tiles are land (complete blockage)
+                                if (cross1IsLand && cross2IsLand) return;
+                            }
                         }
+                        
+                        stack.push([nx, ny]);
                     });
                 }
                 
                 // Only create basins for water tiles (depth > 0)
                 if (tiles.size > 0 && height > 0) {
+                    const basinData = { tiles, height, outlets: new Set() };
+                    
                     // Group by height level
                     if (!basinsByLevel.has(height)) {
                         basinsByLevel.set(height, []);
                     }
-                    basinsByLevel.get(height).push({ tiles, height });
+                    basinsByLevel.get(height).push(basinData);
+                    
+                    // Map each tile to this basin
+                    tiles.forEach(tileKey => {
+                        tileToBasin.set(tileKey, basinData);
+                    });
                 }
             }
         }
         
-        // Assign IDs in format level#letters
+        // Second pass: find outlets for each basin (connections to lower depth basins)
+        basinsByLevel.forEach((basinsAtLevel, currentDepth) => {
+            basinsAtLevel.forEach(basin => {
+                basin.tiles.forEach(tileKey => {
+                    const [tx, ty] = tileKey.split(',').map(Number);
+                    
+                    // Check all 8 directions for outlet connections to lower depths
+                    const directions = [
+                        [1, 0], [-1, 0], [0, 1], [0, -1], // Cardinal directions
+                        [1, 1], [-1, -1], [1, -1], [-1, 1] // Diagonal directions
+                    ];
+                    
+                    directions.forEach(([dx, dy]) => {
+                        const nx = tx + dx, ny = ty + dy;
+                        if (nx < 0 || ny < 0 || nx >= CONFIG.WORLD_W || ny >= CONFIG.WORLD_H) return;
+                        
+                        const neighborHeight = heights[ny][nx];
+                        const neighborKey = nx + "," + ny;
+                        
+                        // Check if neighbor is a lower depth basin (potential outlet)
+                        if (neighborHeight > 0 && neighborHeight < currentDepth && tileToBasin.has(neighborKey)) {
+                            const neighborBasin = tileToBasin.get(neighborKey);
+                            basin.outlets.add(neighborBasin);
+                        }
+                    });
+                });
+            });
+        });
+        
+        // First pass: Assign IDs to all basins and create a mapping from basin data to ID
+        const basinDataToId = new Map();
+        
         basinsByLevel.forEach((basinsAtLevel, level) => {
             basinsAtLevel.forEach((basinData, index) => {
                 const letters = generateLetterSequence(index);
                 const id = `${level}#${letters}`;
+                
+                // Map the basin data to its ID
+                basinDataToId.set(basinData, id);
+                
+                // Create the basin entry (outlets will be filled in second pass)
                 this.basins.set(id, { 
                     tiles: basinData.tiles, 
                     volume: 0, 
                     level: 0, 
-                    height: level 
+                    height: level,
+                    outlets: [] // Will be filled in next pass
                 });
+                
+                // Map tiles to basin ID
                 basinData.tiles.forEach(k => {
                     const [tx, ty] = k.split(',').map(Number);
                     this.basinIdOf[ty][tx] = id;
                 });
+            });
+        });
+        
+        // Second pass: Fill in outlet IDs now that all basin IDs are assigned
+        basinsByLevel.forEach((basinsAtLevel, level) => {
+            basinsAtLevel.forEach((basinData, index) => {
+                const basinId = basinDataToId.get(basinData);
+                const basin = this.basins.get(basinId);
+                
+                basin.outlets = Array.from(basinData.outlets).map(outletBasin => {
+                    return basinDataToId.get(outletBasin);
+                }).filter(id => id); // Filter out any undefined IDs
             });
         });
     }
@@ -157,11 +216,42 @@ export class BasinManager {
     }
 
     updateWaterLevels() {
+        // First, handle water overflow from higher to lower basins
+        this.handleWaterOverflow();
+        
+        // Then update individual basin levels
         this.basins.forEach(basin => {
             const capacityPerLevel = basin.tiles.size * CONFIG.VOLUME_UNIT;
             basin.level = Math.floor(basin.volume / capacityPerLevel);
             if (basin.level < 0) basin.level = 0;
             if (basin.level > CONFIG.MAX_DEPTH) basin.level = CONFIG.MAX_DEPTH;
+        });
+    }
+    
+    handleWaterOverflow() {
+        // Process basins from deepest to shallowest to handle overflow cascade
+        const sortedBasins = Array.from(this.basins.entries()).sort((a, b) => b[1].height - a[1].height);
+        
+        sortedBasins.forEach(([basinId, basin]) => {
+            if (!basin.outlets || basin.outlets.length === 0) return;
+            
+            const maxCapacity = basin.tiles.size * CONFIG.VOLUME_UNIT * CONFIG.MAX_DEPTH;
+            if (basin.volume > maxCapacity) {
+                // This basin is overflowing
+                const overflow = basin.volume - maxCapacity;
+                basin.volume = maxCapacity;
+                
+                // Distribute overflow to outlet basins
+                const outletCount = basin.outlets.length;
+                const overflowPerOutlet = overflow / outletCount;
+                
+                basin.outlets.forEach(outletId => {
+                    const outletBasin = this.basins.get(outletId);
+                    if (outletBasin) {
+                        outletBasin.volume += overflowPerOutlet;
+                    }
+                });
+            }
         });
     }
 
