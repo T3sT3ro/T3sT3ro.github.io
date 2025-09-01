@@ -27,6 +27,9 @@ export class BasinManager {
     }
 
     computeBasins(heights) {
+        performance.mark('basin-computation-start');
+        
+        performance.mark('basin-clear-data-start');
         // Clear existing basin data
         this.basinIdOf.forEach(row => row.fill(0));
         this.basins.clear();
@@ -36,10 +39,13 @@ export class BasinManager {
         for (let y = 0; y < CONFIG.WORLD_H; y++) { 
             visited[y] = new Array(CONFIG.WORLD_W).fill(false); 
         }
+        performance.mark('basin-clear-data-end');
         
+        performance.mark('basin-flood-fill-start');
         // First pass: identify all potential basin tiles and their connectivity
         const basinsByLevel = new Map();
         const tileToBasin = new Map(); // Maps "x,y" to basin data
+        let floodFillCount = 0;
         
         for (let y = 0; y < CONFIG.WORLD_H; y++) {
             for (let x = 0; x < CONFIG.WORLD_W; x++) {
@@ -97,8 +103,8 @@ export class BasinManager {
                     });
                 }
                 
-                // Only create basins for water tiles (depth > 0)
                 if (tiles.size > 0 && height > 0) {
+                    floodFillCount++;
                     const basinData = { tiles, height, outlets: new Set() };
                     
                     // Group by height level
@@ -114,7 +120,9 @@ export class BasinManager {
                 }
             }
         }
+        performance.mark('basin-flood-fill-end');
         
+        performance.mark('basin-outlets-start');
         // Second pass: find outlets for each basin (connections to lower depth basins)
         basinsByLevel.forEach((basinsAtLevel, currentDepth) => {
             basinsAtLevel.forEach(basin => {
@@ -143,7 +151,9 @@ export class BasinManager {
                 });
             });
         });
+        performance.mark('basin-outlets-end');
         
+        performance.mark('basin-assignment-start');
         // First pass: Assign IDs to all basins and create a mapping from basin data to ID
         const basinDataToId = new Map();
         
@@ -182,6 +192,24 @@ export class BasinManager {
                     return basinDataToId.get(outletBasin);
                 }).filter(id => id); // Filter out any undefined IDs
             });
+        });
+        performance.mark('basin-assignment-end');
+        
+        performance.mark('basin-computation-end');
+        
+        // Measure performance
+        performance.measure('Basin Data Clearing', 'basin-clear-data-start', 'basin-clear-data-end');
+        performance.measure('Basin Flood Fill', 'basin-flood-fill-start', 'basin-flood-fill-end');
+        performance.measure('Basin Outlet Detection', 'basin-outlets-start', 'basin-outlets-end');
+        performance.measure('Basin ID Assignment', 'basin-assignment-start', 'basin-assignment-end');
+        performance.measure('Total Basin Computation', 'basin-computation-start', 'basin-computation-end');
+        
+        // Log detailed performance info
+        const measures = performance.getEntriesByType('measure');
+        const recentMeasures = measures.slice(-5);
+        console.log(`        └─ Basin Computation (${floodFillCount} flood fills, ${this.basins.size} basins):`);
+        recentMeasures.forEach(measure => {
+            console.log(`           ${measure.name}: ${measure.duration.toFixed(2)}ms`);
         });
     }
 

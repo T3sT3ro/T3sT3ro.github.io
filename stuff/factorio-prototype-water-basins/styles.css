@@ -134,14 +134,13 @@ canvas {
     flex-direction: row;
     flex-wrap: wrap;
     column-gap: var(--size-2);
-    align-items: center;
     flex: 1;
 }
 
 #legendItems {
     display: flex;
     flex-direction: row;
-    gap: var(--size-1);
+    gap: var(--size-2);
     margin-right: var(--size-4);
 }
 
@@ -159,6 +158,13 @@ canvas {
     border: var(--border-size-1) solid var(--text-1);
 }
 
+/* Legend selection styling */
+.legend-item-selected {
+    outline: 4px solid orange;
+    outline-offset: 1px;
+    background-color: rgba(255, 165, 0, 0.1);
+}
+
 .control-item {
     display: flex;
     align-items: center;
@@ -166,6 +172,20 @@ canvas {
     margin-right: var(--size-2);
     line-height: 0.9;
     font-size: var(--font-size-0);
+}
+
+/* Control box section headers */
+#controlsBox h4 {
+    margin-top: var(--size-2);
+    margin-bottom: var(--size-1);
+    padding-bottom: var(--size-1);
+    border-bottom: var(--border-size-1) solid var(--gray-4);
+    color: var(--text-1);
+    font-weight: bold;
+}
+
+#controlsBox h4:first-child {
+    margin-top: 0;
 }
 
 button,

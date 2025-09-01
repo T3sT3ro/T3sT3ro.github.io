@@ -2,6 +2,7 @@
 
 import { CONFIG } from './config.js';
 import { BasinLabelManager } from './labels.js';
+import { UI_CONSTANTS, CSS_CLASSES } from './constants.js';
 
 export function getHeightColor(depth) {
     // Only depth 0 = surface (brown), all others = gray
@@ -298,9 +299,67 @@ export class Renderer {
             this.ctx.fillText(pumpText, labelX, labelY);
         }
     }
+
+    drawBrushOverlay(overlayMap, selectedDepth) {
+        if (overlayMap.size === 0) return;
+
+        // Set overlay style using constants
+        this.ctx.fillStyle = UI_CONSTANTS.BRUSH.OVERLAY_FILL;
+        this.ctx.strokeStyle = getHeightColor(selectedDepth);
+        this.ctx.lineWidth = this.getScaledLineWidth(UI_CONSTANTS.BRUSH.OVERLAY_LINE_WIDTH);
+
+        // Draw overlay tiles
+        for (const [key, depth] of overlayMap) {
+            const [x, y] = key.split(',').map(n => parseInt(n));
+            
+            const tileX = x * CONFIG.TILE_SIZE;
+            const tileY = y * CONFIG.TILE_SIZE;
+            
+            // Fill with semi-transparent white
+            this.ctx.fillRect(tileX, tileY, CONFIG.TILE_SIZE, CONFIG.TILE_SIZE);
+            
+            // Stroke with target depth color
+            this.ctx.strokeRect(tileX, tileY, CONFIG.TILE_SIZE, CONFIG.TILE_SIZE);
+        }
+    }
+
+    drawBrushPreview(centerX, centerY, brushSize) {
+        if (centerX < 0 || centerY < 0 || centerX >= CONFIG.WORLD_W || centerY >= CONFIG.WORLD_H) return;
+
+        const radius = Math.floor(brushSize / 2);
+        
+        this.ctx.strokeStyle = UI_CONSTANTS.BRUSH.PREVIEW_COLOR;
+        this.ctx.lineWidth = this.getScaledLineWidth(1);
+        this.ctx.setLineDash(UI_CONSTANTS.BRUSH.PREVIEW_DASH);
+
+        // Draw preview tiles
+        for (let dx = -radius; dx <= radius; dx++) {
+            for (let dy = -radius; dy <= radius; dy++) {
+                const x = centerX + dx;
+                const y = centerY + dy;
+                
+                // Check if tile is within world bounds
+                if (x >= 0 && y >= 0 && x < CONFIG.WORLD_W && y < CONFIG.WORLD_H) {
+                    // For circular brush, check distance
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance <= radius) {
+                        const tileX = x * CONFIG.TILE_SIZE;
+                        const tileY = y * CONFIG.TILE_SIZE;
+                        
+                        this.ctx.strokeRect(tileX, tileY, CONFIG.TILE_SIZE, CONFIG.TILE_SIZE);
+                    }
+                }
+            }
+        }
+
+        // Reset line dash
+        this.ctx.setLineDash([]);
+    }
 }
 
 export class LegendRenderer {
+    static selectedDepth = 0;
+
     static createLegend() {
         const legendItems = document.getElementById('legendItems');
         if (!legendItems) return;
@@ -309,10 +368,11 @@ export class LegendRenderer {
 
         for (let depth = 0; depth <= CONFIG.MAX_DEPTH; depth++) {
             const item = document.createElement('div');
-            item.className = 'legend-item';
+            item.className = CSS_CLASSES.LEGEND_ITEM;
+            item.id = `legend-item-${depth}`;
 
             const colorBox = document.createElement('div');
-            colorBox.className = 'legend-color';
+            colorBox.className = CSS_CLASSES.LEGEND_COLOR;
             colorBox.style.backgroundColor = getHeightColor(depth);
 
             const label = document.createElement('span');
@@ -321,6 +381,22 @@ export class LegendRenderer {
             item.appendChild(label);
             item.appendChild(colorBox);
             legendItems.appendChild(item);
+        }
+    }
+
+    static updateSelectedDepth(depth) {
+        this.selectedDepth = depth;
+        
+        // Remove previous selection styling by removing CSS class
+        const allItems = document.querySelectorAll(`.${CSS_CLASSES.LEGEND_ITEM}`);
+        allItems.forEach(item => {
+            item.classList.remove(CSS_CLASSES.LEGEND_ITEM_SELECTED);
+        });
+
+        // Add selection styling to current depth using CSS class
+        const selectedItem = document.getElementById(`legend-item-${depth}`);
+        if (selectedItem) {
+            selectedItem.classList.add(CSS_CLASSES.LEGEND_ITEM_SELECTED);
         }
     }
 }

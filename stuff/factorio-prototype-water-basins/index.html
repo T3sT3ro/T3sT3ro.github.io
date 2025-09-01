@@ -10,6 +10,9 @@
         // Cache busting for CSS and JS files
         const cacheBuster = Date.now();
         document.write(`<link rel="stylesheet" href="styles.css?v=${cacheBuster}">`);
+        
+        // Version-based cache busting - increment this when modules change
+        window.moduleVersion = '1.0.2';
     </script>
 </head>
 
@@ -69,16 +72,29 @@
                 <div id="legendItems"></div>
             </div>
             <div id="controlsBox" class="control-box">
-                <div class="control-item"><code>LMB</code> Set depth=0</div>
-                <div class="control-item"><code>RMB</code> Set depth=1</div>
-                <div class="control-item"><code>ALT+LMB</code> Increase depth</div>
-                <div class="control-item"><code>ALT+RMB</code> Decrease depth</div>
-                <div class="control-item"><code>SHIFT+LMB</code> Add outlet pump</div>
-                <div class="control-item"><code>SHIFT+RMB</code> Add inlet pump</div>
-                <div class="control-item"><code>SHIFT+CTRL+LMB</code> Link pump to reservoir</div>
-                <div class="control-item"><code>CTRL+LMB</code> Flood fill</div>
-                <div class="control-item"><code>CTRL+RMB</code> Flood empty</div>
-                <div class="control-item"><code>MMB</code> Pan and zoom</div>
+                <div>
+                    <h4>Terrain Painting</h4>
+                    <div class="control-item"><code>0-9</code> Select depth level</div>
+                    <div class="control-item"><code>LMB drag</code> Paint terrain with selected depth</div>
+                    <div class="control-item"><code>ALT + Mouse wheel</code> Change selected depth</div>
+                    <div class="control-item"><code>ALT + RMB</code> Pipette tool (pick depth)</div>
+                    <div class="control-item"><code>SHIFT + Mouse wheel</code> Change brush size (1-8)</div>
+                </div>
+                
+                <div>
+                    <h4>Pumps & Water</h4>
+                    <div class="control-item"><code>SHIFT + LMB</code> Add outlet pump</div>
+                    <div class="control-item"><code>SHIFT + RMB</code> Add inlet pump</div>
+                    <div class="control-item"><code>SHIFT + CTRL + LMB</code> Link pump to reservoir</div>
+                    <div class="control-item"><code>CTRL + LMB</code> Flood fill</div>
+                    <div class="control-item"><code>CTRL + RMB</code> Flood empty</div>
+                </div>
+                
+                <div>
+                    <h4>Navigation</h4>
+                    <div class="control-item"><code>MMB drag</code> Pan view</div>
+                    <div class="control-item"><code>Mouse wheel</code> Zoom in/out</div>
+                </div>
             </div>
             <div id="labelControls" class="control-box">
                 <h4>Drawing Labels</h4>
@@ -109,6 +125,13 @@
             </div>
         </div>
     </div>
-    <script type="module" src="app.js"></script>
+    <script>
+        // Cache busting for main JS file using version
+        const version = window.moduleVersion || Date.now();
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = `app.js?v=${version}`;
+        document.head.appendChild(script);
+    </script>
 </body>
 </html>

@@ -26,14 +26,29 @@ export class GameState {
     // Terrain operations
     randomizeHeights() {
         this.currentSeed = Math.random() * 1000;
+        console.log("Randomized heights with seed:", this.currentSeed);
         this.heights = this.heightGenerator.generate(this.currentSeed);
         this.recomputeAll();
     }
 
     // Regenerate terrain with current seed but updated noise settings
     regenerateWithCurrentSettings() {
+        performance.mark('height-generation-start');
         this.heights = this.heightGenerator.generate(this.currentSeed);
+        performance.mark('height-generation-end');
+        performance.measure('Height Generation', 'height-generation-start', 'height-generation-end');
+        
+        performance.mark('basin-computation-start');
         this.recomputeAll();
+        performance.mark('basin-computation-end');
+        performance.measure('Basin Computation', 'basin-computation-start', 'basin-computation-end');
+        
+        // Log the detailed timing
+        const measures = performance.getEntriesByType('measure');
+        const recentMeasures = measures.slice(-2); // Get the 2 most recent measures
+        recentMeasures.forEach(measure => {
+            console.log(`  └─ ${measure.name}: ${measure.duration.toFixed(2)}ms`);
+        });
     }
 
     setDepthAt(x, y, depth) {
@@ -41,6 +56,18 @@ export class GameState {
             this.heights[y][x] = Math.max(0, Math.min(CONFIG.MAX_DEPTH, depth));
             this.recomputeAll();
         }
+    }
+
+    // Batch version that doesn't recompute immediately - for brush painting
+    setDepthAtBatch(x, y, depth) {
+        if (x >= 0 && y >= 0 && x < CONFIG.WORLD_W && y < CONFIG.WORLD_H) {
+            this.heights[y][x] = Math.max(0, Math.min(CONFIG.MAX_DEPTH, depth));
+        }
+    }
+
+    // Call this after batch operations to recompute basins once
+    revalidateMap() {
+        this.recomputeAll();
     }
 
     increaseDepthAt(x, y) {
@@ -133,7 +160,15 @@ export class GameState {
 
     // Utility methods
     recomputeAll() {
+        performance.mark('basin-manager-compute-start');
         this.basinManager.computeBasins(this.heights);
+        performance.mark('basin-manager-compute-end');
+        performance.measure('Basin Manager - Compute Basins', 'basin-manager-compute-start', 'basin-manager-compute-end');
+        
+        // Log the timing for this specific operation
+        const measures = performance.getEntriesByType('measure');
+        const lastMeasure = measures[measures.length - 1];
+        console.log(`    └─ ${lastMeasure.name}: ${lastMeasure.duration.toFixed(2)}ms`);
     }
 
     // Getters for rendering

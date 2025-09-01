@@ -1,38 +1,69 @@
-# Tilemap Water Pumping - Refactored
+# Factorio Water Basins Prototype
 
-This project has been refactored to separate concerns and improve maintainability.
-
-## File Structure
-
-- **`visualization.html`** - Main HTML structure with minimal inline content
-- **`styles.css`** - All CSS styles separated from HTML
-- **`logic.js`** - All JavaScript logic and functionality
-- **`pumping.js`** - Original monolithic file (kept for reference)
+A canvas-based water basin simulation inspired by Factorio, featuring hierarchical basin detection, pan/zoom controls, and real-time water flow dynamics.
 
 ## Features
 
-- **Separation of Concerns**: Styles, logic, and presentation are now in separate files
-- **Cache Busting**: JavaScript-based cache busting prevents browser caching issues
-- **Maintainability**: Code is easier to read, debug, and modify
-- **Same Functionality**: All original features are preserved
-
-## Cache Busting
-
-The application uses timestamp-based cache busting to ensure browsers always load the latest versions of CSS and JavaScript files:
-
-```javascript
-const cacheBuster = Date.now();
-document.write(`<link rel="stylesheet" href="styles.css?v=${cacheBuster}">`);
-```
-
-This approach works in static environments without server-side processing.
+- **Hierarchical Basin Detection**: Smart basin grouping that handles nested depth scenarios
+- **Interactive Canvas**: Pan with middle mouse, zoom with scroll wheel
+- **Real-time Water Flow**: Pumps and water level simulation
+- **Smart Labels**: Basin labels with collision avoidance and proper anchoring
+- **Performance Optimized**: Integrated rendering pipeline for smooth 60fps performance
+- **Modular Architecture**: Clean separation of concerns across multiple ES6 modules
 
 ## Development
 
-To modify the application:
+### Quick Start
+```bash
+# Install dependencies
+pnpm install
 
-1. **Styles**: Edit `styles.css` for visual changes
-2. **Logic**: Edit `logic.js` for functionality changes  
-3. **Structure**: Edit `visualization.html` for layout changes
+# Start development server (with cache busting)
+pnpm dev
 
-The cache busting ensures changes are immediately visible without manual cache clearing.
+# Or just serve files
+pnpm start
+```
+
+### Cache Busting
+
+The application includes automatic cache busting to prevent browser caching issues during development:
+
+1. **Automatic versioning**: HTML includes dynamic module versioning
+2. **Development server**: http-server with `-c-1` flag disables caching  
+3. **Manual cache bust**: Run `pnpm refresh` to increment version number
+
+```bash
+# Force cache refresh when making JS module changes
+pnpm refresh
+```
+
+### File Structure
+
+- **`index.html`** - Main HTML with cache-busting system
+- **`app.js`** - Main application controller with dynamic imports
+- **`modules/`** - Core ES6 modules:
+  - `config.js` - Configuration and canvas setup
+  - `game.js` - Game state and height generation
+  - `renderer.js` - Canvas rendering and camera system
+  - `basins.js` - Hierarchical basin detection algorithm
+  - `labels.js` - Smart label positioning system
+  - `pumps.js` - Water pump simulation
+  - `ui.js` - User interface controls and settings
+  - `noise.js` - Terrain generation with noise functions
+
+## Technical Details
+
+### Basin Detection Algorithm
+
+The hierarchical basin system properly handles complex terrain:
+- **Same-depth connectivity**: Basins connect only to tiles of identical depth
+- **Diagonal blocking**: Land tiles prevent diagonal water connections
+- **Outlet mapping**: Higher depth basins can overflow into lower ones
+- **Tree structure**: Basins form a proper hierarchy for water flow simulation
+
+### Performance Optimizations
+
+- **Integrated highlighting**: Single-pass terrain and highlight rendering
+- **Efficient lookups**: Spatial indexing for O(1) basin queries
+- **Canvas transforms**: Hardware-accelerated pan/zoom using CSS transforms
