@@ -143,6 +143,8 @@ class TilemapWaterPumpingApp {
     // Mark terrain layer as dirty after regeneration
     this.renderer.onTerrainChanged();
     this.renderer.onWaterChanged(); // Water basins change with terrain
+    // Basin labels also need to be updated when terrain changes affect basins
+    this.renderer.onLabelsToggled();
     performance.mark("terrain-regeneration-end");
     performance.measure(
       "Terrain Regeneration",
@@ -251,6 +253,8 @@ class TilemapWaterPumpingApp {
     // Mark terrain and water layers as dirty after terrain changes
     this.renderer.onTerrainChanged();
     this.renderer.onWaterChanged();
+    // Basin labels also need to be updated when terrain changes affect basins
+    this.renderer.onLabelsToggled();
     this.updateDebugDisplays();
   }
 
@@ -297,6 +301,8 @@ class TilemapWaterPumpingApp {
         this.gameState.randomizeHeights();
         this.renderer.onTerrainChanged();
         this.renderer.onWaterChanged(); // Water basins change with terrain
+        // Basin labels also need to be updated when terrain changes affect basins
+        this.renderer.onLabelsToggled();
         this.draw();
         this.updateDebugDisplays();
       };
