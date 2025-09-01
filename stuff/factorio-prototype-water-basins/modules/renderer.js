@@ -30,11 +30,60 @@ export class Renderer {
       minZoom: 0.25,
       maxZoom: 4,
     };
+
+    // Initialize off-screen canvases for layered rendering
+    this.initializeOffScreenCanvases();
+    
+    // Track which layers need updates
+    this.layerDirty = {
+      terrain: true,
+      infrastructure: true,
+      water: true,
+      interactive: true
+    };
   }
 
-  // Apply camera transformation to context
-  applyCameraTransform() {
-    this.ctx.setTransform(
+  initializeOffScreenCanvases() {
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+
+    // Layer 1: Static terrain
+    this.terrainCanvas = document.createElement('canvas');
+    this.terrainCanvas.width = width;
+    this.terrainCanvas.height = height;
+    this.terrainCtx = this.terrainCanvas.getContext('2d');
+
+    // Layer 2: Infrastructure (chunk boundaries, pump connections)
+    this.infrastructureCanvas = document.createElement('canvas');
+    this.infrastructureCanvas.width = width;
+    this.infrastructureCanvas.height = height;
+    this.infrastructureCtx = this.infrastructureCanvas.getContext('2d');
+
+    // Layer 3: Dynamic water
+    this.waterCanvas = document.createElement('canvas');
+    this.waterCanvas.width = width;
+    this.waterCanvas.height = height;
+    this.waterCtx = this.waterCanvas.getContext('2d');
+
+    // Layer 4: Interactive elements (pumps, labels)
+    this.interactiveCanvas = document.createElement('canvas');
+    this.interactiveCanvas.width = width;
+    this.interactiveCanvas.height = height;
+    this.interactiveCtx = this.interactiveCanvas.getContext('2d');
+  }
+
+  // Mark specific layers as needing updates
+  markLayerDirty(layer) {
+    if (layer === 'all') {
+      Object.keys(this.layerDirty).forEach(key => this.layerDirty[key] = true);
+    } else if (layer in this.layerDirty) {
+      this.layerDirty[layer] = true;
+    }
+  }
+
+  // Apply camera transformation to any context
+  applyCameraTransformToContext(ctx) {
+    ctx.setTransform(
       this.camera.zoom,
       0,
       0,
@@ -44,9 +93,19 @@ export class Renderer {
     );
   }
 
+  // Apply camera transformation to main context
+  applyCameraTransform() {
+    this.applyCameraTransformToContext(this.ctx);
+  }
+
+  // Reset camera transformation for any context
+  resetTransformForContext(ctx) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+
   // Reset camera transformation
   resetTransform() {
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.resetTransformForContext(this.ctx);
   }
 
   // Convert screen coordinates to world coordinates
@@ -61,6 +120,8 @@ export class Renderer {
   pan(deltaX, deltaY) {
     this.camera.x += deltaX / this.camera.zoom;
     this.camera.y += deltaY / this.camera.zoom;
+    // All layers need to be redrawn when camera moves
+    this.markLayerDirty('all');
   }
 
   // Zoom camera at given point
@@ -76,6 +137,9 @@ export class Renderer {
     const worldAfter = this.screenToWorld(screenX, screenY);
     this.camera.x += worldBefore.x - worldAfter.x;
     this.camera.y += worldBefore.y - worldAfter.y;
+    
+    // All layers need to be redrawn when camera zooms
+    this.markLayerDirty('all');
   }
 
   clear() {
@@ -84,13 +148,23 @@ export class Renderer {
     this.applyCameraTransform();
   }
 
-  drawTerrain(heights, basinManager = null, highlightedBasin = null) {
-    // Draw all terrain tiles first
+  clearLayer(ctx) {
+    this.resetTransformForContext(ctx);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    this.applyCameraTransformToContext(ctx);
+  }
+
+  renderTerrainLayer(heights, basinManager = null, highlightedBasin = null) {
+    if (!this.layerDirty.terrain) return;
+    
+    this.clearLayer(this.terrainCtx);
+
+    // Draw all terrain tiles
     for (let y = 0; y < CONFIG.WORLD_H; y++) {
       for (let x = 0; x < CONFIG.WORLD_W; x++) {
         const depth = heights[y][x];
-        this.ctx.fillStyle = getHeightColor(depth);
-        this.ctx.fillRect(
+        this.terrainCtx.fillStyle = getHeightColor(depth);
+        this.terrainCtx.fillRect(
           x * CONFIG.TILE_SIZE,
           y * CONFIG.TILE_SIZE,
           CONFIG.TILE_SIZE,
@@ -101,9 +175,9 @@ export class Renderer {
 
     // Draw highlight strokes for highlighted basin
     if (basinManager && highlightedBasin) {
-      this.ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
-      this.ctx.strokeStyle = "orange";
-      this.ctx.lineWidth = this.getScaledLineWidth(3);
+      this.terrainCtx.fillStyle = "rgba(255, 255, 0, 0.5)";
+      this.terrainCtx.strokeStyle = "orange";
+      this.terrainCtx.lineWidth = this.getScaledLineWidth(3);
 
       for (let y = 0; y < CONFIG.WORLD_H; y++) {
         for (let x = 0; x < CONFIG.WORLD_W; x++) {
@@ -114,71 +188,52 @@ export class Renderer {
               CONFIG.TILE_SIZE,
               CONFIG.TILE_SIZE,
             ];
-            this.ctx.fillRect(...params);
-            this.ctx.strokeRect(...params);
+            this.terrainCtx.fillRect(...params);
+            this.terrainCtx.strokeRect(...params);
           }
         }
       }
     }
+
+    this.layerDirty.terrain = false;
   }
 
-  drawWater(basins) {
-    for (let [id, basin] of basins) {
-      if (basin.level <= 0) continue;
-      const alpha = Math.min(0.7, 0.12 + basin.level * 0.06);
-      this.ctx.fillStyle = `rgba(50,120,200,${alpha})`;
+  renderInfrastructureLayer(pumpsByReservoir, showChunkBoundaries = true) {
+    if (!this.layerDirty.infrastructure) return;
+    
+    this.clearLayer(this.infrastructureCtx);
 
-      basin.tiles.forEach((tileKey) => {
-        const [tx, ty] = tileKey.split(",").map(Number);
-        // Only draw water if it's above the terrain height
-        if (basin.level > basin.height) {
-          this.ctx.fillRect(
-            tx * CONFIG.TILE_SIZE,
-            ty * CONFIG.TILE_SIZE,
-            CONFIG.TILE_SIZE,
-            CONFIG.TILE_SIZE,
-          );
-        }
-      });
-    }
-  }
+    // Draw chunk boundaries
+    if (showChunkBoundaries) {
+      this.infrastructureCtx.strokeStyle = "rgba(255,0,0,0.5)";
+      this.infrastructureCtx.lineWidth = this.getScaledLineWidth(1);
 
-  drawPumps(pumps, selectedReservoirId) {
-    const scaledLineWidth = this.getScaledLineWidth(2);
-
-    for (let pump of pumps) {
-      const cx = pump.x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-      const cy = pump.y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-
-      // Highlight pumps in selected reservoir with a thicker circle
-      if (selectedReservoirId && pump.reservoirId === selectedReservoirId) {
-        this.ctx.beginPath();
-        this.ctx.arc(cx, cy, CONFIG.TILE_SIZE * 1.8, 0, Math.PI * 2);
-        this.ctx.strokeStyle = "rgba(255, 255, 0, 0.5)"; // Yellow highlight
-        this.ctx.lineWidth = scaledLineWidth + 1;
-        this.ctx.stroke();
+      // Vertical lines
+      for (let cx = 0; cx <= CONFIG.WORLD_W; cx += CONFIG.CHUNK_SIZE) {
+        this.infrastructureCtx.beginPath();
+        this.infrastructureCtx.moveTo(cx * CONFIG.TILE_SIZE, 0);
+        this.infrastructureCtx.lineTo(cx * CONFIG.TILE_SIZE, CONFIG.WORLD_H * CONFIG.TILE_SIZE);
+        this.infrastructureCtx.stroke();
       }
 
-      this.ctx.beginPath();
-      this.ctx.arc(cx, cy, CONFIG.TILE_SIZE * 1, 0, Math.PI * 2);
-      this.ctx.strokeStyle = (pump.mode === "inlet")
-        ? "rgba(200, 0, 0, 0.7)"
-        : "rgba(0, 255, 0, 0.7)";
-      this.ctx.lineWidth = scaledLineWidth;
-      this.ctx.stroke();
+      // Horizontal lines
+      for (let cy = 0; cy <= CONFIG.WORLD_H; cy += CONFIG.CHUNK_SIZE) {
+        this.infrastructureCtx.beginPath();
+        this.infrastructureCtx.moveTo(0, cy * CONFIG.TILE_SIZE);
+        this.infrastructureCtx.lineTo(CONFIG.WORLD_W * CONFIG.TILE_SIZE, cy * CONFIG.TILE_SIZE);
+        this.infrastructureCtx.stroke();
+      }
     }
-  }
 
-  drawPumpConnections(pumpsByReservoir) {
-    // Draw lines between pumps in the same reservoir (if more than 1)
+    // Draw pump connections
     const scaledLineWidth = this.getScaledLineWidth(2);
     const dashPattern = this.camera.zoom < 0.5 ? [10, 6] : [5, 3];
 
-    pumpsByReservoir.forEach((pumpsInReservoir, reservoirId) => {
+    pumpsByReservoir.forEach((pumpsInReservoir, _reservoirId) => {
       if (pumpsInReservoir.length > 1) {
-        this.ctx.strokeStyle = "red";
-        this.ctx.lineWidth = scaledLineWidth;
-        this.ctx.setLineDash(dashPattern);
+        this.infrastructureCtx.strokeStyle = "red";
+        this.infrastructureCtx.lineWidth = scaledLineWidth;
+        this.infrastructureCtx.setLineDash(dashPattern);
 
         for (let i = 0; i < pumpsInReservoir.length - 1; i++) {
           const pump1 = pumpsInReservoir[i];
@@ -189,36 +244,17 @@ export class Renderer {
           const x2 = pump2.x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
           const y2 = pump2.y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
 
-          this.ctx.beginPath();
-          this.ctx.moveTo(x1, y1);
-          this.ctx.lineTo(x2, y2);
-          this.ctx.stroke();
+          this.infrastructureCtx.beginPath();
+          this.infrastructureCtx.moveTo(x1, y1);
+          this.infrastructureCtx.lineTo(x2, y2);
+          this.infrastructureCtx.stroke();
         }
 
-        this.ctx.setLineDash([]); // Reset to solid lines
+        this.infrastructureCtx.setLineDash([]); // Reset to solid lines
       }
     });
-  }
 
-  drawChunkBoundaries() {
-    this.ctx.strokeStyle = "rgba(255,0,0,0.5)";
-    this.ctx.lineWidth = this.getScaledLineWidth(1);
-
-    // Vertical lines
-    for (let cx = 0; cx <= CONFIG.WORLD_W; cx += CONFIG.CHUNK_SIZE) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(cx * CONFIG.TILE_SIZE, 0);
-      this.ctx.lineTo(cx * CONFIG.TILE_SIZE, CONFIG.WORLD_H * CONFIG.TILE_SIZE);
-      this.ctx.stroke();
-    }
-
-    // Horizontal lines
-    for (let cy = 0; cy <= CONFIG.WORLD_H; cy += CONFIG.CHUNK_SIZE) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(0, cy * CONFIG.TILE_SIZE);
-      this.ctx.lineTo(CONFIG.WORLD_W * CONFIG.TILE_SIZE, cy * CONFIG.TILE_SIZE);
-      this.ctx.stroke();
-    }
+    this.layerDirty.infrastructure = false;
   }
 
   // Get appropriate font size based on zoom level to keep text readable
@@ -238,29 +274,88 @@ export class Renderer {
     return this.camera.zoom < 0.5 ? Math.max(0.5, baseWidth / this.camera.zoom) : baseWidth;
   }
 
-  drawLabels(heights, basins, pumps, labelSettings) {
-    const fontSize = this.getScaledFontSize();
-    this.ctx.font = `${fontSize}px Arial`;
-    this.ctx.textAlign = "center";
-    this.ctx.textBaseline = "middle";
+  renderWaterLayer(basins) {
+    if (!this.layerDirty.water) return;
+    
+    this.clearLayer(this.waterCtx);
 
-    // Draw depth labels (original system)
+    for (const [_id, basin] of basins) {
+      if (basin.level <= 0) continue;
+      const alpha = Math.min(0.7, 0.12 + basin.level * 0.06);
+      this.waterCtx.fillStyle = `rgba(50,120,200,${alpha})`;
+
+      basin.tiles.forEach((tileKey) => {
+        const [tx, ty] = tileKey.split(",").map(Number);
+        // Only draw water if it's above the terrain height
+        if (basin.level > basin.height) {
+          this.waterCtx.fillRect(
+            tx * CONFIG.TILE_SIZE,
+            ty * CONFIG.TILE_SIZE,
+            CONFIG.TILE_SIZE,
+            CONFIG.TILE_SIZE,
+          );
+        }
+      });
+    }
+
+    this.layerDirty.water = false;
+  }
+
+  renderInteractiveLayer(pumps, selectedReservoirId, heights, basins, labelSettings) {
+    if (!this.layerDirty.interactive) return;
+    
+    this.clearLayer(this.interactiveCtx);
+
+    // Draw pumps
+    const scaledLineWidth = this.getScaledLineWidth(2);
+
+    for (const pump of pumps) {
+      const cx = pump.x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+      const cy = pump.y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+
+      // Highlight pumps in selected reservoir with a thicker circle
+      if (selectedReservoirId && pump.reservoirId === selectedReservoirId) {
+        this.interactiveCtx.beginPath();
+        this.interactiveCtx.arc(cx, cy, CONFIG.TILE_SIZE * 1.8, 0, Math.PI * 2);
+        this.interactiveCtx.strokeStyle = "rgba(255, 255, 0, 0.5)"; // Yellow highlight
+        this.interactiveCtx.lineWidth = scaledLineWidth + 1;
+        this.interactiveCtx.stroke();
+      }
+
+      this.interactiveCtx.beginPath();
+      this.interactiveCtx.arc(cx, cy, CONFIG.TILE_SIZE * 1, 0, Math.PI * 2);
+      this.interactiveCtx.strokeStyle = (pump.mode === "inlet")
+        ? "rgba(200, 0, 0, 0.7)"
+        : "rgba(0, 255, 0, 0.7)";
+      this.interactiveCtx.lineWidth = scaledLineWidth;
+      this.interactiveCtx.stroke();
+    }
+
+    // Draw labels
+    const fontSize = this.getScaledFontSize();
+    this.interactiveCtx.font = `${fontSize}px Arial`;
+    this.interactiveCtx.textAlign = "center";
+    this.interactiveCtx.textBaseline = "middle";
+
+    // Draw depth labels
     if (labelSettings.showDepthLabels) {
-      this.drawDepthLabels(heights);
+      this.drawDepthLabelsToContext(this.interactiveCtx, heights);
     }
 
     // Draw basin labels with smart positioning
     if (labelSettings.showBasinLabels) {
-      this.basinLabelManager.draw(this.ctx, basins, heights, pumps, this.camera.zoom);
+      this.basinLabelManager.draw(this.interactiveCtx, basins, heights, pumps, this.camera.zoom);
     }
 
-    // Draw pump labels (original system)
+    // Draw pump labels
     if (labelSettings.showPumpLabels) {
-      this.drawPumpLabels(pumps);
+      this.drawPumpLabelsToContext(this.interactiveCtx, pumps);
     }
+
+    this.layerDirty.interactive = false;
   }
 
-  drawDepthLabels(heights) {
+  drawDepthLabelsToContext(ctx, heights) {
     for (let y = 0; y < CONFIG.WORLD_H; y++) {
       for (let x = 0; x < CONFIG.WORLD_W; x++) {
         const depth = heights[y][x];
@@ -271,24 +366,24 @@ export class Renderer {
           // Choose text color based on background
           const grayValue = Math.floor(220 - (depth / CONFIG.MAX_DEPTH) * 180);
           if (grayValue > 130) {
-            this.ctx.strokeStyle = "white";
-            this.ctx.fillStyle = "black";
+            ctx.strokeStyle = "white";
+            ctx.fillStyle = "black";
           } else {
-            this.ctx.strokeStyle = "black";
-            this.ctx.fillStyle = "white";
+            ctx.strokeStyle = "black";
+            ctx.fillStyle = "white";
           }
 
-          this.ctx.lineWidth = 1;
-          this.ctx.strokeText(depth.toString(), labelX, labelY);
-          this.ctx.fillText(depth.toString(), labelX, labelY);
+          ctx.lineWidth = 1;
+          ctx.strokeText(depth.toString(), labelX, labelY);
+          ctx.fillText(depth.toString(), labelX, labelY);
         }
       }
     }
   }
 
-  drawPumpLabels(pumps) {
+  drawPumpLabelsToContext(ctx, pumps) {
     const fontSize = this.getScaledFontSize();
-    this.ctx.font = `${fontSize}px Arial`;
+    ctx.font = `${fontSize}px Arial`;
     const scaledLineWidth = this.getScaledLineWidth(1);
 
     for (let i = 0; i < pumps.length; i++) {
@@ -298,14 +393,117 @@ export class Renderer {
 
       const pumpText = `P${i} PS${pump.reservoirId || "?"}`;
 
-      this.ctx.strokeStyle = "white";
-      this.ctx.fillStyle = (pump.mode === "inlet") ? "green" : "red";
+      ctx.strokeStyle = "white";
+      ctx.fillStyle = (pump.mode === "inlet") ? "green" : "red";
 
-      this.ctx.lineWidth = scaledLineWidth * 2;
-      this.ctx.strokeText(pumpText, labelX, labelY);
-      this.ctx.lineWidth = scaledLineWidth;
-      this.ctx.fillText(pumpText, labelX, labelY);
+      ctx.lineWidth = scaledLineWidth * 2;
+      ctx.strokeText(pumpText, labelX, labelY);
+      ctx.lineWidth = scaledLineWidth;
+      ctx.fillText(pumpText, labelX, labelY);
     }
+  }
+
+  // New optimized render method that uses layered rendering
+  renderOptimized(gameState, uiSettings, selectedReservoirId, brushOverlay, brushCenter, brushSize, selectedDepth) {
+    // Render each layer only if it's dirty
+    this.renderTerrainLayer(
+      gameState.getHeights(),
+      gameState.getBasinManager(),
+      gameState.getHighlightedBasin()
+    );
+
+    this.renderInfrastructureLayer(
+      gameState.getPumpsByReservoir(),
+      true // show chunk boundaries
+    );
+
+    this.renderWaterLayer(gameState.getBasins());
+
+    this.renderInteractiveLayer(
+      gameState.getPumps(),
+      selectedReservoirId,
+      gameState.getHeights(),
+      gameState.getBasins(),
+      uiSettings
+    );
+
+    // Clear main canvas and reset transform for compositing
+    this.resetTransform();
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // Composite all layers to main canvas without any additional transforms
+    // (the layers already have the camera transform applied)
+    this.ctx.drawImage(this.terrainCanvas, 0, 0);
+    this.ctx.drawImage(this.waterCanvas, 0, 0);
+    this.ctx.drawImage(this.infrastructureCanvas, 0, 0);
+    this.ctx.drawImage(this.interactiveCanvas, 0, 0);
+
+    // Apply camera transform for UI overlays (these need to move with the camera)
+    this.applyCameraTransform();
+    
+    // Draw UI overlays directly to main canvas (these change frequently)
+    this.drawBrushOverlay(brushOverlay, selectedDepth);
+    if (brushCenter) {
+      this.drawBrushPreview(brushCenter.x, brushCenter.y, brushSize);
+    }
+  }
+
+  // Legacy method for backward compatibility
+  drawTerrain(heights, basinManager = null, highlightedBasin = null) {
+    this.markLayerDirty('terrain');
+    this.renderTerrainLayer(heights, basinManager, highlightedBasin);
+  }
+
+  // Legacy method for backward compatibility
+  drawWater(basins) {
+    this.markLayerDirty('water');
+    this.renderWaterLayer(basins);
+  }
+
+  // Legacy method for backward compatibility
+  drawPumps(_pumps, _selectedReservoirId) {
+    this.markLayerDirty('interactive');
+    // Will be handled in renderInteractiveLayer
+  }
+
+  // Legacy method for backward compatibility
+  drawPumpConnections(_pumpsByReservoir) {
+    this.markLayerDirty('infrastructure');
+    // Will be handled in renderInfrastructureLayer
+  }
+
+  // Legacy method for backward compatibility
+  drawChunkBoundaries() {
+    this.markLayerDirty('infrastructure');
+    // Will be handled in renderInfrastructureLayer
+  }
+
+  // Legacy method for backward compatibility
+  drawLabels(_heights, _basins, _pumps, _labelSettings) {
+    this.markLayerDirty('interactive');
+    // Will be handled in renderInteractiveLayer
+  }
+
+  // Public methods to mark layers dirty for specific changes
+  onTerrainChanged() {
+    this.markLayerDirty('terrain');
+  }
+
+  onWaterChanged() {
+    this.markLayerDirty('water');
+  }
+
+  onPumpsChanged() {
+    this.markLayerDirty('infrastructure');
+    this.markLayerDirty('interactive');
+  }
+
+  onLabelsToggled() {
+    this.markLayerDirty('interactive');
+  }
+
+  onBasinHighlightChanged() {
+    this.markLayerDirty('terrain');
   }
 
   drawBrushOverlay(overlayMap, selectedDepth) {
@@ -317,7 +515,7 @@ export class Renderer {
     this.ctx.lineWidth = this.getScaledLineWidth(UI_CONSTANTS.BRUSH.OVERLAY_LINE_WIDTH);
 
     // Draw overlay tiles
-    for (const [key, depth] of overlayMap) {
+    for (const [key, _depth] of overlayMap) {
       const [x, y] = key.split(",").map((n) => parseInt(n));
 
       const tileX = x * CONFIG.TILE_SIZE;

@@ -14,9 +14,9 @@ export const UI_CONSTANTS = {
   BRUSH: {
     MIN_SIZE: 1,
     MAX_SIZE: 16,
-    PREVIEW_DASH: [1, 2],
-    PREVIEW_COLOR: "rgba(255, 255, 255, 0.8)",
-    OVERLAY_FILL: "rgba(255, 255, 255, 0.6)",
+    PREVIEW_DASH: [2, 2],
+    PREVIEW_COLOR: "rgba(255, 255, 0, 0.8)",
+    OVERLAY_FILL: "rgba(255, 255, 255, 0.1)",
     OVERLAY_LINE_WIDTH: 2,
   },
 

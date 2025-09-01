@@ -93,7 +93,10 @@ class TilemapWaterPumpingApp {
     });
 
     // Setup callbacks
-    this.debugDisplay.setBasinHighlightChangeCallback((basinId) => this.draw());
+    this.debugDisplay.setBasinHighlightChangeCallback((_basinId) => {
+      this.renderer.onBasinHighlightChanged();
+      this.draw();
+    });
 
     // Tick control state
     this.tickTimer = null;
@@ -130,6 +133,9 @@ class TilemapWaterPumpingApp {
 
     performance.mark("terrain-regeneration-start");
     this.gameState.regenerateWithCurrentSettings();
+    // Mark terrain layer as dirty after regeneration
+    this.renderer.onTerrainChanged();
+    this.renderer.onWaterChanged(); // Water basins change with terrain
     performance.mark("terrain-regeneration-end");
     performance.measure(
       "Terrain Regeneration",
@@ -235,6 +241,9 @@ class TilemapWaterPumpingApp {
 
     // Only revalidate the map once after all changes are committed
     this.gameState.revalidateMap();
+    // Mark terrain and water layers as dirty after terrain changes
+    this.renderer.onTerrainChanged();
+    this.renderer.onWaterChanged();
     this.updateDebugDisplays();
   }
 
@@ -244,6 +253,7 @@ class TilemapWaterPumpingApp {
     if (tickBtn) {
       tickBtn.onmousedown = () => {
         this.gameState.tick();
+        this.renderer.onWaterChanged(); // Water levels change during simulation
         this.draw();
         this.updateDebugDisplays();
 
@@ -251,6 +261,7 @@ class TilemapWaterPumpingApp {
         this.tickTimer = setTimeout(() => {
           this.tickInterval = setInterval(() => {
             this.gameState.tick();
+            this.renderer.onWaterChanged(); // Water levels change during simulation
             this.draw();
             this.updateDebugDisplays();
           }, 100); // Tick every 100ms when held
@@ -306,6 +317,7 @@ class TilemapWaterPumpingApp {
     if (showDepthLabelsEl) {
       showDepthLabelsEl.onchange = () => {
         this.uiSettings.toggleDepthLabels();
+        this.renderer.onLabelsToggled();
         this.draw();
       };
     }
@@ -314,6 +326,7 @@ class TilemapWaterPumpingApp {
     if (showPumpLabelsEl) {
       showPumpLabelsEl.onchange = () => {
         this.uiSettings.togglePumpLabels();
+        this.renderer.onLabelsToggled();
         this.draw();
       };
     }
@@ -322,6 +335,7 @@ class TilemapWaterPumpingApp {
     if (showBasinLabelsEl) {
       showBasinLabelsEl.onchange = () => {
         this.uiSettings.toggleBasinLabels();
+        this.renderer.onLabelsToggled();
         this.draw();
       };
     }
@@ -407,13 +421,15 @@ class TilemapWaterPumpingApp {
       if (e.shiftKey) {
         if (e.button === 0) { // SHIFT + LMB - add outlet pump
           const selectedId = this.gameState.getSelectedReservoir();
-          const reservoirId = this.gameState.addPump(mx, my, "outlet", selectedId !== null);
+          const _reservoirId = this.gameState.addPump(mx, my, "outlet", selectedId !== null);
+          this.renderer.onPumpsChanged();
           this.updateReservoirControls();
           this.draw();
           this.updateDebugDisplays();
         } else if (e.button === 2) { // SHIFT + RMB - add inlet pump
           const selectedId = this.gameState.getSelectedReservoir();
-          const reservoirId = this.gameState.addPump(mx, my, "inlet", selectedId !== null);
+          const _reservoirId = this.gameState.addPump(mx, my, "inlet", selectedId !== null);
+          this.renderer.onPumpsChanged();
           this.updateReservoirControls();
           this.draw();
           this.updateDebugDisplays();
@@ -631,48 +647,15 @@ class TilemapWaterPumpingApp {
   }
 
   draw() {
-    this.renderer.clear();
-
-    // Draw terrain with integrated highlighting
-    this.renderer.drawTerrain(
-      this.gameState.getHeights(),
-      this.gameState.getBasinManager(),
-      this.gameState.getHighlightedBasin(),
-    );
-
-    // Draw water
-    this.renderer.drawWater(this.gameState.getBasins());
-
-    // Draw pumps
-    this.renderer.drawPumps(
-      this.gameState.getPumps(),
-      this.gameState.getSelectedReservoir(),
-    );
-
-    // Draw pump connections
-    this.renderer.drawPumpConnections(this.gameState.getPumpsByReservoir());
-
-    // Draw chunk boundaries
-    this.renderer.drawChunkBoundaries();
-
-    // Draw brush overlay
-    this.renderer.drawBrushOverlay(this.brushOverlay, this.selectedDepth);
-
-    // Draw brush preview
-    if (this.brushCenter) {
-      this.renderer.drawBrushPreview(
-        this.brushCenter.x,
-        this.brushCenter.y,
-        this.brushSize,
-      );
-    }
-
-    // Draw labels
-    this.renderer.drawLabels(
-      this.gameState.getHeights(),
-      this.gameState.getBasins(),
-      this.gameState.getPumps(),
+    // Use optimized layered rendering
+    this.renderer.renderOptimized(
+      this.gameState,
       this.uiSettings,
+      this.gameState.getSelectedReservoir(),
+      this.brushOverlay,
+      this.brushCenter,
+      this.brushSize,
+      this.selectedDepth
     );
   }
 }
