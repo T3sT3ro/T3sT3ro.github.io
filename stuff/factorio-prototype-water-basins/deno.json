@@ -1,0 +1,26 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-net --allow-read server.js",
+    "debug": "deno run --allow-net --allow-read --inspect server.js --debug",
+    "serve": "deno run --allow-net --allow-read server.js",
+    "fmt": "deno fmt",
+    "lint": "deno lint",
+    "check": "deno check **/*.js"
+  },
+  "imports": {
+    "@std/http": "jsr:@std/http@^1.0.0"
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"]
+    }
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": false,
+    "proseWrap": "preserve"
+  }
+}
