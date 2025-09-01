@@ -5,13 +5,22 @@ import { CONFIG } from "./config.js";
 export class ReservoirManager {
   constructor() {
     this.reservoirs = new Map(); // id -> {volume: number}
-    this.nextReservoirId = 1;
     this.selectedReservoirId = null; // For linking pumps to the same reservoir
   }
 
-  createReservoir() {
-    const id = this.nextReservoirId++;
-    this.reservoirs.set(id, { volume: 0 });
+  createReservoir(id = null) {
+    // If no ID provided, find the next available ID starting from 1
+    if (id === null || id <= 0) {
+      id = 1;
+      while (this.reservoirs.has(id)) {
+        id++;
+      }
+    }
+    
+    // Only create if it doesn't already exist
+    if (!this.reservoirs.has(id)) {
+      this.reservoirs.set(id, { volume: 0 });
+    }
     return id;
   }
 
@@ -29,7 +38,6 @@ export class ReservoirManager {
 
   clearAll() {
     this.reservoirs.clear();
-    this.nextReservoirId = 1;
     this.selectedReservoirId = null;
   }
 
@@ -71,12 +79,15 @@ export class PumpManager {
     const selectedId = this.reservoirManager.getSelectedReservoir();
 
     if (linkToReservoir && selectedId && this.reservoirManager.exists(selectedId)) {
+      // Link to existing selected reservoir
       reservoirId = selectedId;
-    } else if (selectedId && selectedId > 0 && this.reservoirManager.exists(selectedId)) {
-      // Use currently selected reservoir if it exists
-      reservoirId = selectedId;
+    } else if (selectedId && selectedId > 0) {
+      // Use the selected ID from input field as source of truth
+      reservoirId = this.reservoirManager.createReservoir(selectedId);
     } else {
-      reservoirId = this.reservoirManager.createReservoir();
+      // This should never happen as input field should always have a valid value >= 1
+      // But as a fallback, create reservoir with ID 1
+      reservoirId = this.reservoirManager.createReservoir(1);
     }
 
     this.pumps.push({ x, y, mode, reservoirId });
@@ -111,7 +122,7 @@ export class PumpManager {
   }
 
   tick() {
-    for (let pump of this.pumps) {
+    for (const pump of this.pumps) {
       const basin = this.basinManager.getBasinAt(pump.x, pump.y);
       const reservoir = this.reservoirManager.getReservoir(pump.reservoirId);
 

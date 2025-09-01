@@ -329,18 +329,9 @@ class TilemapWaterPumpingApp {
     // Pipe system number input control
     const reservoirInputEl = document.getElementById("reservoirInput");
     if (reservoirInputEl) {
-      reservoirInputEl.oninput = (e) => {
-        const value = e.target.value;
-        if (value === "" || value === "0") {
-          this.gameState.setSelectedReservoir(null);
-        } else {
-          const id = parseInt(value);
-          if (id > 0) {
-            this.gameState.setSelectedReservoir(id);
-          } else {
-            this.gameState.setSelectedReservoir(null);
-          }
-        }
+      reservoirInputEl.oninput = (_e) => {
+        const desiredId = this.getDesiredReservoirIdFromInput();
+        this.gameState.setSelectedReservoir(desiredId);
         this.draw();
       };
     }
@@ -597,17 +588,35 @@ class TilemapWaterPumpingApp {
   }
 
   updateReservoirControls() {
+    // This method should only be called when we need to sync the input
+    // field with the internal state (like on initial load)
+    const input = document.getElementById("reservoirInput");
+    if (input && input.value === "") {
+      // Set to 1 if input is empty
+      const selectedId = this.gameState.getSelectedReservoir();
+      input.value = selectedId !== null ? selectedId : 1;
+    }
+  }
+
+  getDesiredReservoirIdFromInput() {
     const input = document.getElementById("reservoirInput");
     if (input) {
-      const selectedId = this.gameState.getSelectedReservoir();
-      input.value = selectedId !== null ? selectedId : 0;
+      const value = input.value;
+      if (value === "" || parseInt(value) < 1) {
+        // Reset to 1 if invalid
+        input.value = "1";
+        return 1;
+      }
+      const id = parseInt(value);
+      return id > 0 ? id : 1;
     }
+    return 1;
   }
 
   clearReservoirSelection() {
     console.log("Clearing reservoir selection");
     this.gameState.setSelectedReservoir(null);
-    this.updateReservoirControls();
+    // Don't update input field - let it keep its current value as source of truth
     this.draw();
   }
 

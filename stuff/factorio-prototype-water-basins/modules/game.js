@@ -109,10 +109,7 @@ export class GameState {
   // Pump operations
   addPump(x, y, mode, linkToExisting = false) {
     const reservoirId = this.pumpManager.addPumpAt(x, y, mode, linkToExisting);
-    // Don't auto-select reservoir when linking to existing or when one is already selected
-    if (reservoirId && !linkToExisting && this.getSelectedReservoir() === null) {
-      this.setSelectedReservoir(reservoirId);
-    }
+    // Don't auto-select reservoir - let the input field be the source of truth
     return reservoirId;
   }
 
