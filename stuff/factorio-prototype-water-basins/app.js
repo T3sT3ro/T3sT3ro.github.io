@@ -83,8 +83,15 @@ class TilemapWaterPumpingApp {
       () => this.onNoiseSettingsChanged(),
     );
     this.debugDisplay = new this.DebugDisplay(this.gameState.getBasinManager(), this.gameState, {
-      removePump: (index) => this.gameState.getPumpManager().removePump(index),
-      removeReservoir: (id) => this.gameState.getReservoirManager().removeReservoir(id),
+      removePump: (index) => {
+        this.gameState.getPumpManager().removePump(index);
+        this.renderer.onPumpsChanged();
+      },
+      removeReservoir: (id) => {
+        this.gameState.getReservoirManager().removeReservoir(id);
+        this.renderer.onPumpsChanged();
+        this.renderer.onWaterChanged(); // Reservoirs can contain water
+      },
       updateControls: () => this.updateReservoirControls(),
       updateDisplays: () => this.updateDebugDisplays(),
       updateDebugDisplays: () => this.updateDebugDisplays(),
@@ -288,6 +295,8 @@ class TilemapWaterPumpingApp {
     if (randomizeBtn) {
       randomizeBtn.onclick = () => {
         this.gameState.randomizeHeights();
+        this.renderer.onTerrainChanged();
+        this.renderer.onWaterChanged(); // Water basins change with terrain
         this.draw();
         this.updateDebugDisplays();
       };
@@ -297,6 +306,7 @@ class TilemapWaterPumpingApp {
     if (clearPumpsBtn) {
       clearPumpsBtn.onclick = () => {
         this.gameState.clearPumps();
+        this.renderer.onPumpsChanged();
         this.updateReservoirControls();
         this.draw();
         this.updateDebugDisplays();
@@ -307,6 +317,7 @@ class TilemapWaterPumpingApp {
     if (clearWaterBtn) {
       clearWaterBtn.onclick = () => {
         this.gameState.clearAllWater();
+        this.renderer.onWaterChanged();
         this.draw();
         this.updateDebugDisplays();
       };
@@ -346,6 +357,7 @@ class TilemapWaterPumpingApp {
       reservoirInputEl.oninput = (_e) => {
         const desiredId = this.getDesiredReservoirIdFromInput();
         this.gameState.setSelectedReservoir(desiredId);
+        this.renderer.onPumpsChanged(); // Pump highlighting changes
         this.draw();
       };
     }
@@ -410,8 +422,10 @@ class TilemapWaterPumpingApp {
 
         if (e.button === 0) { // CTRL + LMB - flood fill
           this.gameState.floodFill(mx, my, true);
+          this.renderer.onWaterChanged();
         } else if (e.button === 2) { // CTRL + RMB - flood empty
           this.gameState.floodFill(mx, my, false);
+          this.renderer.onWaterChanged();
         }
         this.draw();
         this.updateDebugDisplays();
@@ -443,6 +457,7 @@ class TilemapWaterPumpingApp {
         this.brushOverlay.clear();
         this.updateBrushOverlay(mx, my);
         this.gameState.setSelectedReservoir(null); // Clear pipe system selection
+        this.renderer.onPumpsChanged(); // Pump highlighting changes
         this.updateReservoirControls();
         this.draw();
       }
@@ -632,6 +647,7 @@ class TilemapWaterPumpingApp {
   clearReservoirSelection() {
     console.log("Clearing reservoir selection");
     this.gameState.setSelectedReservoir(null);
+    this.renderer.onPumpsChanged(); // Pump highlighting changes
     // Don't update input field - let it keep its current value as source of truth
     this.draw();
   }
