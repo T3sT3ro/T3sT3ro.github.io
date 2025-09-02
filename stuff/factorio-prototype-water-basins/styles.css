@@ -81,6 +81,10 @@ html {
   }
 }
 
+.col-span-full {
+  grid-column: 1 / -1;
+}
+
 .standard-input {
   padding: var(--size-1);
   border: var(--border-size-1) solid var(--gray-4);
@@ -116,6 +120,7 @@ main {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--size-1);
+    column-gap: var(--size-2);
     font-size: var(--font-size-0);
   }
 
@@ -384,14 +389,6 @@ main {
   padding: var(--size-1) 0;
 }
 
-.selected-pipe-system {
-  font-weight: bold;
-  margin-block-end: var(--size-2);
-  padding: var(--size-1);
-  background-color: var(--surface-3);
-  border-radius: var(--radius-1);
-}
-
 button,
 select {
   padding: var(--size-2) var(--size-3);
@@ -521,16 +518,9 @@ select {
 #basinsDebug,
 #reservoirsDebug {
   flex: 1;
-  border: var(--border-size-1) solid var(--gray-5);
-  background: var(--surface-2);
-  padding: var(--control-padding);
-  display: flex;
-  flex-direction: column;
-  min-block-size: 0;
 
   & h4 {
     margin: 0 0 var(--size-2) 0;
-    font-size: var(--font-size-2);
     border-block-end: var(--border-size-1) solid var(--gray-4);
     padding-block-end: var(--size-1);
     flex-shrink: 0;
@@ -546,6 +536,12 @@ select {
   min-block-size: 0;
   white-space: pre;
   font-size: var(--font-size-0);
+}
+
+#basinsText {
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: nowrap;
 }
 
 .basin-line {

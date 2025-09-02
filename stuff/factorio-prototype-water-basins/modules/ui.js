@@ -388,10 +388,6 @@ export class DebugDisplay {
   }
 
   updateReservoirsDisplay(reservoirs, pumps, selectedReservoirId) {
-    let reservoirsDbg = selectedReservoirId !== null
-      ? `Selected Pipe System: #${selectedReservoirId}\n\n`
-      : "No pipe system selected\n\n";
-
     // Group pumps by reservoir (pipe system)
     const pumpsByReservoir = new Map();
     pumps.forEach((pump, index) => {
@@ -401,23 +397,9 @@ export class DebugDisplay {
       pumpsByReservoir.get(pump.reservoirId).push({ ...pump, index });
     });
 
-    pumpsByReservoir.forEach((pumpsInReservoir, reservoirId) => {
-      const reservoir = reservoirs.get(reservoirId);
-      reservoirsDbg += `Pipe System #${reservoirId}: vol=${
-        reservoir ? reservoir.volume.toFixed(1) : 0
-      }\n`;
-
-      pumpsInReservoir.forEach((pump) => {
-        const colorPrefix = pump.mode === "inlet" ? "🔴" : "🟢";
-        reservoirsDbg += `  ${colorPrefix} P${pump.index} (${pump.x},${pump.y}) ${pump.mode} `;
-        reservoirsDbg += `[Remove]\n`;
-      });
-      reservoirsDbg += `[Remove Pipe System #${reservoirId}]\n\n`;
-    });
-
     const reservoirsTextEl = document.getElementById("reservoirsText");
     if (reservoirsTextEl) {
-      this.createInteractiveReservoirDisplay(reservoirsDbg, reservoirs, pumps, selectedReservoirId);
+      this.createInteractiveReservoirDisplay("", reservoirs, pumps, selectedReservoirId, pumpsByReservoir);
     }
   }
 
@@ -429,35 +411,22 @@ export class DebugDisplay {
     }
   }
 
-  createInteractiveReservoirDisplay(reservoirsText, reservoirs, pumps, selectedReservoirId) {
+  createInteractiveReservoirDisplay(_reservoirsText, reservoirs, pumps, selectedReservoirId, pumpsByReservoir = null) {
     const reservoirsContainer = document.getElementById("reservoirsText");
     if (!reservoirsContainer) return;
 
     reservoirsContainer.innerHTML = "";
 
-    // Add selected pipe system info
-    if (selectedReservoirId !== null) {
-      const selectedDiv = document.createElement("div");
-      selectedDiv.className = "selected-pipe-system";
-      selectedDiv.textContent = `Selected Pipe System: #${selectedReservoirId}`;
-      reservoirsContainer.appendChild(selectedDiv);
-    } else {
-      const noSelectionDiv = document.createElement("div");
-      noSelectionDiv.className = "selected-pipe-system";
-      noSelectionDiv.textContent = "No pipe system selected";
-      noSelectionDiv.style.fontStyle = "italic";
-      noSelectionDiv.style.color = "var(--gray-6)";
-      reservoirsContainer.appendChild(noSelectionDiv);
+    // Group pumps by reservoir (pipe system) if not provided
+    if (!pumpsByReservoir) {
+      pumpsByReservoir = new Map();
+      pumps.forEach((pump, index) => {
+        if (!pumpsByReservoir.has(pump.reservoirId)) {
+          pumpsByReservoir.set(pump.reservoirId, []);
+        }
+        pumpsByReservoir.get(pump.reservoirId).push({ ...pump, index });
+      });
     }
-
-    // Group pumps by reservoir (pipe system)
-    const pumpsByReservoir = new Map();
-    pumps.forEach((pump, index) => {
-      if (!pumpsByReservoir.has(pump.reservoirId)) {
-        pumpsByReservoir.set(pump.reservoirId, []);
-      }
-      pumpsByReservoir.get(pump.reservoirId).push({ ...pump, index });
-    });
 
     // Create interactive display for each pipe system
     pumpsByReservoir.forEach((pumpsInReservoir, reservoirId) => {
@@ -523,7 +492,7 @@ export class DebugDisplay {
 
         const colorPrefix = pump.mode === "inlet" ? "🔴" : "🟢";
         const pumpText = document.createElement("span");
-        pumpText.textContent = `${colorPrefix} P${pump.index} (${pump.x},${pump.y}) ${pump.mode}`;
+        pumpText.textContent = `${colorPrefix} P${pump.reservoirId}.${pump.index} (${pump.x},${pump.y}) ${pump.mode}`;
         pumpDiv.appendChild(pumpText);
 
         const removePumpButton = this.createRemoveButton("Remove", () => {

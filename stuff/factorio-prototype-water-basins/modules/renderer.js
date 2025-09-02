@@ -386,21 +386,32 @@ export class Renderer {
     ctx.font = `${fontSize}px Arial`;
     const scaledLineWidth = this.getScaledLineWidth(1);
 
-    for (let i = 0; i < pumps.length; i++) {
-      const pump = pumps[i];
-      const labelX = pump.x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-      const labelY = pump.y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2 - CONFIG.TILE_SIZE * 2;
+    // Group pumps by reservoir to get proper pump indices per reservoir
+    const pumpsByReservoir = new Map();
+    pumps.forEach((pump, globalIndex) => {
+      if (!pumpsByReservoir.has(pump.reservoirId)) {
+        pumpsByReservoir.set(pump.reservoirId, []);
+      }
+      pumpsByReservoir.get(pump.reservoirId).push({ ...pump, globalIndex });
+    });
 
-      const pumpText = `P${i} PS${pump.reservoirId || "?"}`;
+    // Draw labels for each pump with proper P{reservoirId}.{reservoirPumpIndex} naming
+    pumpsByReservoir.forEach((reservoirPumps, _reservoirId) => {
+      reservoirPumps.forEach((pump, reservoirPumpIndex) => {
+        const labelX = pump.x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
+        const labelY = pump.y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2 - CONFIG.TILE_SIZE * 2;
 
-      ctx.strokeStyle = "white";
-      ctx.fillStyle = (pump.mode === "inlet") ? "green" : "red";
+        const pumpText = `P${pump.reservoirId || "?"}.${reservoirPumpIndex + 1}`;
 
-      ctx.lineWidth = scaledLineWidth * 2;
-      ctx.strokeText(pumpText, labelX, labelY);
-      ctx.lineWidth = scaledLineWidth;
-      ctx.fillText(pumpText, labelX, labelY);
-    }
+        ctx.strokeStyle = "white";
+        ctx.fillStyle = (pump.mode === "inlet") ? "green" : "red";
+
+        ctx.lineWidth = scaledLineWidth * 2;
+        ctx.strokeText(pumpText, labelX, labelY);
+        ctx.lineWidth = scaledLineWidth;
+        ctx.fillText(pumpText, labelX, labelY);
+      });
+    });
   }
 
   // New optimized render method that uses layered rendering
