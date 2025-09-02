@@ -364,7 +364,7 @@ export class GameState {
 
   runLengthEncode(heights) {
     const flattened = heights.flat();
-    const compressed = [];
+    let compressed = "";
     let current = flattened[0];
     let count = 1;
     
@@ -372,12 +372,13 @@ export class GameState {
       if (flattened[i] === current) {
         count++;
       } else {
-        compressed.push([current, count]);
+        // Encode as value:count pairs separated by commas
+        compressed += (compressed ? "," : "") + current + ":" + count;
         current = flattened[i];
         count = 1;
       }
     }
-    compressed.push([current, count]);
+    compressed += (compressed ? "," : "") + current + ":" + count;
     
     return {
       format: "rle",
@@ -430,7 +431,12 @@ export class GameState {
 
   runLengthDecode(compressed) {
     const flattened = [];
-    for (const [value, count] of compressed.data) {
+    const pairs = compressed.data.split(',');
+    
+    for (const pair of pairs) {
+      const [valueStr, countStr] = pair.split(':');
+      const value = parseInt(valueStr, 10);
+      const count = parseInt(countStr, 10);
       for (let i = 0; i < count; i++) {
         flattened.push(value);
       }
@@ -515,7 +521,7 @@ export class GameState {
 
   runLengthEncodeBasinIds(basinIdMap) {
     const flattened = basinIdMap.flat();
-    const compressed = [];
+    let compressed = "";
     let current = flattened[0];
     let count = 1;
 
@@ -523,12 +529,13 @@ export class GameState {
       if (flattened[i] === current) {
         count++;
       } else {
-        compressed.push([current, count]);
+        // Encode as value:count pairs separated by commas
+        compressed += (compressed ? "," : "") + current + ":" + count;
         current = flattened[i];
         count = 1;
       }
     }
-    compressed.push([current, count]);
+    compressed += (compressed ? "," : "") + current + ":" + count;
 
     return {
       format: "rle_basin_ids",
@@ -609,7 +616,11 @@ export class GameState {
 
   runLengthDecodeBasinIds(compressed) {
     const flattened = [];
-    for (const [value, count] of compressed.data) {
+    const pairs = compressed.data.split(',');
+    
+    for (const pair of pairs) {
+      const [value, countStr] = pair.split(':');
+      const count = parseInt(countStr, 10);
       for (let i = 0; i < count; i++) {
         flattened.push(value);
       }
