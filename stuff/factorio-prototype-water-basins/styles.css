@@ -542,12 +542,19 @@ select {
   overflow-x: auto;
   overflow-y: auto;
   white-space: nowrap;
+  /* Ensure horizontal scrolling works properly */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .basin-line {
   cursor: pointer;
   padding: var(--size-1) 0;
   transition: var(--transition-standard);
+  /* Ensure lines don't wrap and maintain indentation */
+  white-space: nowrap;
+  overflow: visible;
+  min-width: max-content;
 
   &:hover {
     background-color: var(--gray-4);

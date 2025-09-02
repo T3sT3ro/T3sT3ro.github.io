@@ -39,7 +39,8 @@ export class Renderer {
       terrain: true,
       infrastructure: true,
       water: true,
-      interactive: true
+      interactive: true,
+      highlight: true
     };
   }
 
@@ -70,6 +71,12 @@ export class Renderer {
     this.interactiveCanvas.width = width;
     this.interactiveCanvas.height = height;
     this.interactiveCtx = this.interactiveCanvas.getContext('2d');
+
+    // Layer 5: Basin highlights (separate for performance)
+    this.highlightCanvas = document.createElement('canvas');
+    this.highlightCanvas.width = width;
+    this.highlightCanvas.height = height;
+    this.highlightCtx = this.highlightCanvas.getContext('2d');
   }
 
   // Mark specific layers as needing updates
@@ -154,7 +161,7 @@ export class Renderer {
     this.applyCameraTransformToContext(ctx);
   }
 
-  renderTerrainLayer(heights, basinManager = null, highlightedBasin = null) {
+  renderTerrainLayer(heights) {
     if (!this.layerDirty.terrain) return;
     
     this.clearLayer(this.terrainCtx);
@@ -170,28 +177,6 @@ export class Renderer {
           CONFIG.TILE_SIZE,
           CONFIG.TILE_SIZE,
         );
-      }
-    }
-
-    // Draw highlight strokes for highlighted basin
-    if (basinManager && highlightedBasin) {
-      this.terrainCtx.fillStyle = "rgba(255, 255, 0, 0.5)";
-      this.terrainCtx.strokeStyle = "orange";
-      this.terrainCtx.lineWidth = this.getScaledLineWidth(3);
-
-      for (let y = 0; y < CONFIG.WORLD_H; y++) {
-        for (let x = 0; x < CONFIG.WORLD_W; x++) {
-          if (basinManager.basinIdOf[y][x] === highlightedBasin) {
-            const params = [
-              x * CONFIG.TILE_SIZE,
-              y * CONFIG.TILE_SIZE,
-              CONFIG.TILE_SIZE,
-              CONFIG.TILE_SIZE,
-            ];
-            this.terrainCtx.fillRect(...params);
-            this.terrainCtx.strokeRect(...params);
-          }
-        }
       }
     }
 
@@ -355,6 +340,38 @@ export class Renderer {
     this.layerDirty.interactive = false;
   }
 
+  renderHighlightLayer(basinManager, highlightedBasin) {
+    if (!this.layerDirty.highlight) return;
+    
+    this.clearLayer(this.highlightCtx);
+
+    // Only render if there's a basin to highlight
+    if (basinManager && highlightedBasin) {
+      // Use optimized tile lookup from basin data instead of scanning all world tiles
+      const basin = basinManager.basins.get(highlightedBasin);
+      if (basin) {
+        this.highlightCtx.fillStyle = "rgba(255, 255, 0, 0.5)";
+        this.highlightCtx.strokeStyle = "orange";
+        this.highlightCtx.lineWidth = this.getScaledLineWidth(3);
+
+        // Draw highlight for each tile in the basin
+        basin.tiles.forEach((tileKey) => {
+          const [x, y] = tileKey.split(",").map(Number);
+          const params = [
+            x * CONFIG.TILE_SIZE,
+            y * CONFIG.TILE_SIZE,
+            CONFIG.TILE_SIZE,
+            CONFIG.TILE_SIZE,
+          ];
+          this.highlightCtx.fillRect(...params);
+          this.highlightCtx.strokeRect(...params);
+        });
+      }
+    }
+
+    this.layerDirty.highlight = false;
+  }
+
   drawDepthLabelsToContext(ctx, heights) {
     for (let y = 0; y < CONFIG.WORLD_H; y++) {
       for (let x = 0; x < CONFIG.WORLD_W; x++) {
@@ -417,11 +434,7 @@ export class Renderer {
   // New optimized render method that uses layered rendering
   renderOptimized(gameState, uiSettings, selectedReservoirId, brushOverlay, brushCenter, brushSize, selectedDepth) {
     // Render each layer only if it's dirty
-    this.renderTerrainLayer(
-      gameState.getHeights(),
-      gameState.getBasinManager(),
-      gameState.getHighlightedBasin()
-    );
+    this.renderTerrainLayer(gameState.getHeights());
 
     this.renderInfrastructureLayer(
       gameState.getPumpsByReservoir(),
@@ -429,6 +442,11 @@ export class Renderer {
     );
 
     this.renderWaterLayer(gameState.getBasins());
+
+    this.renderHighlightLayer(
+      gameState.getBasinManager(), 
+      gameState.getHighlightedBasin()
+    );
 
     this.renderInteractiveLayer(
       gameState.getPumps(),
@@ -447,6 +465,7 @@ export class Renderer {
     this.ctx.drawImage(this.terrainCanvas, 0, 0);
     this.ctx.drawImage(this.waterCanvas, 0, 0);
     this.ctx.drawImage(this.infrastructureCanvas, 0, 0);
+    this.ctx.drawImage(this.highlightCanvas, 0, 0);
     this.ctx.drawImage(this.interactiveCanvas, 0, 0);
 
     // Apply camera transform for UI overlays (these need to move with the camera)
@@ -462,7 +481,13 @@ export class Renderer {
   // Legacy method for backward compatibility
   drawTerrain(heights, basinManager = null, highlightedBasin = null) {
     this.markLayerDirty('terrain');
-    this.renderTerrainLayer(heights, basinManager, highlightedBasin);
+    this.renderTerrainLayer(heights);
+    
+    // Handle highlighting if provided (legacy support)
+    if (basinManager && highlightedBasin) {
+      this.markLayerDirty('highlight');
+      this.renderHighlightLayer(basinManager, highlightedBasin);
+    }
   }
 
   // Legacy method for backward compatibility
@@ -514,7 +539,7 @@ export class Renderer {
   }
 
   onBasinHighlightChanged() {
-    this.markLayerDirty('terrain');
+    this.markLayerDirty('highlight');
   }
 
   drawBrushOverlay(overlayMap, selectedDepth) {

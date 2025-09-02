@@ -342,42 +342,109 @@ export class DebugDisplay {
 
   updateBasinsDisplay() {
     const heights = this.gameState.getHeights();
-    const debugInfo = this.basinManager.getDebugInfo(heights);
-    let basinsDbg = "";
+    if (!heights) {
+      console.warn("No heights available for basin display");
+      return;
+    }
 
-    // Build tree structure - find root basins (those with no higher neighbors)
+    const debugInfo = this.basinManager.getDebugInfo(heights);
+    if (!debugInfo) {
+      console.warn("No debug info available for basin display");
+      return;
+    }
+    
+    // Build hierarchical basin data structure based on outlet relationships
+    const basinHierarchy = [];
     const visited = new Set();
-    const printBasin = (id, depth = 0) => {
-      if (visited.has(id)) return;
+    
+    // First, build a reverse mapping: child -> parents (which basins flow into this one)
+    const childToParents = new Map();
+    this.basinManager.basins.forEach((basin, id) => {
+      if (basin.outlets && basin.outlets.length > 0) {
+        basin.outlets.forEach(outletId => {
+          if (!childToParents.has(outletId)) {
+            childToParents.set(outletId, []);
+          }
+          childToParents.get(outletId).push(id);
+        });
+      }
+    });
+    
+    const buildBasinEntry = (id, depth = 0) => {
+      if (visited.has(id)) return null;
       visited.add(id);
 
-      const indent = "  ".repeat(depth);
       const basin = this.basinManager.basins.get(id);
-      if (!basin) return;
+      if (!basin) return null;
 
       const maxCapacity = basin.tiles.size * CONFIG.VOLUME_UNIT * CONFIG.MAX_DEPTH;
-      basinsDbg +=
-        `${indent}${id}: ${basin.tiles.size} tiles, vol=${basin.volume}/${maxCapacity}, water_lvl=${basin.level}\n`;
+      const entry = {
+        id,
+        depth,
+        basin,
+        maxCapacity,
+        children: []
+      };
 
-      // Find children (connected basins that haven't been visited)
-      const children = Array.from(debugInfo.connections.get(id) || [])
-        .filter((childId) => !visited.has(childId))
-        .sort();
-
-      children.forEach((childId) => {
-        printBasin(childId, depth + 1);
+      // Find child basins (basins that flow into this basin)
+      const children = childToParents.get(id) || [];
+      children.sort().forEach(childId => {
+        const childEntry = buildBasinEntry(childId, depth + 1);
+        if (childEntry) {
+          entry.children.push(childEntry);
+        }
       });
+
+      return entry;
     };
 
-    // Start with unvisited basins (creates forest if disconnected components exist)
-    debugInfo.basinArray.forEach(([id]) => {
-      if (!visited.has(id)) {
-        printBasin(id);
+    // Start with root basins (those that don't flow into any other basin - they have outlets but are not outlets themselves)
+    const allOutletIds = new Set();
+    this.basinManager.basins.forEach(basin => {
+      if (basin.outlets) {
+        basin.outlets.forEach(outletId => allOutletIds.add(outletId));
       }
     });
 
+    // Find basins that are not outlets for any other basin (root basins)
+    debugInfo.basinArray.forEach(([id]) => {
+      if (!allOutletIds.has(id) && !visited.has(id)) {
+        const rootEntry = buildBasinEntry(id);
+        if (rootEntry) {
+          basinHierarchy.push(rootEntry);
+        }
+      }
+    });
+
+    // Handle any remaining basins (disconnected components or isolated basins)
+    debugInfo.basinArray.forEach(([id]) => {
+      if (!visited.has(id)) {
+        const isolatedEntry = buildBasinEntry(id);
+        if (isolatedEntry) {
+          basinHierarchy.push(isolatedEntry);
+        }
+      }
+    });
+
+    // If no basins were processed yet, fall back to a simpler flat display
+    if (basinHierarchy.length === 0 && debugInfo.basinArray.length > 0) {
+      debugInfo.basinArray.forEach(([id]) => {
+        const basin = this.basinManager.basins.get(id);
+        if (basin) {
+          const maxCapacity = basin.tiles.size * CONFIG.VOLUME_UNIT * CONFIG.MAX_DEPTH;
+          basinHierarchy.push({
+            id,
+            depth: 0,
+            basin,
+            maxCapacity,
+            children: []
+          });
+        }
+      });
+    }
+
     // Create interactive basin display
-    this.createInteractiveBasinDisplay(basinsDbg);
+    this.createInteractiveBasinDisplay(basinHierarchy);
 
     // Update basin title with statistics
     const titleEl = document.getElementById("basinsTitle");
@@ -528,57 +595,59 @@ export class DebugDisplay {
     });
   }
 
-  createInteractiveBasinDisplay(basinsText) {
+  createInteractiveBasinDisplay(basinHierarchy) {
     const basinsContainer = document.getElementById("basinsText");
     if (!basinsContainer) return;
 
     basinsContainer.innerHTML = "";
 
-    const lines = basinsText.split("\n");
-    lines.forEach((line) => {
-      if (line.trim() === "") {
-        basinsContainer.appendChild(document.createTextNode("\n"));
-        return;
-      }
-
+    const renderBasinEntry = (entry) => {
       const lineDiv = document.createElement("div");
-      lineDiv.textContent = line;
+      lineDiv.className = "basin-line";
+      lineDiv.style.paddingLeft = `${entry.depth * 1.5}em`; // CSS-based indentation
+      lineDiv.dataset.basinId = entry.id;
+      
+      // Create basin info text
+      const basinText = `${entry.id}: ${entry.basin.tiles.size} tiles, vol=${entry.basin.volume}/${entry.maxCapacity}, water_lvl=${entry.basin.level}`;
+      lineDiv.textContent = basinText;
 
-      // Check if this line contains a basin ID
-      const basinMatch = line.match(/(\d+#\w+):/);
-      if (basinMatch) {
-        const basinId = basinMatch[1];
-        lineDiv.className = "basin-line";
-        lineDiv.dataset.basinId = basinId;
+      // Add click event for highlighting
+      lineDiv.addEventListener("click", () => {
+        const currentHighlight = this.basinManager.getHighlightedBasin();
+        const newHighlight = currentHighlight === entry.id ? null : entry.id;
+        this.basinManager.setHighlightedBasin(newHighlight);
+        this.updateBasinHighlights();
+        this.onBasinHighlightChange?.(newHighlight);
+      });
 
-        lineDiv.addEventListener("click", () => {
-          const currentHighlight = this.basinManager.getHighlightedBasin();
-          const newHighlight = currentHighlight === basinId ? null : basinId;
-          this.basinManager.setHighlightedBasin(newHighlight);
-          this.updateBasinHighlights();
-          // Trigger redraw (this should be handled by the main application)
-          this.onBasinHighlightChange?.(newHighlight);
-        });
+      lineDiv.addEventListener("mouseenter", () => {
+        const currentHighlight = this.basinManager.getHighlightedBasin();
+        if (currentHighlight !== entry.id) {
+          this.basinManager.setHighlightedBasin(entry.id);
+          this.onBasinHighlightChange?.(entry.id);
+        }
+      });
 
-        lineDiv.addEventListener("mouseenter", () => {
-          const currentHighlight = this.basinManager.getHighlightedBasin();
-          if (currentHighlight !== basinId) {
-            this.basinManager.setHighlightedBasin(basinId);
-            this.onBasinHighlightChange?.(basinId);
-          }
-        });
-
-        lineDiv.addEventListener("mouseleave", () => {
-          // Only clear highlight if it's not permanently selected
-          const permanentHighlight = document.querySelector(".basin-line.highlighted");
-          if (!permanentHighlight) {
-            this.basinManager.setHighlightedBasin(null);
-            this.onBasinHighlightChange?.(null);
-          }
-        });
-      }
+      lineDiv.addEventListener("mouseleave", () => {
+        // Only clear highlight if it's not permanently selected
+        const permanentHighlight = document.querySelector(".basin-line.highlighted");
+        if (!permanentHighlight) {
+          this.basinManager.setHighlightedBasin(null);
+          this.onBasinHighlightChange?.(null);
+        }
+      });
 
       basinsContainer.appendChild(lineDiv);
+
+      // Recursively render children
+      entry.children.forEach(childEntry => {
+        renderBasinEntry(childEntry);
+      });
+    };
+
+    // Render all root entries
+    basinHierarchy.forEach(entry => {
+      renderBasinEntry(entry);
     });
   }
 

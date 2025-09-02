@@ -142,6 +142,9 @@ class TilemapWaterPumpingApp {
     // Update insights display
     this.updateInsightsDisplay();
 
+    // Update debug displays with initial state
+    this.updateDebugDisplays();
+
     // Initial render
     this.draw();
   }
