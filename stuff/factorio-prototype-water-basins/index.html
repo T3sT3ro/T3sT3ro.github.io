@@ -21,6 +21,7 @@
         <div id="zoomIndicator">
           Zoom: 100%
         </div>
+        <button id="helpBtn" class="help-button" title="Show controls help">?</button>
       </div>
 
       <div id="canvasContainer">
@@ -128,31 +129,6 @@
           <h4>Legend</h4>
           <div id="legendItems"></div>
         </div>
-        <div id="controlsBox" class="control-box">
-          <div>
-            <h4>Terrain Painting</h4>
-            <div class="control-item"><code>0-9</code> Select depth level</div>
-            <div class="control-item"><code>LMB drag</code> Paint terrain with selected depth</div>
-            <div class="control-item"><code>ALT + Mouse wheel</code> Change selected depth</div>
-            <div class="control-item"><code>ALT + RMB</code> Pipette tool (pick depth)</div>
-            <div class="control-item"><code>SHIFT + Mouse wheel</code> Change brush size (1-8)</div>
-          </div>
-
-          <div>
-            <h4>Pumps & Water</h4>
-            <div class="control-item"><code>SHIFT + LMB</code> Add outlet pump</div>
-            <div class="control-item"><code>SHIFT + RMB</code> Add inlet pump</div>
-            <div class="control-item"><code>SHIFT + CTRL + LMB</code> Link pump to pipe system</div>
-            <div class="control-item"><code>CTRL + LMB</code> Flood fill</div>
-            <div class="control-item"><code>CTRL + RMB</code> Flood empty</div>
-          </div>
-
-          <div>
-            <h4>Navigation</h4>
-            <div class="control-item"><code>MMB drag</code> Pan view</div>
-            <div class="control-item"><code>Mouse wheel</code> Zoom in/out</div>
-          </div>
-        </div>
         <div id="labelControls" class="control-box">
           <h4>Drawing Labels</h4>
           <div class="control-item">
@@ -250,6 +226,45 @@
                 <button type="button" id="copyJsonBtn">Copy to Clipboard</button>
                 <button type="button" id="downloadJsonBtn">Download File</button>
               </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" onclick="this.closest('dialog').close()">Close</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="helpModal" class="help-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Controls Help</h3>
+          <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="help-sections">
+            <div class="help-section">
+              <h4>Terrain Painting</h4>
+              <div class="control-item"><code>0-9</code> Select depth level</div>
+              <div class="control-item"><code>LMB drag</code> Paint terrain with selected depth</div>
+              <div class="control-item"><code>ALT + Mouse wheel</code> Change selected depth</div>
+              <div class="control-item"><code>ALT + RMB</code> Pipette tool (pick depth)</div>
+              <div class="control-item"><code>SHIFT + Mouse wheel</code> Change brush size (1-8)</div>
+            </div>
+
+            <div class="help-section">
+              <h4>Pumps & Water</h4>
+              <div class="control-item"><code>SHIFT + LMB</code> Add outlet pump</div>
+              <div class="control-item"><code>SHIFT + RMB</code> Add inlet pump</div>
+              <div class="control-item"><code>SHIFT + CTRL + LMB</code> Link pump to pipe system</div>
+              <div class="control-item"><code>CTRL + LMB</code> Flood fill</div>
+              <div class="control-item"><code>CTRL + RMB</code> Flood empty</div>
+            </div>
+
+            <div class="help-section">
+              <h4>Navigation</h4>
+              <div class="control-item"><code>MMB drag</code> Pan view</div>
+              <div class="control-item"><code>Mouse wheel</code> Zoom in/out</div>
             </div>
           </div>
         </div>

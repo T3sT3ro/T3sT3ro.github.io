@@ -20,6 +20,12 @@ export class SaveLoadManager {
       exportBtn.onclick = () => this.showExportModal();
     }
 
+    // Help button
+    const helpBtn = document.getElementById("helpBtn");
+    if (helpBtn) {
+      helpBtn.onclick = () => this.showHelpModal();
+    }
+
     // Load modal handlers
     const loadFromTextBtn = document.getElementById("loadFromTextBtn");
     if (loadFromTextBtn) {
@@ -60,6 +66,13 @@ export class SaveLoadManager {
     const modal = document.getElementById("exportModal");
     if (modal) {
       this.generateExportJson();
+      modal.showModal();
+    }
+  }
+
+  showHelpModal() {
+    const modal = document.getElementById("helpModal");
+    if (modal) {
       modal.showModal();
     }
   }

@@ -48,6 +48,29 @@ main {
 #insights {
   display: flex;
   gap: var(--size-2);
+  justify-content: space-between;
+  align-items: center;
+}
+
+.help-button {
+  background: var(--brand);
+  color: white;
+  border: none;
+  border-radius: var(--border-size-3);
+  width: var(--size-7);
+  height: var(--size-7);
+  font-size: var(--font-size-2);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.help-button:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-2);
 }
 
 #canvasContainer {
@@ -195,6 +218,7 @@ canvas {
   margin-right: var(--size-2);
   line-height: 0.9;
   font-size: var(--font-size-0);
+  margin-top: var(--size-relative-1);
 }
 
 /* Control box section headers */
@@ -668,7 +692,44 @@ dialog.save-load-modal::backdrop {
   border-color: var(--red-4);
 }
 
-.saved-map-actions button.delete-btn:hover {
-  background: var(--red-3);
-  border-color: var(--red-5);
-}
+  .saved-map-actions button.delete-btn:hover {
+    background: var(--red-3);
+    border-color: var(--red-5);
+  }
+
+  /* Help modal styling */
+  dialog.help-modal {
+    border: none;
+    border-radius: var(--radius-2);
+    box-shadow: var(--shadow-4);
+    background: var(--surface-1);
+    color: var(--text-1);
+    max-width: 500px;
+    width: 90vw;
+    max-height: 80vh;
+    padding: 0;
+  }
+
+  dialog.help-modal::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .help-sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size-4);
+  }
+
+  .help-section {
+    border: var(--border-size-1) solid var(--gray-5);
+    border-radius: var(--radius-2);
+    padding: var(--size-3);
+    background: var(--surface-2);
+  }
+
+  .help-section h4 {
+    margin: 0 0 var(--size-2) 0;
+    font-size: var(--font-size-1);
+    color: var(--brand);
+    font-weight: bold;
+  }

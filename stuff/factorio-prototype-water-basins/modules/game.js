@@ -213,7 +213,7 @@ export class GameState {
       timestamp: new Date().toISOString(),
       // Terrain data
       currentSeed: this.currentSeed,
-      heights: this.heights,
+      heights: this.compressHeights(this.heights),
       // Game state
       tickCounter: this.tickCounter,
       // Noise settings
@@ -229,15 +229,8 @@ export class GameState {
         warpIterations: this.heightGenerator.noiseSettings.warpIterations,
         octaveSettings: this.heightGenerator.noiseSettings.octaveSettings
       },
-      // Basin data
-      basins: Array.from(this.basinManager.basins.entries()).map(([id, basin]) => ({
-        id: id,
-        tiles: Array.from(basin.tiles),
-        volume: basin.volume,
-        level: basin.level,
-        height: basin.height,
-        outlets: basin.outlets
-      })),
+      // Basin data - optimized storage
+      basins: this.compressBasins(),
       // Pump data
       pumps: this.pumpManager.getAllPumps().map(pump => ({
         x: pump.x,
@@ -269,7 +262,7 @@ export class GameState {
       }
       
       if (data.heights) {
-        this.heights = data.heights;
+        this.heights = this.decompressHeights(data.heights);
       } else {
         throw new Error("Invalid save data: missing terrain heights");
       }
@@ -295,16 +288,15 @@ export class GameState {
       // Recompute basins based on imported heights
       this.basinManager.computeBasins(this.heights);
       
-      // Import basin water levels
+      // Import basin data
       if (data.basins) {
-        data.basins.forEach(basinData => {
-          const basin = this.basinManager.basins.get(basinData.id);
-          if (basin) {
-            basin.volume = basinData.volume || 0;
-            basin.level = basinData.level || 0;
-            // Note: height and outlets are set during computeBasins
-          }
-        });
+        if (data.basins.format === "optimized_v1") {
+          // New optimized format
+          this.reconstructBasinsFromCompressed(data.basins);
+        } else {
+          // Legacy format - fallback
+          this.importLegacyBasins(data.basins);
+        }
       }
       
       // Import reservoirs
@@ -342,6 +334,327 @@ export class GameState {
     } catch (error) {
       console.error("Failed to import save data:", error);
       throw new Error(`Failed to import save data: ${error.message}`);
+    }
+  }
+
+  // Compression utilities for better save format
+  compressHeights(heights) {
+    // Option 1: Readable 2D array format (current implementation improved)
+    return {
+      format: "2d_array",
+      width: CONFIG.WORLD_W,
+      height: CONFIG.WORLD_H,
+      data: heights.map(row => row.join('')).join('\n')
+    };
+    
+    // Alternative: Run-length encoding for sparse data
+    // return this.runLengthEncode(heights);
+    
+    // Alternative: Base64 + bit packing for maximum compression
+    // return this.base64Encode(heights);
+  }
+
+  runLengthEncode(heights) {
+    const flattened = heights.flat();
+    const compressed = [];
+    let current = flattened[0];
+    let count = 1;
+    
+    for (let i = 1; i < flattened.length; i++) {
+      if (flattened[i] === current) {
+        count++;
+      } else {
+        compressed.push([current, count]);
+        current = flattened[i];
+        count = 1;
+      }
+    }
+    compressed.push([current, count]);
+    
+    return {
+      format: "rle",
+      width: CONFIG.WORLD_W,
+      height: CONFIG.WORLD_H,
+      data: compressed
+    };
+  }
+
+  base64Encode(heights) {
+    // Pack 2 height values (0-9) into each byte for 50% compression
+    const flattened = heights.flat();
+    const bytes = [];
+    
+    for (let i = 0; i < flattened.length; i += 2) {
+      const val1 = flattened[i] || 0;
+      const val2 = flattened[i + 1] || 0;
+      bytes.push((val1 << 4) | val2);
+    }
+    
+    const uint8Array = new Uint8Array(bytes);
+    const base64 = btoa(String.fromCharCode.apply(null, uint8Array));
+    
+    return {
+      format: "base64_packed",
+      width: CONFIG.WORLD_W,
+      height: CONFIG.WORLD_H,
+      data: base64
+    };
+  }
+
+  decompressHeights(compressed) {
+    switch (compressed.format) {
+      case "2d_array":
+        return compressed.data.split('\n').map(row => 
+          row.split('').map(char => parseInt(char, 10))
+        );
+        
+      case "rle":
+        return this.runLengthDecode(compressed);
+        
+      case "base64_packed":
+        return this.base64Decode(compressed);
+        
+      default:
+        // Fallback for old uncompressed format
+        return Array.isArray(compressed) ? compressed : compressed.data;
+    }
+  }
+
+  runLengthDecode(compressed) {
+    const flattened = [];
+    for (const [value, count] of compressed.data) {
+      for (let i = 0; i < count; i++) {
+        flattened.push(value);
+      }
+    }
+    
+    const heights = [];
+    for (let y = 0; y < compressed.height; y++) {
+      heights[y] = [];
+      for (let x = 0; x < compressed.width; x++) {
+        heights[y][x] = flattened[y * compressed.width + x];
+      }
+    }
+    return heights;
+  }
+
+  base64Decode(compressed) {
+    const binaryString = atob(compressed.data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    const flattened = [];
+    for (const byte of bytes) {
+      flattened.push((byte >> 4) & 0xF);  // High 4 bits
+      flattened.push(byte & 0xF);         // Low 4 bits
+    }
+    
+    const heights = [];
+    for (let y = 0; y < compressed.height; y++) {
+      heights[y] = [];
+      for (let x = 0; x < compressed.width; x++) {
+        const index = y * compressed.width + x;
+        heights[y][x] = index < flattened.length ? flattened[index] : 0;
+      }
+    }
+    return heights;
+  }
+
+  // Basin compression utilities
+  compressBasins() {
+    const basinIdMap = this.createBasinIdMap();
+    const basinTree = this.createBasinTree();
+    const basinMetadata = this.createBasinMetadata();
+
+    return {
+      format: "optimized_v1",
+      width: CONFIG.WORLD_W,
+      height: CONFIG.WORLD_H,
+      // 2D array where each cell contains the basin ID for that tile
+      basinIdMap: this.compressBasinIdMap(basinIdMap),
+      // Tree structure showing how basins connect (outlets)
+      basinTree: basinTree,
+      // Basin properties (volume, level, etc.)
+      basinMetadata: basinMetadata
+    };
+  }
+
+  createBasinIdMap() {
+    // Create 2D array of basin IDs
+    const basinIdMap = [];
+    for (let y = 0; y < CONFIG.WORLD_H; y++) {
+      basinIdMap[y] = [];
+      for (let x = 0; x < CONFIG.WORLD_W; x++) {
+        const basinId = this.basinManager.basinIdOf[y][x];
+        // Convert basin ID to a compact format - use 0 for no basin
+        basinIdMap[y][x] = basinId || "0";
+      }
+    }
+    return basinIdMap;
+  }
+
+  compressBasinIdMap(basinIdMap) {
+    // Option 1: Simple string format (easy to read/debug)
+    return {
+      format: "string_rows",
+      data: basinIdMap.map(row => row.join('|')).join('\n')
+    };
+
+    // Alternative: Run-length encoding for basin IDs (better compression)
+    // Uncomment the line below and comment the above return to use RLE
+    // return this.runLengthEncodeBasinIds(basinIdMap);
+  }
+
+  runLengthEncodeBasinIds(basinIdMap) {
+    const flattened = basinIdMap.flat();
+    const compressed = [];
+    let current = flattened[0];
+    let count = 1;
+
+    for (let i = 1; i < flattened.length; i++) {
+      if (flattened[i] === current) {
+        count++;
+      } else {
+        compressed.push([current, count]);
+        current = flattened[i];
+        count = 1;
+      }
+    }
+    compressed.push([current, count]);
+
+    return {
+      format: "rle_basin_ids",
+      data: compressed
+    };
+  }
+
+  createBasinTree() {
+    // Create tree structure showing basin outlet relationships
+    const tree = {};
+    this.basinManager.basins.forEach((basin, basinId) => {
+      tree[basinId] = {
+        outlets: basin.outlets || [],
+        height: basin.height
+      };
+    });
+    return tree;
+  }
+
+  createBasinMetadata() {
+    // Store basin properties (volume, level, etc.)
+    const metadata = {};
+    this.basinManager.basins.forEach((basin, basinId) => {
+      metadata[basinId] = {
+        volume: basin.volume || 0,
+        level: basin.level || 0,
+        tileCount: basin.tiles ? basin.tiles.size : 0
+      };
+    });
+    return metadata;
+  }
+
+  decompressBasins(compressedBasins) {
+    if (!compressedBasins.format || compressedBasins.format !== "optimized_v1") {
+      // Fallback for old format
+      return compressedBasins;
+    }
+
+    return {
+      basinIdMap: this.decompressBasinIdMap(compressedBasins.basinIdMap),
+      basinTree: compressedBasins.basinTree,
+      basinMetadata: compressedBasins.basinMetadata
+    };
+  }
+
+  decompressBasinIdMap(compressed) {
+    switch (compressed.format) {
+      case "string_rows":
+        return compressed.data.split('\n').map(row => row.split('|'));
+
+      case "rle_basin_ids":
+        return this.runLengthDecodeBasinIds(compressed);
+
+      default:
+        // Fallback
+        return compressed;
+    }
+  }
+
+  runLengthDecodeBasinIds(compressed) {
+    const flattened = [];
+    for (const [value, count] of compressed.data) {
+      for (let i = 0; i < count; i++) {
+        flattened.push(value);
+      }
+    }
+
+    const basinIdMap = [];
+    for (let y = 0; y < CONFIG.WORLD_H; y++) {
+      basinIdMap[y] = [];
+      for (let x = 0; x < CONFIG.WORLD_W; x++) {
+        basinIdMap[y][x] = flattened[y * CONFIG.WORLD_W + x];
+      }
+    }
+    return basinIdMap;
+  }
+
+  reconstructBasinsFromCompressed(compressedData) {
+    const decompressed = this.decompressBasins(compressedData);
+    const { basinIdMap, basinTree, basinMetadata } = decompressed;
+
+    // Clear existing basin data
+    this.basinManager.basins.clear();
+    this.basinManager.basinIdOf.forEach(row => row.fill(0));
+
+    // Reconstruct basinIdOf array
+    for (let y = 0; y < CONFIG.WORLD_H; y++) {
+      for (let x = 0; x < CONFIG.WORLD_W; x++) {
+        const basinId = basinIdMap[y][x];
+        this.basinManager.basinIdOf[y][x] = basinId === "0" ? 0 : basinId;
+      }
+    }
+
+    // Reconstruct basin objects
+    Object.keys(basinTree).forEach(basinId => {
+      if (basinId === "0") return; // Skip empty tiles
+
+      // Collect tiles for this basin
+      const tiles = new Set();
+      for (let y = 0; y < CONFIG.WORLD_H; y++) {
+        for (let x = 0; x < CONFIG.WORLD_W; x++) {
+          if (basinIdMap[y][x] === basinId) {
+            tiles.add(`${x},${y}`);
+          }
+        }
+      }
+
+      // Create basin object
+      const metadata = basinMetadata[basinId] || {};
+      const treeData = basinTree[basinId] || {};
+      
+      this.basinManager.basins.set(basinId, {
+        tiles: tiles,
+        volume: metadata.volume || 0,
+        level: metadata.level || 0,
+        height: treeData.height || 0,
+        outlets: treeData.outlets || []
+      });
+    });
+  }
+
+  importLegacyBasins(basinsData) {
+    // Handle old format where basins were stored as individual objects
+    if (Array.isArray(basinsData)) {
+      basinsData.forEach(basinData => {
+        const basin = this.basinManager.basins.get(basinData.id);
+        if (basin) {
+          basin.volume = basinData.volume || 0;
+          basin.level = basinData.level || 0;
+          // Note: height and outlets are set during computeBasins
+        }
+      });
     }
   }
 }
