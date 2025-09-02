@@ -246,6 +246,66 @@ export class NoiseControlUI {
       });
     }
   }
+
+  updateUI() {
+    // Update main noise controls with current settings
+    const freqEl = document.getElementById("noiseFreq");
+    const freqValueEl = document.getElementById("noiseFreqValue");
+    const octavesEl = document.getElementById("noiseOctaves");
+    const octavesValueEl = document.getElementById("noiseOctavesValue");
+    const persistenceEl = document.getElementById("noisePersistence");
+    const persistenceValueEl = document.getElementById("noisePersistenceValue");
+    const lacunarityEl = document.getElementById("noiseLacunarity");
+    const lacunarityValueEl = document.getElementById("noiseLacunarityValue");
+    const offsetEl = document.getElementById("noiseOffset");
+    const offsetValueEl = document.getElementById("noiseOffsetValue");
+    const gainEl = document.getElementById("noiseGain");
+    const gainValueEl = document.getElementById("noiseGainValue");
+    const noiseTypeEl = document.getElementById("noiseType");
+    const warpEl = document.getElementById("noiseWarpStrength");
+    const warpValueEl = document.getElementById("noiseWarpStrengthValue");
+    const warpIterationsEl = document.getElementById("noiseWarpIterations");
+    const warpIterationsValueEl = document.getElementById("noiseWarpIterationsValue");
+
+    if (freqEl) {
+      freqEl.value = this.noiseSettings.baseFreq;
+      if (freqValueEl) freqValueEl.textContent = this.noiseSettings.baseFreq.toFixed(3);
+    }
+    if (octavesEl) {
+      octavesEl.value = this.noiseSettings.octaves;
+      if (octavesValueEl) octavesValueEl.textContent = this.noiseSettings.octaves;
+    }
+    if (persistenceEl) {
+      persistenceEl.value = this.noiseSettings.persistence;
+      if (persistenceValueEl) persistenceValueEl.textContent = this.noiseSettings.persistence.toFixed(2);
+    }
+    if (lacunarityEl) {
+      lacunarityEl.value = this.noiseSettings.lacunarity;
+      if (lacunarityValueEl) lacunarityValueEl.textContent = this.noiseSettings.lacunarity.toFixed(2);
+    }
+    if (offsetEl) {
+      offsetEl.value = this.noiseSettings.offset;
+      if (offsetValueEl) offsetValueEl.textContent = this.noiseSettings.offset.toFixed(2);
+    }
+    if (gainEl) {
+      gainEl.value = this.noiseSettings.gain;
+      if (gainValueEl) gainValueEl.textContent = this.noiseSettings.gain.toFixed(2);
+    }
+    if (noiseTypeEl) {
+      noiseTypeEl.value = this.noiseSettings.noiseType;
+    }
+    if (warpEl) {
+      warpEl.value = this.noiseSettings.warpStrength;
+      if (warpValueEl) warpValueEl.textContent = this.noiseSettings.warpStrength.toFixed(2);
+    }
+    if (warpIterationsEl) {
+      warpIterationsEl.value = this.noiseSettings.warpIterations;
+      if (warpIterationsValueEl) warpIterationsValueEl.textContent = this.noiseSettings.warpIterations;
+    }
+
+    // Update octave controls
+    this.createOctaveControls();
+  }
 }
 
 export class DebugDisplay {

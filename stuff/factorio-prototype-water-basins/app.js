@@ -9,15 +9,17 @@ const gameModule = import(`./modules/game.js?v=${moduleVersion}`);
 const rendererModule = import(`./modules/renderer.js?v=${moduleVersion}`);
 const uiModule = import(`./modules/ui.js?v=${moduleVersion}`);
 const constantsModule = import(`./modules/constants.js?v=${moduleVersion}`);
+const saveloadModule = import(`./modules/saveload.js?v=${moduleVersion}`);
 
 // Wait for all modules to load, then initialize the app
-Promise.all([configModule, gameModule, rendererModule, uiModule, constantsModule])
-  .then(([config, game, renderer, ui, constants]) => {
+Promise.all([configModule, gameModule, rendererModule, uiModule, constantsModule, saveloadModule])
+  .then(([config, game, renderer, ui, constants, saveload]) => {
     const { setupCanvas, CONFIG } = config;
     const { GameState } = game;
     const { Renderer, LegendRenderer } = renderer;
     const { UISettings, NoiseControlUI, DebugDisplay } = ui;
     const { UI_CONSTANTS } = constants;
+    const { SaveLoadManager } = saveload;
 
     // Create and initialize the app
     const app = new TilemapWaterPumpingApp(
@@ -30,6 +32,7 @@ Promise.all([configModule, gameModule, rendererModule, uiModule, constantsModule
       NoiseControlUI,
       DebugDisplay,
       UI_CONSTANTS,
+      SaveLoadManager,
     );
     app.init();
   })
@@ -48,6 +51,7 @@ class TilemapWaterPumpingApp {
     NoiseControlUI,
     DebugDisplay,
     UI_CONSTANTS,
+    SaveLoadManager,
   ) {
     this.setupCanvas = setupCanvas;
     this.CONFIG = CONFIG;
@@ -58,6 +62,7 @@ class TilemapWaterPumpingApp {
     this.NoiseControlUI = NoiseControlUI;
     this.DebugDisplay = DebugDisplay;
     this.UI_CONSTANTS = UI_CONSTANTS;
+    this.SaveLoadManager = SaveLoadManager;
 
     // Brush state
     this.brushSize = UI_CONSTANTS.BRUSH.MIN_SIZE;
@@ -98,6 +103,12 @@ class TilemapWaterPumpingApp {
       clearSelection: () => this.clearReservoirSelection(),
       draw: () => this.draw(),
     });
+
+    // Initialize save/load manager
+    this.saveLoadManager = new this.SaveLoadManager(this.gameState, () => this.onGameStateChanged());
+    
+    // Make save load manager globally accessible for HTML onclick handlers
+    globalThis.saveLoadManager = this.saveLoadManager;
 
     // Setup callbacks
     this.debugDisplay.setBasinHighlightChangeCallback((_basinId) => {
@@ -179,6 +190,20 @@ class TilemapWaterPumpingApp {
     recentMeasures.forEach((measure) => {
       console.log(`${measure.name}: ${measure.duration.toFixed(2)}ms`);
     });
+  }
+
+  onGameStateChanged() {
+    // Called when the game state is loaded from save/import
+    this.renderer.onTerrainChanged();
+    this.renderer.onWaterChanged();
+    this.renderer.onPumpsChanged();
+    this.renderer.onLabelsToggled();
+    this.draw();
+    this.updateDebugDisplays();
+    this.updateReservoirControls();
+    
+    // Update noise control UI to reflect loaded settings
+    this.noiseControlUI.updateUI();
   }
 
   setupKeyboardEventHandlers() {
@@ -684,5 +709,5 @@ class TilemapWaterPumpingApp {
 
 // Initialize the application when DOM is loaded
 document.addEventListener("DOMContentLoaded", () => {
-  window.tilemapApp = new TilemapWaterPumpingApp();
+  globalThis.tilemapApp = new TilemapWaterPumpingApp();
 });

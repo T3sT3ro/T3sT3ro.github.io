@@ -205,4 +205,143 @@ export class GameState {
   getHeightGenerator() {
     return this.heightGenerator;
   }
+
+  // Save/Load functionality
+  exportToJSON() {
+    const data = {
+      version: "1.0.0",
+      timestamp: new Date().toISOString(),
+      // Terrain data
+      currentSeed: this.currentSeed,
+      heights: this.heights,
+      // Game state
+      tickCounter: this.tickCounter,
+      // Noise settings
+      noiseSettings: {
+        baseFreq: this.heightGenerator.noiseSettings.baseFreq,
+        octaves: this.heightGenerator.noiseSettings.octaves,
+        persistence: this.heightGenerator.noiseSettings.persistence,
+        lacunarity: this.heightGenerator.noiseSettings.lacunarity,
+        offset: this.heightGenerator.noiseSettings.offset,
+        gain: this.heightGenerator.noiseSettings.gain,
+        noiseType: this.heightGenerator.noiseSettings.noiseType,
+        warpStrength: this.heightGenerator.noiseSettings.warpStrength,
+        warpIterations: this.heightGenerator.noiseSettings.warpIterations,
+        octaveSettings: this.heightGenerator.noiseSettings.octaveSettings
+      },
+      // Basin data
+      basins: Array.from(this.basinManager.basins.entries()).map(([id, basin]) => ({
+        id: id,
+        tiles: Array.from(basin.tiles),
+        volume: basin.volume,
+        level: basin.level,
+        height: basin.height,
+        outlets: basin.outlets
+      })),
+      // Pump data
+      pumps: this.pumpManager.getAllPumps().map(pump => ({
+        x: pump.x,
+        y: pump.y,
+        mode: pump.mode,
+        reservoirId: pump.reservoirId
+      })),
+      // Reservoir data
+      reservoirs: Array.from(this.reservoirManager.getAllReservoirs().entries()).map(([id, reservoir]) => ({
+        id: id,
+        volume: reservoir.volume
+      }))
+    };
+    return JSON.stringify(data, null, 2);
+  }
+
+  importFromJSON(jsonString) {
+    try {
+      const data = JSON.parse(jsonString);
+      
+      // Validate version compatibility
+      if (!data.version) {
+        throw new Error("Invalid save data: missing version information");
+      }
+      
+      // Import terrain data
+      if (data.currentSeed !== undefined) {
+        this.currentSeed = data.currentSeed;
+      }
+      
+      if (data.heights) {
+        this.heights = data.heights;
+      } else {
+        throw new Error("Invalid save data: missing terrain heights");
+      }
+      
+      // Import game state
+      if (data.tickCounter !== undefined) {
+        this.tickCounter = data.tickCounter;
+      }
+      
+      // Import noise settings
+      if (data.noiseSettings) {
+        const settings = this.heightGenerator.getNoiseSettings();
+        Object.assign(settings, data.noiseSettings);
+        // Update UI controls if they exist
+        settings.updateUI();
+      }
+      
+      // Clear existing data
+      this.basinManager = new BasinManager();
+      this.reservoirManager = new ReservoirManager();
+      this.pumpManager = new PumpManager(this.reservoirManager, this.basinManager);
+      
+      // Recompute basins based on imported heights
+      this.basinManager.computeBasins(this.heights);
+      
+      // Import basin water levels
+      if (data.basins) {
+        data.basins.forEach(basinData => {
+          const basin = this.basinManager.basins.get(basinData.id);
+          if (basin) {
+            basin.volume = basinData.volume || 0;
+            basin.level = basinData.level || 0;
+            // Note: height and outlets are set during computeBasins
+          }
+        });
+      }
+      
+      // Import reservoirs
+      if (data.reservoirs) {
+        data.reservoirs.forEach(reservoirData => {
+          this.reservoirManager.createReservoir(reservoirData.id);
+          const reservoir = this.reservoirManager.getReservoir(reservoirData.id);
+          if (reservoir) {
+            reservoir.volume = reservoirData.volume || 0;
+          }
+        });
+      }
+      
+      // Import pumps
+      if (data.pumps) {
+        data.pumps.forEach(pumpData => {
+          // First create/ensure the reservoir exists
+          if (pumpData.reservoirId) {
+            this.reservoirManager.createReservoir(pumpData.reservoirId);
+            this.reservoirManager.setSelectedReservoir(pumpData.reservoirId);
+          }
+          
+          const _reservoirId = this.pumpManager.addPumpAt(
+            pumpData.x, 
+            pumpData.y, 
+            pumpData.mode || 'auto',
+            true  // Link to existing reservoir
+          );
+          
+          // No additional properties to set since pumping and lastPumpTick don't exist
+        });
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Failed to import save data:", error);
+      throw new Error(`Failed to import save data: ${error.message}`);
+    }
+  }
 }

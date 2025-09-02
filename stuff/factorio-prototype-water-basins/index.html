@@ -36,6 +36,8 @@
             <button id="randomizeBtn">Randomize Heights</button>
             <button id="clearPumps">Clear Pumps</button>
             <button id="clearWater">Clear All Water</button>
+            <button id="loadBtn">Load Map</button>
+            <button id="exportBtn">Export Map</button>
           </div>
         </div>
         <div id="noiseControls" class="control-box">
@@ -188,6 +190,75 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal dialogs -->
+    <dialog id="loadModal" class="save-load-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Load Map</h3>
+          <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="load-options">
+            <div class="load-option">
+              <h4>From Browser Storage</h4>
+              <div id="savedMaps" class="saved-maps-list">
+                <p class="no-saves">No saved maps found</p>
+              </div>
+            </div>
+            <div class="load-option">
+              <h4>From JSON</h4>
+              <div class="json-input-methods">
+                <div class="input-method">
+                  <label for="jsonFileInput">Upload JSON file:</label>
+                  <input type="file" id="jsonFileInput" accept=".json" />
+                </div>
+                <div class="input-method">
+                  <label for="jsonTextInput">Paste JSON data:</label>
+                  <textarea id="jsonTextInput" placeholder="Paste your map JSON data here..." rows="8"></textarea>
+                  <button type="button" id="loadFromTextBtn">Load from Text</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="exportModal" class="save-load-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Export/Save Map</h3>
+          <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="export-options">
+            <div class="export-option">
+              <h4>Save to Browser Storage</h4>
+              <div class="save-to-browser">
+                <input type="text" id="saveNameInput" placeholder="Enter save name..." />
+                <button type="button" id="saveToBrowserBtn">Save</button>
+              </div>
+            </div>
+            <div class="export-option">
+              <h4>Export as JSON</h4>
+              <textarea id="exportJsonOutput" readonly rows="12"></textarea>
+              <div class="export-actions">
+                <button type="button" id="copyJsonBtn">Copy to Clipboard</button>
+                <button type="button" id="downloadJsonBtn">Download File</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" onclick="this.closest('dialog').close()">Close</button>
+        </div>
+      </div>
+    </dialog>
+
     <script>
       // Cache busting for main JS file using version
       const version = window.moduleVersion || Date.now();
