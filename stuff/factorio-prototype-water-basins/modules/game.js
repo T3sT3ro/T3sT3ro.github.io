@@ -372,13 +372,13 @@ export class GameState {
       if (flattened[i] === current) {
         count++;
       } else {
-        // Encode as value:count pairs separated by commas
-        compressed += (compressed ? "," : "") + current + ":" + count;
+        // Encode as value:count pairs, skip :1 for singular values
+        compressed += (compressed ? "," : "") + current + (count > 1 ? ":" + count : "");
         current = flattened[i];
         count = 1;
       }
     }
-    compressed += (compressed ? "," : "") + current + ":" + count;
+    compressed += (compressed ? "," : "") + current + (count > 1 ? ":" + count : "");
     
     return {
       format: "rle",
@@ -434,10 +434,16 @@ export class GameState {
     const pairs = compressed.data.split(',');
     
     for (const pair of pairs) {
-      const [valueStr, countStr] = pair.split(':');
-      const value = parseInt(valueStr, 10);
-      const count = parseInt(countStr, 10);
-      for (let i = 0; i < count; i++) {
+      if (pair.includes(':')) {
+        const [valueStr, countStr] = pair.split(':');
+        const value = parseInt(valueStr, 10);
+        const count = parseInt(countStr, 10);
+        for (let i = 0; i < count; i++) {
+          flattened.push(value);
+        }
+      } else {
+        // Single value without count (implicit count of 1)
+        const value = parseInt(pair, 10);
         flattened.push(value);
       }
     }
@@ -529,13 +535,13 @@ export class GameState {
       if (flattened[i] === current) {
         count++;
       } else {
-        // Encode as value:count pairs separated by commas
-        compressed += (compressed ? "," : "") + current + ":" + count;
+        // Encode as value:count pairs, skip :1 for singular values
+        compressed += (compressed ? "," : "") + current + (count > 1 ? ":" + count : "");
         current = flattened[i];
         count = 1;
       }
     }
-    compressed += (compressed ? "," : "") + current + ":" + count;
+    compressed += (compressed ? "," : "") + current + (count > 1 ? ":" + count : "");
 
     return {
       format: "rle_basin_ids",
@@ -619,10 +625,15 @@ export class GameState {
     const pairs = compressed.data.split(',');
     
     for (const pair of pairs) {
-      const [value, countStr] = pair.split(':');
-      const count = parseInt(countStr, 10);
-      for (let i = 0; i < count; i++) {
-        flattened.push(value);
+      if (pair.includes(':')) {
+        const [value, countStr] = pair.split(':');
+        const count = parseInt(countStr, 10);
+        for (let i = 0; i < count; i++) {
+          flattened.push(value);
+        }
+      } else {
+        // Single value without count (implicit count of 1)
+        flattened.push(pair);
       }
     }
 
