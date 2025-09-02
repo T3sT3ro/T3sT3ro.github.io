@@ -561,6 +561,57 @@ dialog.save-load-modal::backdrop {
   color: var(--text-1);
 }
 
+.encoding-options {
+  margin-bottom: 1rem;
+  padding: var(--size-3);
+  background-color: var(--gray-1);
+  border-radius: var(--radius-2);
+}
+
+.encoding-section {
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.encoding-section:last-of-type {
+  margin-bottom: 0;
+}
+
+.encoding-section label {
+  font-weight: var(--font-weight-6);
+  min-width: 140px;
+}
+
+.encoding-section select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--gray-4);
+  border-radius: var(--radius-2);
+  background-color: var(--gray-0);
+  min-width: 180px;
+}
+
+.size-info {
+  font-size: var(--font-size-0);
+  color: var(--gray-7);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.total-size-section {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--gray-3);
+  text-align: center;
+}
+
+.total-size-section span {
+  font-family: var(--font-mono);
+  color: var(--blue-7);
+}
+
 .saved-maps-list {
   display: flex;
   flex-direction: column;

@@ -221,6 +221,28 @@
             </div>
             <div class="export-option">
               <h4>Export as JSON</h4>
+              <div class="encoding-options">
+                <div class="encoding-section">
+                  <label for="heightEncoding">Height Data Encoding:</label>
+                  <select id="heightEncoding">
+                    <option value="2d_array">2D Array (Readable)</option>
+                    <option value="rle">Run-Length Encoding</option>
+                    <option value="base64_packed">Base64 Packed</option>
+                  </select>
+                  <span class="size-info" id="heightSizeInfo">calculating...</span>
+                </div>
+                <div class="encoding-section">
+                  <label for="basinEncoding">Basin Data Encoding:</label>
+                  <select id="basinEncoding">
+                    <option value="string_rows">String Rows (Readable)</option>
+                    <option value="rle_basin_ids">Run-Length Encoding</option>
+                  </select>
+                  <span class="size-info" id="basinSizeInfo">calculating...</span>
+                </div>
+                <div class="total-size-section">
+                  <strong>Total JSON Size: <span id="totalSizeInfo">calculating...</span></strong>
+                </div>
+              </div>
               <textarea id="exportJsonOutput" readonly rows="12"></textarea>
               <div class="export-actions">
                 <button type="button" id="copyJsonBtn">Copy to Clipboard</button>

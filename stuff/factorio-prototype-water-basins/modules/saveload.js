@@ -52,6 +52,17 @@ export class SaveLoadManager {
     if (downloadJsonBtn) {
       downloadJsonBtn.onclick = () => this.downloadJson();
     }
+
+    // Encoding selection handlers
+    const heightEncodingSelect = document.getElementById("heightEncoding");
+    if (heightEncodingSelect) {
+      heightEncodingSelect.addEventListener('change', () => this.updateExportData());
+    }
+
+    const basinEncodingSelect = document.getElementById("basinEncoding");
+    if (basinEncodingSelect) {
+      basinEncodingSelect.addEventListener('change', () => this.updateExportData());
+    }
   }
 
   showLoadModal() {
@@ -65,7 +76,8 @@ export class SaveLoadManager {
   showExportModal() {
     const modal = document.getElementById("exportModal");
     if (modal) {
-      this.generateExportJson();
+      this.setupOptimalDefaults();
+      this.updateExportData();
       modal.showModal();
     }
   }
@@ -113,6 +125,85 @@ export class SaveLoadManager {
         console.error("Export error:", error);
       }
     }
+  }
+
+  setupOptimalDefaults() {
+    try {
+      const bestOptions = this.gameState.getBestEncodingOptions();
+      
+      const heightSelect = document.getElementById("heightEncoding");
+      const basinSelect = document.getElementById("basinEncoding");
+      
+      if (heightSelect && bestOptions.heightEncoding) {
+        heightSelect.value = bestOptions.heightEncoding;
+      }
+      
+      if (basinSelect && bestOptions.basinEncoding) {
+        basinSelect.value = bestOptions.basinEncoding;
+      }
+    } catch (error) {
+      console.warn("Could not determine optimal encoding defaults:", error);
+    }
+  }
+
+  updateExportData() {
+    const heightSelect = document.getElementById("heightEncoding");
+    const basinSelect = document.getElementById("basinEncoding");
+    const output = document.getElementById("exportJsonOutput");
+    const heightSizeInfo = document.getElementById("heightSizeInfo");
+    const basinSizeInfo = document.getElementById("basinSizeInfo");
+    const totalSizeInfo = document.getElementById("totalSizeInfo");
+
+    if (!heightSelect || !basinSelect || !output) return;
+
+    try {
+      // Get the selected encoding options
+      const heightEncoding = heightSelect.value;
+      const basinEncoding = basinSelect.value;
+
+      // Calculate sizes for current selection
+      const sizes = this.gameState.calculateEncodingSizes();
+      
+      // Update size displays
+      if (heightSizeInfo && sizes.heightData) {
+        const size = sizes.heightData[heightEncoding];
+        heightSizeInfo.textContent = size ? this.formatSize(size) : 'unknown';
+      }
+
+      if (basinSizeInfo && sizes.basinData) {
+        const size = sizes.basinData[basinEncoding];
+        basinSizeInfo.textContent = size ? this.formatSize(size) : 'unknown';
+      }
+
+      // Generate JSON with selected options
+      const jsonData = this.gameState.exportToJSON({
+        heightEncoding,
+        basinEncoding
+      });
+      
+      output.value = jsonData;
+
+      // Calculate total size
+      if (totalSizeInfo) {
+        const totalSize = new Blob([jsonData]).size;
+        totalSizeInfo.textContent = this.formatSize(totalSize);
+      }
+
+    } catch (error) {
+      console.error("Error updating export data:", error);
+      output.value = `Error generating export data: ${error.message}`;
+      
+      // Clear size displays on error
+      if (heightSizeInfo) heightSizeInfo.textContent = 'error';
+      if (basinSizeInfo) basinSizeInfo.textContent = 'error';
+      if (totalSizeInfo) totalSizeInfo.textContent = 'error';
+    }
+  }
+
+  formatSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   loadFromText() {
@@ -228,7 +319,7 @@ export class SaveLoadManager {
     try {
       document.execCommand('copy');
       alert("JSON data copied to clipboard!");
-    } catch (error) {
+    } catch (_error) {
       // Fallback for modern browsers
       navigator.clipboard.writeText(output.value).then(() => {
         alert("JSON data copied to clipboard!");
