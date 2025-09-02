@@ -381,6 +381,17 @@ class TilemapWaterPumpingApp {
         this.draw();
       };
     }
+
+    // Pipe system number input control
+    const reservoirInputEl = document.getElementById("reservoirInput");
+    if (reservoirInputEl) {
+      reservoirInputEl.oninput = (_e) => {
+        const desiredId = this.getDesiredReservoirIdFromInput();
+        this.gameState.setSelectedReservoir(desiredId);
+        this.renderer.onPumpsChanged(); // Pump highlighting changes
+        this.draw();
+      };
+    }
   }
 
   setupCanvasEventHandlers() {
