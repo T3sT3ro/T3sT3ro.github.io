@@ -558,17 +558,18 @@ export class GameState {
         volume: basin.volume || 0,
         level: basin.level || 0,
         tileCount: basin.tiles ? basin.tiles.size : 0,
-        // Store parent IDs instead of outlet IDs for flatter structure
-        parents: [] // Will be filled when processing outlets
+        // Store child IDs instead of parent IDs for correct tree structure
+        children: [] // Will be filled when processing outlets
       };
     });
 
-    // Second pass: convert outlets to parent relationships
+    // Second pass: outlets are children (deeper basins), not parents
     this.basinManager.basins.forEach((basin, basinId) => {
       if (basin.outlets && basin.outlets.length > 0) {
         basin.outlets.forEach(outletId => {
-          if (tree[outletId]) {
-            tree[outletId].parents.push(basinId);
+          if (tree[basinId]) {
+            // The outlet (deeper basin) is a child of the current basin
+            tree[basinId].children.push(outletId);
           }
         });
       }
@@ -689,13 +690,8 @@ export class GameState {
         }
       }
 
-      // Convert parent pointers back to outlets
-      const outlets = [];
-      Object.keys(basinData).forEach(otherId => {
-        if (basinData[otherId].parents && basinData[otherId].parents.includes(basinId)) {
-          outlets.push(otherId);
-        }
-      });
+      // Convert children back to outlets (children are deeper basins that this basin flows to)
+      const outlets = data.children || [];
 
       this.basinManager.basins.set(basinId, {
         tiles: tiles,

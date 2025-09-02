@@ -149,61 +149,77 @@ export class SaveLoadManager {
   updateExportData() {
     const heightSelect = document.getElementById("heightEncoding");
     const basinSelect = document.getElementById("basinEncoding");
+    
+    if (!heightSelect || !basinSelect) return;
+    
+    const heightEncoding = heightSelect.value;
+    const basinEncoding = basinSelect.value;
+    
+    // Update size information
+    this.updateSizeInfo(heightEncoding, basinEncoding);
+    
+    // Update the JSON output
+    const options = {
+      heightEncoding: heightEncoding,
+      basinEncoding: basinEncoding
+    };
+    
     const output = document.getElementById("exportJsonOutput");
-    const heightSizeInfo = document.getElementById("heightSizeInfo");
-    const basinSizeInfo = document.getElementById("basinSizeInfo");
-    const totalSizeInfo = document.getElementById("totalSizeInfo");
-
-    if (!heightSelect || !basinSelect || !output) return;
-
-    try {
-      // Get the selected encoding options
-      const heightEncoding = heightSelect.value;
-      const basinEncoding = basinSelect.value;
-
-      // Calculate sizes for current selection
-      const sizes = this.gameState.calculateEncodingSizes();
-      
-      // Update size displays
-      if (heightSizeInfo && sizes.heightData) {
-        const size = sizes.heightData[heightEncoding];
-        heightSizeInfo.textContent = size ? this.formatSize(size) : 'unknown';
+    if (output) {
+      try {
+        const jsonData = this.gameState.exportToJSON(options);
+        output.value = jsonData;
+      } catch (error) {
+        output.value = `Error generating export data: ${error.message}`;
+        console.error("Export error:", error);
       }
-
-      if (basinSizeInfo && sizes.basinData) {
-        const size = sizes.basinData[basinEncoding];
-        basinSizeInfo.textContent = size ? this.formatSize(size) : 'unknown';
-      }
-
-      // Generate JSON with selected options
-      const jsonData = this.gameState.exportToJSON({
-        heightEncoding,
-        basinEncoding
-      });
-      
-      output.value = jsonData;
-
-      // Calculate total size
-      if (totalSizeInfo) {
-        const totalSize = new Blob([jsonData]).size;
-        totalSizeInfo.textContent = this.formatSize(totalSize);
-      }
-
-    } catch (error) {
-      console.error("Error updating export data:", error);
-      output.value = `Error generating export data: ${error.message}`;
-      
-      // Clear size displays on error
-      if (heightSizeInfo) heightSizeInfo.textContent = 'error';
-      if (basinSizeInfo) basinSizeInfo.textContent = 'error';
-      if (totalSizeInfo) totalSizeInfo.textContent = 'error';
     }
   }
 
-  formatSize(bytes) {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  updateSizeInfo(heightEncoding, basinEncoding) {
+    const heightSizeInfo = document.getElementById("heightSizeInfo");
+    const basinSizeInfo = document.getElementById("basinSizeInfo");
+    const totalSizeInfo = document.getElementById("totalSizeInfo");
+    
+    try {
+      // Calculate individual sizes
+      const heightCompressed = this.gameState.compressHeights(heightEncoding);
+      const basinCompressed = this.gameState.compressBasins(basinEncoding);
+      
+      const heightSize = JSON.stringify(heightCompressed).length;
+      const basinSize = JSON.stringify(basinCompressed).length;
+      
+      // Calculate total JSON size
+      const options = {
+        heightEncoding: heightEncoding,
+        basinEncoding: basinEncoding
+      };
+      const totalSize = this.gameState.exportToJSON(options).length;
+      
+      // Update displays
+      if (heightSizeInfo) {
+        heightSizeInfo.textContent = this.formatBytes(heightSize);
+      }
+      if (basinSizeInfo) {
+        basinSizeInfo.textContent = this.formatBytes(basinSize);
+      }
+      if (totalSizeInfo) {
+        totalSizeInfo.textContent = this.formatBytes(totalSize);
+      }
+    } catch (error) {
+      console.error("Error calculating sizes:", error);
+      if (heightSizeInfo) heightSizeInfo.textContent = "error";
+      if (basinSizeInfo) basinSizeInfo.textContent = "error";
+      if (totalSizeInfo) totalSizeInfo.textContent = "error";
+    }
+  }
+
+  formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
   loadFromText() {

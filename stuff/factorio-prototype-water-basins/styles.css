@@ -570,10 +570,10 @@ dialog.save-load-modal::backdrop {
 
 .encoding-section {
   margin-bottom: 0.75rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: 160px 200px 1fr;
   align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .encoding-section:last-of-type {
@@ -582,7 +582,7 @@ dialog.save-load-modal::backdrop {
 
 .encoding-section label {
   font-weight: var(--font-weight-6);
-  min-width: 140px;
+  justify-self: start;
 }
 
 .encoding-section select {
@@ -590,7 +590,6 @@ dialog.save-load-modal::backdrop {
   border: 1px solid var(--gray-4);
   border-radius: var(--radius-2);
   background-color: var(--gray-0);
-  min-width: 180px;
 }
 
 .size-info {
@@ -598,6 +597,7 @@ dialog.save-load-modal::backdrop {
   color: var(--gray-7);
   font-family: var(--font-mono);
   white-space: nowrap;
+  justify-self: start;
 }
 
 .total-size-section {
