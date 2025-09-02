@@ -46,10 +46,45 @@ main {
 }
 
 #insights {
+  flex: 1;
   display: flex;
-  gap: var(--size-2);
+  flex-direction: column;
+  position: relative;
+  min-width: fit-content;
+}
+
+#insights .insights-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--size-1);
+  font-size: var(--font-size-0);
+}
+
+.insight-item {
+  display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.insight-label {
+  font-weight: bold;
+  color: var(--text-2);
+  margin-inline-end: var(--size-1);
+}
+
+.insight-item span:last-child {
+  font-family: var(--font-mono);
+  color: var(--text-1);
+  font-weight: normal;
+}
+
+#insights .help-button {
+  position: absolute;
+  top: var(--size-1);
+  right: var(--size-1);
+  width: var(--size-5);
+  height: var(--size-5);
+  font-size: var(--font-size-0);
 }
 
 .help-button {
@@ -57,7 +92,6 @@ main {
   color: white;
   border: none;
   border-radius: var(--border-size-3);
-  width: var(--size-7);
   height: var(--size-7);
   font-size: var(--font-size-2);
   font-weight: bold;
@@ -66,16 +100,17 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: auto;
 }
 
 .help-button:hover {
-  transform: scale(1.1);
-  box-shadow: var(--shadow-2);
+  filter: brightness(1.5);
 }
 
 #canvasContainer {
   border: var(--border-size-1) solid var(--gray-5);
   max-height: 100%;
+  overflow: hidden;
 }
 
 canvas {
@@ -100,7 +135,7 @@ canvas {
   padding: var(--size-2);
   border: var(--border-size-1) solid var(--gray-5);
   background: var(--surface-2);
-  min-width: 0;
+  min-width: min-content;
 }
 
 .control-box h4 {
@@ -163,6 +198,7 @@ canvas {
   flex-direction: column;
   gap: var(--size-1);
   flex-wrap: wrap;
+  height: 100%;
 }
 
 #noiseControls {
@@ -206,9 +242,10 @@ canvas {
 
 /* Legend selection styling */
 .legend-item-selected {
-  outline: 4px solid orange;
-  outline-offset: 1px;
-  background-color: rgba(255, 165, 0, 0.1);
+  background-color: rgb(from var(--brand) r g b / .2);
+  padding-bottom: var(--size-1);
+  border-bottom: var(--border-size-3) solid var(--brand);
+  font-weight: bold;
 }
 
 .control-item {
@@ -318,6 +355,7 @@ select {
   background: var(--surface-1);
   padding: var(--size-1);
   position: relative;
+  min-width: fit-content;
 }
 
 #octaveControls {
@@ -327,6 +365,7 @@ select {
   left: 0;
   right: 0;
   padding: inherit;
+  min-width: fit-content;
 }
 
 #noiseControls label {

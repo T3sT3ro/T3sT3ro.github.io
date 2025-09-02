@@ -1,308 +1,271 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Tilemap Water Pumping</title>
-    <link rel="stylesheet" href="https://unpkg.com/open-props">
-    <script>
-      // Cache busting for CSS and JS files
-      const cacheBuster = Date.now();
-      document.write(`<link rel="stylesheet" href="styles.css?v=${cacheBuster}">`);
 
-      // Version-based cache busting - increment this when modules change
-      window.moduleVersion = "1.0.2";
-    </script>
-  </head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tilemap Water Pumping</title>
+  <link rel="stylesheet" href="https://unpkg.com/open-props">
+  <script>
+    // Cache busting for CSS and JS files
+    const cacheBuster = Date.now();
+    document.write(`<link rel="stylesheet" href="styles.css?v=${cacheBuster}">`);
 
-  <body>
-    <main>
-      <div id="insights">
-        <div id="zoomIndicator">
-          Zoom: 100%
-        </div>
-        <button id="helpBtn" class="help-button" title="Show controls help">?</button>
-      </div>
+    // Version-based cache busting - increment this when modules change
+    window.moduleVersion = "1.0.2";
+  </script>
+</head>
 
-      <div id="canvasContainer">
-        <canvas id="canvas"></canvas>
-      </div>
-    </main>
-    <div id="controls">
-      <div id="topControls">
-        <div id="buttons" class="control-box">
-          <h4>Actions <span id="tickCounterDisplay">Tick: 0</span></h4>
-          <div class="button-group">
-            <button id="tickBtn">Tick</button>
-            <button id="randomizeBtn">Randomize Heights</button>
-            <button id="clearPumps">Clear Pumps</button>
-            <button id="clearWater">Clear All Water</button>
-            <button id="loadBtn">Load Map</button>
-            <button id="exportBtn">Export Map</button>
-          </div>
-        </div>
-        <div id="noiseControls" class="control-box">
-          <h4>Noise Controls</h4>
-          <div id="noiseControlsContainer">
-            <div id="noiseMainControls">
-              <label>Type:
-                <select id="noiseType">
-                  <option value="perlin">Perlin</option>
-                  <option value="simplex">Simplex</option>
-                  <option value="ridged">Ridged</option>
-                  <option value="billowy">Billowy</option>
-                </select>
-              </label>
-              <label>Base Freq: <input
-                  id="noiseFreq"
-                  type="range"
-                  min="0.005"
-                  max="0.1"
-                  step="0.005"
-                  value="0.02"
-                ><span class="value-display" id="noiseFreqValue">0.02</span></label>
-              <label>Octaves: <input
-                  id="noiseOctaves"
-                  type="range"
-                  min="1"
-                  max="6"
-                  step="1"
-                  value="3"
-                ><span class="value-display" id="noiseOctavesValue">3</span></label>
-              <label>Persistence: <input
-                  id="noisePersistence"
-                  type="range"
-                  min="0.1"
-                  max="0.9"
-                  step="0.1"
-                  value="0.5"
-                ><span class="value-display" id="noisePersistenceValue">0.5</span></label>
-              <label>Lacunarity: <input
-                  id="noiseLacunarity"
-                  type="range"
-                  min="1.5"
-                  max="3.0"
-                  step="0.1"
-                  value="2.0"
-                ><span class="value-display" id="noiseLacunarityValue">2.0</span></label>
-              <label>Gain: <input
-                  id="noiseGain"
-                  type="range"
-                  min="0.5"
-                  max="5.0"
-                  step="0.1"
-                  value="1.0"
-                ><span class="value-display" id="noiseGainValue">1.0</span></label>
-              <label>Offset: <input
-                  id="noiseOffset"
-                  type="range"
-                  min="-2.0"
-                  max="1.0"
-                  step="0.05"
-                  value="0.3"
-                ><span class="value-display" id="noiseOffsetValue">0.3</span></label>
-              <label>Warp Strength: <input
-                  id="noiseWarpStrength"
-                  type="range"
-                  min="0"
-                  max="20"
-                  step="1"
-                  value="0"
-                ><span class="value-display" id="noiseWarpStrengthValue">0</span></label>
-              <label>Warp Iterations: <input
-                  id="noiseWarpIterations"
-                  type="range"
-                  min="1"
-                  max="4"
-                  step="1"
-                  value="1"
-                ><span class="value-display" id="noiseWarpIterationsValue">1</span></label>
-            </div>
-            <div id="octaveControlsContainer">
-              <div id="octaveControls"></div>
-            </div>
-          </div>
+<body>
+  <main>
+    <div id="canvasContainer">
+      <canvas id="canvas"></canvas>
+    </div>
+  </main>
+  <div id="controls">
+    <div id="topControls">
+      <div id="buttons" class="control-box">
+        <h4>Actions <span id="tickCounterDisplay">Tick: 0</span></h4>
+        <div class="button-group">
+          <button id="tickBtn">Tick</button>
+          <button id="randomizeBtn">Randomize Heights</button>
+          <button id="clearPumps">Clear Pumps</button>
+          <button id="clearWater">Clear All Water</button>
+          <button id="loadBtn">Load Map</button>
+          <button id="exportBtn">Export Map</button>
+          <button id="helpBtn" class="help-button" title="Show controls help">?</button>
         </div>
       </div>
-      <div id="bottomControls">
-        <div id="legend" class="control-box">
-          <h4>Legend</h4>
-          <div id="legendItems"></div>
-        </div>
-        <div id="labelControls" class="control-box">
-          <h4>Drawing Labels</h4>
-          <div class="control-item">
-            <label><input type="checkbox" id="showDepthLabels"> Show Depth</label>
-          </div>
-          <div class="control-item">
-            <label><input type="checkbox" id="showPumpLabels" checked> Show Pump IDs</label>
-          </div>
-          <div class="control-item">
-            <label><input type="checkbox" id="showBasinLabels" checked> Show Basin IDs</label>
-          </div>
-        </div>
-      </div>
-      <div id="debugContainer">
-        <div id="basinsDebug" class="control-box">
-          <h4 id="basinsTitle">
-            Basins
-          </h4>
-          <div id="basinsText"></div>
-        </div>
-        <div id="reservoirsDebug" class="control-box">
-          <h4>
-            Pumps
-            <label class="pipe-system-input-label">
-              Select Pipe System: <input
-                type="number"
-                id="reservoirInput"
-                min="1"
-                value="1"
-                placeholder="ID"
-              >
+      <div id="noiseControls" class="control-box">
+        <h4>Noise Controls</h4>
+        <div id="noiseControlsContainer">
+          <div id="noiseMainControls">
+            <label>Type:
+              <select id="noiseType">
+                <option value="perlin">Perlin</option>
+                <option value="simplex">Simplex</option>
+                <option value="ridged">Ridged</option>
+                <option value="billowy">Billowy</option>
+              </select>
             </label>
-          </h4>
-          <div id="reservoirsText"></div>
+            <label>Base Freq: <input id="noiseFreq" type="range" min="0.005" max="0.1" step="0.005" value="0.02"><span
+                class="value-display" id="noiseFreqValue">0.02</span></label>
+            <label>Octaves: <input id="noiseOctaves" type="range" min="1" max="6" step="1" value="3"><span
+                class="value-display" id="noiseOctavesValue">3</span></label>
+            <label>Persistence: <input id="noisePersistence" type="range" min="0.1" max="0.9" step="0.1"
+                value="0.5"><span class="value-display" id="noisePersistenceValue">0.5</span></label>
+            <label>Lacunarity: <input id="noiseLacunarity" type="range" min="1.5" max="3.0" step="0.1" value="2.0"><span
+                class="value-display" id="noiseLacunarityValue">2.0</span></label>
+            <label>Gain: <input id="noiseGain" type="range" min="0.5" max="5.0" step="0.1" value="1.0"><span
+                class="value-display" id="noiseGainValue">1.0</span></label>
+            <label>Offset: <input id="noiseOffset" type="range" min="-2.0" max="1.0" step="0.05" value="0.3"><span
+                class="value-display" id="noiseOffsetValue">0.3</span></label>
+            <label>Warp Strength: <input id="noiseWarpStrength" type="range" min="0" max="20" step="1" value="0"><span
+                class="value-display" id="noiseWarpStrengthValue">0</span></label>
+            <label>Warp Iterations: <input id="noiseWarpIterations" type="range" min="1" max="4" step="1"
+                value="1"><span class="value-display" id="noiseWarpIterationsValue">1</span></label>
+          </div>
+          <div id="octaveControlsContainer">
+            <div id="octaveControls"></div>
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- Modal dialogs -->
-    <dialog id="loadModal" class="save-load-modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Load Map</h3>
-          <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
+    <div id="bottomControls">
+      <div id="legend" class="control-box">
+        <h4>Legend</h4>
+        <div id="legendItems"></div>
+      </div>
+      <div id="labelControls" class="control-box">
+        <h4>Drawing Labels</h4>
+        <div class="control-item">
+          <label><input type="checkbox" id="showDepthLabels"> Show Depth</label>
         </div>
-        <div class="modal-body">
-          <div class="load-options">
-            <div class="load-option">
-              <h4>From Browser Storage</h4>
-              <div id="savedMaps" class="saved-maps-list">
-                <p class="no-saves">No saved maps found</p>
-              </div>
+        <div class="control-item">
+          <label><input type="checkbox" id="showPumpLabels" checked> Show Pump IDs</label>
+        </div>
+        <div class="control-item">
+          <label><input type="checkbox" id="showBasinLabels" checked> Show Basin IDs</label>
+        </div>
+      </div>
+      <div id="insights" class="control-box">
+        <h4>Map Status</h4>
+        <div class="insights-grid">
+          <div class="insight-item">
+            <span class="insight-label">Zoom:</span>
+            <span id="zoomValue">100%</span>
+          </div>
+          <div class="insight-item">
+            <span class="insight-label">Brush:</span>
+            <span id="brushValue">3</span>
+          </div>
+          <div class="insight-item">
+            <span class="insight-label">Tile:</span>
+            <span id="tileInfo">--</span>
+          </div>
+          <div class="insight-item">
+            <span class="insight-label">Basin:</span>
+            <span id="basinInfo">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="debugContainer">
+      <div id="basinsDebug" class="control-box">
+        <h4 id="basinsTitle">
+          Basins
+        </h4>
+        <div id="basinsText"></div>
+      </div>
+      <div id="reservoirsDebug" class="control-box">
+        <h4>
+          Pumps
+          <label class="pipe-system-input-label">
+            Select Pipe System: <input type="number" id="reservoirInput" min="1" value="1" placeholder="ID">
+          </label>
+        </h4>
+        <div id="reservoirsText"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal dialogs -->
+  <dialog id="loadModal" class="save-load-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Load Map</h3>
+        <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="load-options">
+          <div class="load-option">
+            <h4>From Browser Storage</h4>
+            <div id="savedMaps" class="saved-maps-list">
+              <p class="no-saves">No saved maps found</p>
             </div>
-            <div class="load-option">
-              <h4>From JSON</h4>
-              <div class="json-input-methods">
-                <div class="input-method">
-                  <label for="jsonFileInput">Upload JSON file:</label>
-                  <input type="file" id="jsonFileInput" accept=".json" />
-                </div>
-                <div class="input-method">
-                  <label for="jsonTextInput">Paste JSON data:</label>
-                  <textarea id="jsonTextInput" placeholder="Paste your map JSON data here..." rows="8"></textarea>
-                  <button type="button" id="loadFromTextBtn">Load from Text</button>
-                </div>
+          </div>
+          <div class="load-option">
+            <h4>From JSON</h4>
+            <div class="json-input-methods">
+              <div class="input-method">
+                <label for="jsonFileInput">Upload JSON file:</label>
+                <input type="file" id="jsonFileInput" accept=".json" />
+              </div>
+              <div class="input-method">
+                <label for="jsonTextInput">Paste JSON data:</label>
+                <textarea id="jsonTextInput" placeholder="Paste your map JSON data here..." rows="8"></textarea>
+                <button type="button" id="loadFromTextBtn">Load from Text</button>
               </div>
             </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
-        </div>
       </div>
-    </dialog>
+      <div class="modal-footer">
+        <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+      </div>
+    </div>
+  </dialog>
 
-    <dialog id="exportModal" class="save-load-modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Export/Save Map</h3>
-          <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="export-options">
-            <div class="export-option">
-              <h4>Save to Browser Storage</h4>
-              <div class="save-to-browser">
-                <input type="text" id="saveNameInput" placeholder="Enter save name..." />
-                <button type="button" id="saveToBrowserBtn">Save</button>
+  <dialog id="exportModal" class="save-load-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Export/Save Map</h3>
+        <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="export-options">
+          <div class="export-option">
+            <h4>Save to Browser Storage</h4>
+            <div class="save-to-browser">
+              <input type="text" id="saveNameInput" placeholder="Enter save name..." />
+              <button type="button" id="saveToBrowserBtn">Save</button>
+            </div>
+          </div>
+          <div class="export-option">
+            <h4>Export as JSON</h4>
+            <div class="encoding-options">
+              <div class="encoding-section">
+                <label for="heightEncoding">Height Data Encoding:</label>
+                <select id="heightEncoding">
+                  <option value="2d_array">2D Array (Readable)</option>
+                  <option value="rle">Run-Length Encoding</option>
+                  <option value="base64_packed">Base64 Packed</option>
+                </select>
+                <span class="size-info" id="heightSizeInfo">calculating...</span>
+              </div>
+              <div class="encoding-section">
+                <label for="basinEncoding">Basin Data Encoding:</label>
+                <select id="basinEncoding">
+                  <option value="string_rows">String Rows (Readable)</option>
+                  <option value="rle_basin_ids">Run-Length Encoding</option>
+                </select>
+                <span class="size-info" id="basinSizeInfo">calculating...</span>
+              </div>
+              <div class="total-size-section">
+                <strong>Total JSON Size: <span id="totalSizeInfo">calculating...</span></strong>
               </div>
             </div>
-            <div class="export-option">
-              <h4>Export as JSON</h4>
-              <div class="encoding-options">
-                <div class="encoding-section">
-                  <label for="heightEncoding">Height Data Encoding:</label>
-                  <select id="heightEncoding">
-                    <option value="2d_array">2D Array (Readable)</option>
-                    <option value="rle">Run-Length Encoding</option>
-                    <option value="base64_packed">Base64 Packed</option>
-                  </select>
-                  <span class="size-info" id="heightSizeInfo">calculating...</span>
-                </div>
-                <div class="encoding-section">
-                  <label for="basinEncoding">Basin Data Encoding:</label>
-                  <select id="basinEncoding">
-                    <option value="string_rows">String Rows (Readable)</option>
-                    <option value="rle_basin_ids">Run-Length Encoding</option>
-                  </select>
-                  <span class="size-info" id="basinSizeInfo">calculating...</span>
-                </div>
-                <div class="total-size-section">
-                  <strong>Total JSON Size: <span id="totalSizeInfo">calculating...</span></strong>
-                </div>
-              </div>
-              <textarea id="exportJsonOutput" readonly rows="12"></textarea>
-              <div class="export-actions">
-                <button type="button" id="copyJsonBtn">Copy to Clipboard</button>
-                <button type="button" id="downloadJsonBtn">Download File</button>
-              </div>
+            <textarea id="exportJsonOutput" readonly rows="12"></textarea>
+            <div class="export-actions">
+              <button type="button" id="copyJsonBtn">Copy to Clipboard</button>
+              <button type="button" id="downloadJsonBtn">Download File</button>
             </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" onclick="this.closest('dialog').close()">Close</button>
-        </div>
       </div>
-    </dialog>
+      <div class="modal-footer">
+        <button type="button" onclick="this.closest('dialog').close()">Close</button>
+      </div>
+    </div>
+  </dialog>
 
-    <dialog id="helpModal" class="help-modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Controls Help</h3>
-          <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="help-sections">
-            <div class="help-section">
-              <h4>Terrain Painting</h4>
-              <div class="control-item"><code>0-9</code> Select depth level</div>
-              <div class="control-item"><code>LMB drag</code> Paint terrain with selected depth</div>
-              <div class="control-item"><code>ALT + Mouse wheel</code> Change selected depth</div>
-              <div class="control-item"><code>ALT + RMB</code> Pipette tool (pick depth)</div>
-              <div class="control-item"><code>SHIFT + Mouse wheel</code> Change brush size (1-8)</div>
-            </div>
+  <dialog id="helpModal" class="help-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Controls Help</h3>
+        <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="help-sections">
+          <div class="help-section">
+            <h4>Terrain Painting</h4>
+            <div class="control-item"><code>0-9</code> Select depth level</div>
+            <div class="control-item"><code>LMB drag</code> Paint terrain with selected depth</div>
+            <div class="control-item"><code>ALT + Mouse wheel</code> Change selected depth</div>
+            <div class="control-item"><code>ALT + RMB</code> Pipette tool (pick depth)</div>
+            <div class="control-item"><code>SHIFT + Mouse wheel</code> Change brush size (1-8)</div>
+          </div>
 
-            <div class="help-section">
-              <h4>Pumps & Water</h4>
-              <div class="control-item"><code>SHIFT + LMB</code> Add outlet pump</div>
-              <div class="control-item"><code>SHIFT + RMB</code> Add inlet pump</div>
-              <div class="control-item"><code>SHIFT + CTRL + LMB</code> Link pump to pipe system</div>
-              <div class="control-item"><code>CTRL + LMB</code> Flood fill</div>
-              <div class="control-item"><code>CTRL + RMB</code> Flood empty</div>
-            </div>
+          <div class="help-section">
+            <h4>Pumps & Water</h4>
+            <div class="control-item"><code>SHIFT + LMB</code> Add outlet pump</div>
+            <div class="control-item"><code>SHIFT + RMB</code> Add inlet pump</div>
+            <div class="control-item"><code>SHIFT + CTRL + LMB</code> Link pump to pipe system</div>
+            <div class="control-item"><code>CTRL + LMB</code> Flood fill</div>
+            <div class="control-item"><code>CTRL + RMB</code> Flood empty</div>
+          </div>
 
-            <div class="help-section">
-              <h4>Navigation</h4>
-              <div class="control-item"><code>MMB drag</code> Pan view</div>
-              <div class="control-item"><code>Mouse wheel</code> Zoom in/out</div>
-            </div>
+          <div class="help-section">
+            <h4>Navigation</h4>
+            <div class="control-item"><code>MMB drag</code> Pan view</div>
+            <div class="control-item"><code>Mouse wheel</code> Zoom in/out</div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" onclick="this.closest('dialog').close()">Close</button>
-        </div>
       </div>
-    </dialog>
+      <div class="modal-footer">
+        <button type="button" onclick="this.closest('dialog').close()">Close</button>
+      </div>
+    </div>
+  </dialog>
 
-    <script>
-      // Cache busting for main JS file using version
-      const version = window.moduleVersion || Date.now();
-      const script = document.createElement("script");
-      script.type = "module";
-      script.src = `app.js?v=${version}`;
-      document.head.appendChild(script);
-    </script>
-  </body>
+  <script>
+    // Cache busting for main JS file using version
+    const version = window.moduleVersion || Date.now();
+    const script = document.createElement("script");
+    script.type = "module";
+    script.src = `app.js?v=${version}`;
+    document.head.appendChild(script);
+  </script>
+</body>
+
 </html>

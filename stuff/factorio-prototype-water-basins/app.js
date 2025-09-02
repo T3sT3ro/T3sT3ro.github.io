@@ -139,8 +139,8 @@ class TilemapWaterPumpingApp {
     // Update reservoir controls
     this.updateReservoirControls();
 
-    // Update zoom indicator
-    this.updateZoomIndicator();
+    // Update insights display
+    this.updateInsightsDisplay();
 
     // Initial render
     this.draw();
@@ -525,7 +525,7 @@ class TilemapWaterPumpingApp {
         }
 
         const tileInfo = this.getTileInfo(tileX, tileY);
-        this.updateZoomIndicator(tileInfo);
+        this.updateInsightsDisplay(tileInfo);
         this.draw();
       }
     });
@@ -555,7 +555,7 @@ class TilemapWaterPumpingApp {
       }
       this.brushCenter = null;
       // Reset to just zoom info when mouse leaves canvas
-      this.updateZoomIndicator();
+      this.updateInsightsDisplay();
       this.draw();
     });
 
@@ -575,6 +575,7 @@ class TilemapWaterPumpingApp {
           Math.min(this.UI_CONSTANTS.BRUSH.MAX_SIZE, this.brushSize + delta),
         );
         console.log(`Brush size: ${this.brushSize}`);
+        this.updateInsightsDisplay();
         this.draw();
       } else if (e.altKey) {
         // ALT + Wheel - change selected depth
@@ -584,7 +585,7 @@ class TilemapWaterPumpingApp {
         // Normal zoom
         const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
         this.renderer.zoomAt(screenX, screenY, zoomFactor);
-        this.updateZoomIndicator();
+        this.updateInsightsDisplay();
         this.draw();
       }
     });
@@ -594,33 +595,54 @@ class TilemapWaterPumpingApp {
     });
   }
 
-  updateZoomIndicator(tileInfo = null) {
-    const zoomIndicator = document.getElementById("zoomIndicator");
-    if (zoomIndicator) {
+  updateInsightsDisplay(tileInfo = null) {
+    // Update zoom value
+    const zoomValue = document.getElementById("zoomValue");
+    if (zoomValue) {
       const zoomPercentage = Math.round(this.renderer.camera.zoom * 100);
-      let displayText =
-        `Zoom: ${zoomPercentage}% | Brush: ${this.brushSize} | Depth: ${this.selectedDepth}`;
+      zoomValue.textContent = `${zoomPercentage}%`;
+    }
 
+    // Update brush size
+    const brushValue = document.getElementById("brushValue");
+    if (brushValue) {
+      brushValue.textContent = this.brushSize;
+    }
+
+    // Update tile info
+    const tileInfoEl = document.getElementById("tileInfo");
+    if (tileInfoEl) {
       if (tileInfo) {
-        const { x, y, depth, basinId, pumpInfo } = tileInfo;
-        displayText += ` | Tile: (${x}, ${y})`;
-
+        const { x, y, depth } = tileInfo;
         if (depth === 0) {
-          displayText += ` Land`;
+          tileInfoEl.textContent = `(${x},${y}) Land`;
         } else {
-          displayText += ` D${depth}`;
+          tileInfoEl.textContent = `(${x},${y}) D${depth}`;
         }
-
-        if (basinId) {
-          displayText += ` Basin: ${basinId}`;
-        }
-
-        if (pumpInfo) {
-          displayText += ` | ${pumpInfo.mode} Pump PS${pumpInfo.reservoirId || "?"}`;
-        }
+      } else {
+        tileInfoEl.textContent = "--";
       }
+    }
 
-      zoomIndicator.textContent = displayText;
+    // Update basin info
+    const basinInfoEl = document.getElementById("basinInfo");
+    if (basinInfoEl) {
+      if (tileInfo && tileInfo.basinId) {
+        const basinManager = this.gameState.getBasinManager();
+        const basin = basinManager.basins.get(tileInfo.basinId);
+        if (basin) {
+          const maxCapacity = basin.tiles.size * this.CONFIG.VOLUME_UNIT * this.CONFIG.MAX_DEPTH;
+          const currentVolume = Math.floor(basin.volume);
+          basinInfoEl.textContent = `${tileInfo.basinId} ${currentVolume}/${maxCapacity}`;
+        } else {
+          basinInfoEl.textContent = tileInfo.basinId;
+        }
+      } else if (tileInfo && tileInfo.pumpInfo) {
+        const { mode, reservoirId } = tileInfo.pumpInfo;
+        basinInfoEl.textContent = `${mode} PS${reservoirId || "?"}`;
+      } else {
+        basinInfoEl.textContent = "--";
+      }
     }
   }
 
