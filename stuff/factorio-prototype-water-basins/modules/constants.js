@@ -31,6 +31,98 @@ export const UI_CONSTANTS = {
     },
   },
 
+  // Rendering constants
+  RENDERING: {
+    // Camera and zoom settings
+    CAMERA: {
+      MIN_ZOOM: 0.25,
+      MAX_ZOOM: 4,
+      INITIAL_ZOOM: 1,
+      INITIAL_X: 0,
+      INITIAL_Y: 0,
+    },
+
+    // Terrain colors
+    COLORS: {
+      TERRAIN: {
+        SURFACE: "rgb(139, 69, 19)", // Brown for surface (depth 0)
+        DEPTH_LIGHT_GRAY: 220, // Light gray value for shallow water
+        DEPTH_DARK_GRAY: 40,   // Dark gray value for deep water  
+        DEPTH_GRAY_RANGE: 180, // Range between light and dark gray
+      },
+      
+      WATER: {
+        BASE_COLOR: "50,120,200", // RGB values for water (used in rgba)
+        MIN_ALPHA: 0.12,
+        ALPHA_PER_LEVEL: 0.06,
+        MAX_ALPHA: 0.7,
+      },
+
+      INFRASTRUCTURE: {
+        CHUNK_BOUNDARIES: "rgba(255,0,0,0.2)",
+        PUMP_CONNECTIONS: "red",
+      },
+
+      PUMPS: {
+        INLET: "rgba(200, 0, 0, 0.7)",     // Red for inlet pumps
+        OUTLET: "rgba(0, 255, 0, 0.7)",   // Green for outlet pumps  
+        SELECTED_HIGHLIGHT: "rgba(255, 255, 0, 0.5)", // Yellow highlight for selected reservoir
+        
+        // Solid colors for labels
+        INLET_LABEL: "red",
+        OUTLET_LABEL: "green",
+      },
+
+      BASIN_HIGHLIGHT: {
+        FILL: "rgba(255, 255, 0, 0.5)",   // Yellow fill for highlighted basins
+        STROKE: "orange",                 // Orange outline for highlighted basins
+      },
+
+      LABELS: {
+        TEXT_LIGHT_BG: "black",    // Text color on light backgrounds
+        TEXT_DARK_BG: "white",     // Text color on dark backgrounds
+        STROKE_LIGHT_BG: "white",  // Text stroke on light backgrounds
+        STROKE_DARK_BG: "black",   // Text stroke on dark backgrounds
+        GRAY_THRESHOLD: 130,       // Threshold for switching text colors
+      },
+    },
+
+    // Scaling and sizing
+    SCALING: {
+      FONT: {
+        BASE_SIZE: 10,
+        MIN_SIZE: 8,
+        MAX_SIZE: 16,
+        SCALE_THRESHOLD_MIN: 0.5, // Below this zoom, scale font
+        SCALE_THRESHOLD_MAX: 2,   // Above this zoom, cap font size
+      },
+      
+      LINE_WIDTH: {
+        BASE_WIDTH: 1,
+        MIN_WIDTH: 0.5,
+        SCALE_THRESHOLD: 0.5, // Below this zoom, scale line width
+        PUMP_BASE_WIDTH: 2,
+        HIGHLIGHT_BASE_WIDTH: 3,
+        LABEL_STROKE_MULTIPLIER: 2, // Multiplier for label stroke width
+      },
+
+      PUMP: {
+        RADIUS_MULTIPLIER: 1,    // Multiplier for pump circle radius (times TILE_SIZE)
+        HIGHLIGHT_RADIUS_MULTIPLIER: 1.8, // Multiplier for highlighted pump radius
+        LABEL_Y_OFFSET_MULTIPLIER: -2,    // Y offset for pump labels (times TILE_SIZE)
+      },
+    },
+
+    // Line patterns
+    PATTERNS: {
+      PUMP_CONNECTIONS: {
+        DASH_NORMAL: [5, 3],  // Dash pattern for normal zoom
+        DASH_ZOOMED_OUT: [10, 6], // Dash pattern for zoomed out view
+        DASH_THRESHOLD: 0.5,  // Zoom threshold for switching patterns
+      },
+    },
+  },
+
   // Control mappings for display
   CONTROLS: {
     PAINTING: [
@@ -79,34 +171,3 @@ export const CSS_CLASSES = {
   CONTROL_BOX: "control-box",
 };
 
-// Utility function to generate control list HTML
-export function generateControlsHTML() {
-  let html = "";
-
-  // Add terrain painting controls
-  html += "<h4>Terrain Painting</h4>";
-  UI_CONSTANTS.CONTROLS.PAINTING.forEach((control) => {
-    html +=
-      `<div class="${CSS_CLASSES.CONTROL_ITEM}"><code>${control.keys}</code> ${control.action}</div>`;
-  });
-
-  // Add pump controls
-  html += "<h4>Pumps & Water</h4>";
-  UI_CONSTANTS.CONTROLS.PUMPS.forEach((control) => {
-    html +=
-      `<div class="${CSS_CLASSES.CONTROL_ITEM}"><code>${control.keys}</code> ${control.action}</div>`;
-  });
-  UI_CONSTANTS.CONTROLS.TERRAIN.forEach((control) => {
-    html +=
-      `<div class="${CSS_CLASSES.CONTROL_ITEM}"><code>${control.keys}</code> ${control.action}</div>`;
-  });
-
-  // Add navigation controls
-  html += "<h4>Navigation</h4>";
-  UI_CONSTANTS.CONTROLS.NAVIGATION.forEach((control) => {
-    html +=
-      `<div class="${CSS_CLASSES.CONTROL_ITEM}"><code>${control.keys}</code> ${control.action}</div>`;
-  });
-
-  return html;
-}

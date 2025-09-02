@@ -7,11 +7,13 @@ import { CSS_CLASSES, UI_CONSTANTS } from "./constants.js";
 export function getHeightColor(depth) {
   // Only depth 0 = surface (brown), all others = gray
   if (depth === 0) {
-    return "rgb(139, 69, 19)"; // Brown for surface only
+    return UI_CONSTANTS.RENDERING.COLORS.TERRAIN.SURFACE;
   } else {
     // Gray gradient for all depths > 0
     const ratio = depth / CONFIG.MAX_DEPTH;
-    const v = Math.floor(220 - ratio * 180); // 220 (light gray) -> 40 (dark gray)
+    const lightGray = UI_CONSTANTS.RENDERING.COLORS.TERRAIN.DEPTH_LIGHT_GRAY;
+    const range = UI_CONSTANTS.RENDERING.COLORS.TERRAIN.DEPTH_GRAY_RANGE;
+    const v = Math.floor(lightGray - ratio * range);
     return `rgb(${v},${v},${v})`;
   }
 }
@@ -24,11 +26,11 @@ export class Renderer {
 
     // Camera/viewport system for pan and zoom
     this.camera = {
-      x: 0,
-      y: 0,
-      zoom: 1,
-      minZoom: 0.25,
-      maxZoom: 4,
+      x: UI_CONSTANTS.RENDERING.CAMERA.INITIAL_X,
+      y: UI_CONSTANTS.RENDERING.CAMERA.INITIAL_Y,
+      zoom: UI_CONSTANTS.RENDERING.CAMERA.INITIAL_ZOOM,
+      minZoom: UI_CONSTANTS.RENDERING.CAMERA.MIN_ZOOM,
+      maxZoom: UI_CONSTANTS.RENDERING.CAMERA.MAX_ZOOM,
     };
 
     // Initialize off-screen canvases for layered rendering
@@ -190,8 +192,8 @@ export class Renderer {
 
     // Draw chunk boundaries
     if (showChunkBoundaries) {
-      this.infrastructureCtx.strokeStyle = "rgba(255,0,0,0.5)";
-      this.infrastructureCtx.lineWidth = this.getScaledLineWidth(1);
+      this.infrastructureCtx.strokeStyle = UI_CONSTANTS.RENDERING.COLORS.INFRASTRUCTURE.CHUNK_BOUNDARIES;
+      this.infrastructureCtx.lineWidth = this.getScaledLineWidth(UI_CONSTANTS.RENDERING.SCALING.LINE_WIDTH.BASE_WIDTH);
 
       // Vertical lines
       for (let cx = 0; cx <= CONFIG.WORLD_W; cx += CONFIG.CHUNK_SIZE) {
@@ -211,12 +213,14 @@ export class Renderer {
     }
 
     // Draw pump connections
-    const scaledLineWidth = this.getScaledLineWidth(2);
-    const dashPattern = this.camera.zoom < 0.5 ? [10, 6] : [5, 3];
+    const scaledLineWidth = this.getScaledLineWidth(UI_CONSTANTS.RENDERING.SCALING.LINE_WIDTH.PUMP_BASE_WIDTH);
+    const dashPattern = this.camera.zoom < UI_CONSTANTS.RENDERING.PATTERNS.PUMP_CONNECTIONS.DASH_THRESHOLD 
+      ? UI_CONSTANTS.RENDERING.PATTERNS.PUMP_CONNECTIONS.DASH_ZOOMED_OUT 
+      : UI_CONSTANTS.RENDERING.PATTERNS.PUMP_CONNECTIONS.DASH_NORMAL;
 
     pumpsByReservoir.forEach((pumpsInReservoir, _reservoirId) => {
       if (pumpsInReservoir.length > 1) {
-        this.infrastructureCtx.strokeStyle = "red";
+        this.infrastructureCtx.strokeStyle = UI_CONSTANTS.RENDERING.COLORS.INFRASTRUCTURE.PUMP_CONNECTIONS;
         this.infrastructureCtx.lineWidth = scaledLineWidth;
         this.infrastructureCtx.setLineDash(dashPattern);
 
@@ -243,20 +247,24 @@ export class Renderer {
   }
 
   // Get appropriate font size based on zoom level to keep text readable
-  getScaledFontSize(baseFontSize = 10) {
+  getScaledFontSize(baseFontSize = UI_CONSTANTS.RENDERING.SCALING.FONT.BASE_SIZE) {
+    const { MIN_SIZE, MAX_SIZE, SCALE_THRESHOLD_MIN, SCALE_THRESHOLD_MAX } = UI_CONSTANTS.RENDERING.SCALING.FONT;
+    
     // Simplified scaling - only scale at extreme zoom levels
-    if (this.camera.zoom < 0.5) {
-      return Math.max(8, baseFontSize / this.camera.zoom);
-    } else if (this.camera.zoom > 2) {
-      return Math.min(16, baseFontSize);
+    if (this.camera.zoom < SCALE_THRESHOLD_MIN) {
+      return Math.max(MIN_SIZE, baseFontSize / this.camera.zoom);
+    } else if (this.camera.zoom > SCALE_THRESHOLD_MAX) {
+      return Math.min(MAX_SIZE, baseFontSize);
     }
     return baseFontSize;
   }
 
   // Get scaled line width for better visibility at different zoom levels
-  getScaledLineWidth(baseWidth = 1) {
+  getScaledLineWidth(baseWidth = UI_CONSTANTS.RENDERING.SCALING.LINE_WIDTH.BASE_WIDTH) {
+    const { MIN_WIDTH, SCALE_THRESHOLD } = UI_CONSTANTS.RENDERING.SCALING.LINE_WIDTH;
+    
     // Only scale line width at very low zoom levels
-    return this.camera.zoom < 0.5 ? Math.max(0.5, baseWidth / this.camera.zoom) : baseWidth;
+    return this.camera.zoom < SCALE_THRESHOLD ? Math.max(MIN_WIDTH, baseWidth / this.camera.zoom) : baseWidth;
   }
 
   renderWaterLayer(basins) {
@@ -266,8 +274,10 @@ export class Renderer {
 
     for (const [_id, basin] of basins) {
       if (basin.level <= 0) continue;
-      const alpha = Math.min(0.7, 0.12 + basin.level * 0.06);
-      this.waterCtx.fillStyle = `rgba(50,120,200,${alpha})`;
+      
+      const { BASE_COLOR, MIN_ALPHA, ALPHA_PER_LEVEL, MAX_ALPHA } = UI_CONSTANTS.RENDERING.COLORS.WATER;
+      const alpha = Math.min(MAX_ALPHA, MIN_ALPHA + basin.level * ALPHA_PER_LEVEL);
+      this.waterCtx.fillStyle = `rgba(${BASE_COLOR},${alpha})`;
 
       basin.tiles.forEach((tileKey) => {
         const [tx, ty] = tileKey.split(",").map(Number);
@@ -292,7 +302,9 @@ export class Renderer {
     this.clearLayer(this.interactiveCtx);
 
     // Draw pumps
-    const scaledLineWidth = this.getScaledLineWidth(2);
+    const scaledLineWidth = this.getScaledLineWidth(UI_CONSTANTS.RENDERING.SCALING.LINE_WIDTH.PUMP_BASE_WIDTH);
+    const pumpRadius = CONFIG.TILE_SIZE * UI_CONSTANTS.RENDERING.SCALING.PUMP.RADIUS_MULTIPLIER;
+    const highlightRadius = CONFIG.TILE_SIZE * UI_CONSTANTS.RENDERING.SCALING.PUMP.HIGHLIGHT_RADIUS_MULTIPLIER;
 
     for (const pump of pumps) {
       const cx = pump.x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
@@ -301,17 +313,17 @@ export class Renderer {
       // Highlight pumps in selected reservoir with a thicker circle
       if (selectedReservoirId && pump.reservoirId === selectedReservoirId) {
         this.interactiveCtx.beginPath();
-        this.interactiveCtx.arc(cx, cy, CONFIG.TILE_SIZE * 1.8, 0, Math.PI * 2);
-        this.interactiveCtx.strokeStyle = "rgba(255, 255, 0, 0.5)"; // Yellow highlight
+        this.interactiveCtx.arc(cx, cy, highlightRadius, 0, Math.PI * 2);
+        this.interactiveCtx.strokeStyle = UI_CONSTANTS.RENDERING.COLORS.PUMPS.SELECTED_HIGHLIGHT;
         this.interactiveCtx.lineWidth = scaledLineWidth + 1;
         this.interactiveCtx.stroke();
       }
 
       this.interactiveCtx.beginPath();
-      this.interactiveCtx.arc(cx, cy, CONFIG.TILE_SIZE * 1, 0, Math.PI * 2);
+      this.interactiveCtx.arc(cx, cy, pumpRadius, 0, Math.PI * 2);
       this.interactiveCtx.strokeStyle = (pump.mode === "inlet")
-        ? "rgba(200, 0, 0, 0.7)"
-        : "rgba(0, 255, 0, 0.7)";
+        ? UI_CONSTANTS.RENDERING.COLORS.PUMPS.INLET
+        : UI_CONSTANTS.RENDERING.COLORS.PUMPS.OUTLET;
       this.interactiveCtx.lineWidth = scaledLineWidth;
       this.interactiveCtx.stroke();
     }
@@ -350,9 +362,9 @@ export class Renderer {
       // Use optimized tile lookup from basin data instead of scanning all world tiles
       const basin = basinManager.basins.get(highlightedBasin);
       if (basin) {
-        this.highlightCtx.fillStyle = "rgba(255, 255, 0, 0.5)";
-        this.highlightCtx.strokeStyle = "orange";
-        this.highlightCtx.lineWidth = this.getScaledLineWidth(3);
+        this.highlightCtx.fillStyle = UI_CONSTANTS.RENDERING.COLORS.BASIN_HIGHLIGHT.FILL;
+        this.highlightCtx.strokeStyle = UI_CONSTANTS.RENDERING.COLORS.BASIN_HIGHLIGHT.STROKE;
+        this.highlightCtx.lineWidth = this.getScaledLineWidth(UI_CONSTANTS.RENDERING.SCALING.LINE_WIDTH.HIGHLIGHT_BASE_WIDTH);
 
         // Draw highlight for each tile in the basin
         basin.tiles.forEach((tileKey) => {
@@ -381,13 +393,17 @@ export class Renderer {
           const labelY = y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
 
           // Choose text color based on background
-          const grayValue = Math.floor(220 - (depth / CONFIG.MAX_DEPTH) * 180);
-          if (grayValue > 130) {
-            ctx.strokeStyle = "white";
-            ctx.fillStyle = "black";
+          const lightGray = UI_CONSTANTS.RENDERING.COLORS.TERRAIN.DEPTH_LIGHT_GRAY;
+          const range = UI_CONSTANTS.RENDERING.COLORS.TERRAIN.DEPTH_GRAY_RANGE;
+          const grayValue = Math.floor(lightGray - (depth / CONFIG.MAX_DEPTH) * range);
+          const threshold = UI_CONSTANTS.RENDERING.COLORS.LABELS.GRAY_THRESHOLD;
+          
+          if (grayValue > threshold) {
+            ctx.strokeStyle = UI_CONSTANTS.RENDERING.COLORS.LABELS.STROKE_LIGHT_BG;
+            ctx.fillStyle = UI_CONSTANTS.RENDERING.COLORS.LABELS.TEXT_LIGHT_BG;
           } else {
-            ctx.strokeStyle = "black";
-            ctx.fillStyle = "white";
+            ctx.strokeStyle = UI_CONSTANTS.RENDERING.COLORS.LABELS.STROKE_DARK_BG;
+            ctx.fillStyle = UI_CONSTANTS.RENDERING.COLORS.LABELS.TEXT_DARK_BG;
           }
 
           ctx.lineWidth = 1;
@@ -401,7 +417,9 @@ export class Renderer {
   drawPumpLabelsToContext(ctx, pumps) {
     const fontSize = this.getScaledFontSize();
     ctx.font = `${fontSize}px Arial`;
-    const scaledLineWidth = this.getScaledLineWidth(1);
+    const scaledLineWidth = this.getScaledLineWidth(UI_CONSTANTS.RENDERING.SCALING.LINE_WIDTH.BASE_WIDTH);
+    const strokeMultiplier = UI_CONSTANTS.RENDERING.SCALING.LINE_WIDTH.LABEL_STROKE_MULTIPLIER;
+    const labelYOffset = CONFIG.TILE_SIZE * UI_CONSTANTS.RENDERING.SCALING.PUMP.LABEL_Y_OFFSET_MULTIPLIER;
 
     // Group pumps by reservoir to get proper pump indices per reservoir
     const pumpsByReservoir = new Map();
@@ -416,14 +434,16 @@ export class Renderer {
     pumpsByReservoir.forEach((reservoirPumps, _reservoirId) => {
       reservoirPumps.forEach((pump, reservoirPumpIndex) => {
         const labelX = pump.x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
-        const labelY = pump.y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2 - CONFIG.TILE_SIZE * 2;
+        const labelY = pump.y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2 + labelYOffset;
 
         const pumpText = `P${pump.reservoirId || "?"}.${reservoirPumpIndex + 1}`;
 
-        ctx.strokeStyle = "white";
-        ctx.fillStyle = (pump.mode === "inlet") ? "green" : "red";
+        ctx.strokeStyle = UI_CONSTANTS.RENDERING.COLORS.LABELS.STROKE_LIGHT_BG;
+        ctx.fillStyle = (pump.mode === "inlet") 
+          ? UI_CONSTANTS.RENDERING.COLORS.PUMPS.INLET_LABEL
+          : UI_CONSTANTS.RENDERING.COLORS.PUMPS.OUTLET_LABEL;
 
-        ctx.lineWidth = scaledLineWidth * 2;
+        ctx.lineWidth = scaledLineWidth * strokeMultiplier;
         ctx.strokeText(pumpText, labelX, labelY);
         ctx.lineWidth = scaledLineWidth;
         ctx.fillText(pumpText, labelX, labelY);
