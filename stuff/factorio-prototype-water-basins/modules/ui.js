@@ -1,6 +1,7 @@
 // UI controls and event handling
 
 import { CONFIG } from "./config.js";
+import { UI_CONSTANTS, CSS_CLASSES } from "./constants.js";
 
 export class UISettings {
   constructor() {
@@ -277,11 +278,15 @@ export class NoiseControlUI {
     }
     if (persistenceEl) {
       persistenceEl.value = this.noiseSettings.persistence;
-      if (persistenceValueEl) persistenceValueEl.textContent = this.noiseSettings.persistence.toFixed(2);
+      if (persistenceValueEl) {
+        persistenceValueEl.textContent = this.noiseSettings.persistence.toFixed(2);
+      }
     }
     if (lacunarityEl) {
       lacunarityEl.value = this.noiseSettings.lacunarity;
-      if (lacunarityValueEl) lacunarityValueEl.textContent = this.noiseSettings.lacunarity.toFixed(2);
+      if (lacunarityValueEl) {
+        lacunarityValueEl.textContent = this.noiseSettings.lacunarity.toFixed(2);
+      }
     }
     if (offsetEl) {
       offsetEl.value = this.noiseSettings.offset;
@@ -300,7 +305,9 @@ export class NoiseControlUI {
     }
     if (warpIterationsEl) {
       warpIterationsEl.value = this.noiseSettings.warpIterations;
-      if (warpIterationsValueEl) warpIterationsValueEl.textContent = this.noiseSettings.warpIterations;
+      if (warpIterationsValueEl) {
+        warpIterationsValueEl.textContent = this.noiseSettings.warpIterations;
+      }
     }
 
     // Update octave controls
@@ -309,10 +316,17 @@ export class NoiseControlUI {
 }
 
 export class DebugDisplay {
-  constructor(basinManager, gameState, callbacks = {}) {
-    this.basinManager = basinManager;
+  constructor(_basinManager, gameState, callbacks = {}) {
+    // Don't store basinManager directly since it can be replaced during imports
+    // Instead, always get it from gameState to ensure we have the current reference
     this.gameState = gameState;
     this.onBasinHighlightChange = null;
+    
+    // Throttling for basin highlight changes to prevent excessive re-renders
+    this.highlightThrottleMs = UI_CONSTANTS.BASIN_DISPLAY.THROTTLE_MS;
+    this.lastHighlightTime = 0;
+    this.pendingHighlight = null;
+    this.highlightRaf = null;
 
     // Store callback functions
     this.callbacks = {
@@ -340,6 +354,37 @@ export class DebugDisplay {
     return button;
   }
 
+  // Throttled basin highlight change to prevent excessive re-renders
+  throttledHighlightChange(basinId) {
+    this.pendingHighlight = basinId;
+    
+    if (this.highlightRaf) {
+      return; // Already scheduled
+    }
+    
+    const now = performance.now();
+    const timeSinceLastHighlight = now - this.lastHighlightTime;
+    
+    if (timeSinceLastHighlight >= this.highlightThrottleMs) {
+      // Execute immediately
+      this.executeHighlightChange();
+    } else {
+      // Schedule for later
+      this.highlightRaf = requestAnimationFrame(() => {
+        this.highlightRaf = null;
+        this.executeHighlightChange();
+      });
+    }
+  }
+  
+  executeHighlightChange() {
+    const basinManager = this.gameState.getBasinManager();
+    basinManager.setHighlightedBasin(this.pendingHighlight);
+    this.updateBasinHighlights();
+    this.onBasinHighlightChange?.(this.pendingHighlight);
+    this.lastHighlightTime = performance.now();
+  }
+
   updateBasinsDisplay() {
     const heights = this.gameState.getHeights();
     if (!heights) {
@@ -347,21 +392,22 @@ export class DebugDisplay {
       return;
     }
 
-    const debugInfo = this.basinManager.getDebugInfo(heights);
+    const basinManager = this.gameState.getBasinManager();
+    const debugInfo = basinManager.getDebugInfo(heights);
     if (!debugInfo) {
       console.warn("No debug info available for basin display");
       return;
     }
-    
+
     // Build hierarchical basin data structure based on outlet relationships
     const basinHierarchy = [];
     const visited = new Set();
-    
+
     // First, build a reverse mapping: child -> parents (which basins flow into this one)
     const childToParents = new Map();
-    this.basinManager.basins.forEach((basin, id) => {
+    basinManager.basins.forEach((basin, id) => {
       if (basin.outlets && basin.outlets.length > 0) {
-        basin.outlets.forEach(outletId => {
+        basin.outlets.forEach((outletId) => {
           if (!childToParents.has(outletId)) {
             childToParents.set(outletId, []);
           }
@@ -369,26 +415,26 @@ export class DebugDisplay {
         });
       }
     });
-    
+
     const buildBasinEntry = (id, depth = 0) => {
       if (visited.has(id)) return null;
       visited.add(id);
 
-      const basin = this.basinManager.basins.get(id);
+      const basin = basinManager.basins.get(id);
       if (!basin) return null;
 
-      const maxCapacity = basin.tiles.size * CONFIG.VOLUME_UNIT * CONFIG.MAX_DEPTH;
+      const maxCapacity = basin.tileCount * CONFIG.VOLUME_UNIT * CONFIG.MAX_DEPTH;
       const entry = {
         id,
         depth,
         basin,
         maxCapacity,
-        children: []
+        children: [],
       };
 
       // Find child basins (basins that flow into this basin)
       const children = childToParents.get(id) || [];
-      children.sort().forEach(childId => {
+      children.sort().forEach((childId) => {
         const childEntry = buildBasinEntry(childId, depth + 1);
         if (childEntry) {
           entry.children.push(childEntry);
@@ -400,9 +446,9 @@ export class DebugDisplay {
 
     // Start with root basins (those that don't flow into any other basin - they have outlets but are not outlets themselves)
     const allOutletIds = new Set();
-    this.basinManager.basins.forEach(basin => {
+    basinManager.basins.forEach((basin) => {
       if (basin.outlets) {
-        basin.outlets.forEach(outletId => allOutletIds.add(outletId));
+        basin.outlets.forEach((outletId) => allOutletIds.add(outletId));
       }
     });
 
@@ -429,15 +475,15 @@ export class DebugDisplay {
     // If no basins were processed yet, fall back to a simpler flat display
     if (basinHierarchy.length === 0 && debugInfo.basinArray.length > 0) {
       debugInfo.basinArray.forEach(([id]) => {
-        const basin = this.basinManager.basins.get(id);
+        const basin = basinManager.basins.get(id);
         if (basin) {
-          const maxCapacity = basin.tiles.size * CONFIG.VOLUME_UNIT * CONFIG.MAX_DEPTH;
+          const maxCapacity = basin.tileCount * CONFIG.VOLUME_UNIT * CONFIG.MAX_DEPTH;
           basinHierarchy.push({
             id,
             depth: 0,
             basin,
             maxCapacity,
-            children: []
+            children: [],
           });
         }
       });
@@ -466,7 +512,13 @@ export class DebugDisplay {
 
     const reservoirsTextEl = document.getElementById("reservoirsText");
     if (reservoirsTextEl) {
-      this.createInteractiveReservoirDisplay("", reservoirs, pumps, selectedReservoirId, pumpsByReservoir);
+      this.createInteractiveReservoirDisplay(
+        "",
+        reservoirs,
+        pumps,
+        selectedReservoirId,
+        pumpsByReservoir,
+      );
     }
   }
 
@@ -478,7 +530,13 @@ export class DebugDisplay {
     }
   }
 
-  createInteractiveReservoirDisplay(_reservoirsText, reservoirs, pumps, selectedReservoirId, pumpsByReservoir = null) {
+  createInteractiveReservoirDisplay(
+    _reservoirsText,
+    reservoirs,
+    pumps,
+    selectedReservoirId,
+    pumpsByReservoir = null,
+  ) {
     const reservoirsContainer = document.getElementById("reservoirsText");
     if (!reservoirsContainer) return;
 
@@ -559,7 +617,8 @@ export class DebugDisplay {
 
         const colorPrefix = pump.mode === "inlet" ? "🔴" : "🟢";
         const pumpText = document.createElement("span");
-        pumpText.textContent = `${colorPrefix} P${pump.reservoirId}.${pump.index} (${pump.x},${pump.y}) ${pump.mode}`;
+        pumpText.textContent =
+          `${colorPrefix} P${pump.reservoirId}.${pump.index} (${pump.x},${pump.y}) ${pump.mode}`;
         pumpDiv.appendChild(pumpText);
 
         const removePumpButton = this.createRemoveButton("Remove", () => {
@@ -601,62 +660,84 @@ export class DebugDisplay {
 
     basinsContainer.innerHTML = "";
 
-    const renderBasinEntry = (entry) => {
-      const lineDiv = document.createElement("div");
-      lineDiv.className = "basin-line";
-      lineDiv.style.paddingLeft = `${entry.depth * 1.5}em`; // CSS-based indentation
-      lineDiv.dataset.basinId = entry.id;
-      
-      // Create basin info text
-      const basinText = `${entry.id}: ${entry.basin.tiles.size} tiles, vol=${entry.basin.volume}/${entry.maxCapacity}, water_lvl=${entry.basin.level}`;
-      lineDiv.textContent = basinText;
+    const createBasinEntry = (entry) => {
+      if (entry.children.length > 0) {
+        // Nodes with children use details element
+        const details = document.createElement("details");
+        details.className = "basin-details";
+        details.open = true; // Keep expanded by default
 
-      // Add click event for highlighting
-      lineDiv.addEventListener("click", () => {
-        const currentHighlight = this.basinManager.getHighlightedBasin();
-        const newHighlight = currentHighlight === entry.id ? null : entry.id;
-        this.basinManager.setHighlightedBasin(newHighlight);
-        this.updateBasinHighlights();
-        this.onBasinHighlightChange?.(newHighlight);
-      });
+        const summary = document.createElement("summary");
+        summary.className = "basin-summary";
+        summary.dataset.basinId = entry.id;
 
-      lineDiv.addEventListener("mouseenter", () => {
-        const currentHighlight = this.basinManager.getHighlightedBasin();
-        if (currentHighlight !== entry.id) {
-          this.basinManager.setHighlightedBasin(entry.id);
-          this.onBasinHighlightChange?.(entry.id);
-        }
-      });
+        // Create basin info text
+        const basinText =
+          `${entry.id}: ${entry.basin.tileCount} tiles, vol=${entry.basin.volume}/${entry.maxCapacity}, water_lvl=${entry.basin.level}`;
+        summary.textContent = basinText;
 
-      lineDiv.addEventListener("mouseleave", () => {
-        // Only clear highlight if it's not permanently selected
-        const permanentHighlight = document.querySelector(".basin-line.highlighted");
-        if (!permanentHighlight) {
-          this.basinManager.setHighlightedBasin(null);
-          this.onBasinHighlightChange?.(null);
-        }
-      });
+        // Only hover highlighting, no click functionality
+        summary.addEventListener("mouseenter", () => {
+          const basinManager = this.gameState.getBasinManager();
+          const currentHighlight = basinManager.getHighlightedBasin();
+          if (currentHighlight !== entry.id) {
+            this.throttledHighlightChange(entry.id);
+          }
+        });
 
-      basinsContainer.appendChild(lineDiv);
+        summary.addEventListener("mouseleave", () => {
+          this.throttledHighlightChange(null);
+        });
 
-      // Recursively render children
-      entry.children.forEach(childEntry => {
-        renderBasinEntry(childEntry);
-      });
+        details.appendChild(summary);
+
+        // Add children as nested elements
+        entry.children.forEach((childEntry) => {
+          details.appendChild(createBasinEntry(childEntry));
+        });
+
+        return details;
+      } else {
+        // Leaf nodes use simple list items
+        const listItem = document.createElement("li");
+        listItem.className = "basin-item";
+        listItem.dataset.basinId = entry.id;
+
+        // Create basin info text
+        const basinText =
+          `${entry.id}: ${entry.basin.tileCount} tiles, vol=${entry.basin.volume}/${entry.maxCapacity}, water_lvl=${entry.basin.level}`;
+        listItem.textContent = basinText;
+
+        // Only hover highlighting, no click functionality
+        listItem.addEventListener("mouseenter", () => {
+          const basinManager = this.gameState.getBasinManager();
+          const currentHighlight = basinManager.getHighlightedBasin();
+          if (currentHighlight !== entry.id) {
+            this.throttledHighlightChange(entry.id);
+          }
+        });
+
+        listItem.addEventListener("mouseleave", () => {
+          this.throttledHighlightChange(null);
+        });
+
+        return listItem;
+      }
     };
 
-    // Render all root entries
-    basinHierarchy.forEach(entry => {
-      renderBasinEntry(entry);
+    // Create and append all root entries
+    basinHierarchy.forEach((entry) => {
+      basinsContainer.appendChild(createBasinEntry(entry));
     });
   }
 
   updateBasinHighlights() {
-    const highlighted = this.basinManager.getHighlightedBasin();
-    document.querySelectorAll(".basin-line").forEach((line) => {
-      line.classList.remove("highlighted");
-      if (line.dataset.basinId === highlighted) {
-        line.classList.add("highlighted");
+    const basinManager = this.gameState.getBasinManager();
+    const highlighted = basinManager.getHighlightedBasin();
+    document.querySelectorAll(".basin-summary, .basin-item").forEach((element) => {
+      element.classList.remove("highlighted");
+      if (element.dataset.basinId === highlighted) {
+        element.classList.add("highlighted");
       }
     });
   }

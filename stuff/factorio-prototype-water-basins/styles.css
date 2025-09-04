@@ -5,13 +5,13 @@
   --min-width-value: var(--size-10);
   --min-width-octave-value: var(--size-9);
   --min-width-canvas-container: var(--size-12);
-  
+
   /* Common spacing and sizing patterns */
   --control-gap: var(--size-1);
   --control-padding: var(--size-2);
   --modal-max-width: var(--size-content-3);
   --modal-backdrop-opacity: 0.5;
-  
+
   /* Animation and transition defaults */
   --transition-standard: all var(--animation-speed-normal) ease;
   --hover-brightness: 1.5;
@@ -64,7 +64,8 @@ html {
 }
 
 .mono-font {
-  font-family: var(--font-mono), "Courier New", monospace;
+  font-family:
+    var(--font-mono), "Courier New", monospace;
 }
 
 .standard-border {
@@ -75,7 +76,7 @@ html {
 .interactive-button {
   cursor: pointer;
   transition: var(--transition-standard);
-  
+
   &:hover {
     filter: brightness(var(--hover-brightness));
   }
@@ -95,7 +96,8 @@ html {
 }
 
 body {
-  font-family: var(--font-sans), system-ui, Arial, sans-serif;
+  font-family:
+    var(--font-sans), system-ui, Arial, sans-serif;
   margin: var(--size-2);
   display: flex;
   gap: var(--size-2);
@@ -236,6 +238,23 @@ main {
   background: var(--surface-1);
   color: var(--text-1);
   font-size: var(--font-size-0);
+}
+
+/* Flood fill debug controls */
+#floodfillDebug {
+  .control-group {
+    margin: var(--size-1) 0;
+  }
+  
+  .debug-info {
+    margin-top: var(--size-2);
+    font-size: var(--font-size-0);
+  }
+  
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 /* Specialized control box headers */
@@ -445,7 +464,8 @@ select {
 .value-display {
   min-inline-size: var(--min-width-value);
   text-align: end;
-  font-family: var(--font-mono), "Courier New", monospace;
+  font-family:
+    var(--font-mono), "Courier New", monospace;
   font-size: var(--font-size-0);
   color: var(--text-2);
 }
@@ -503,7 +523,8 @@ select {
     background: var(--gray-4);
     padding: var(--size-1) var(--size-2);
     border-radius: var(--radius-2);
-    font-family: var(--font-mono), "Courier New", monospace;
+    font-family:
+      var(--font-mono), "Courier New", monospace;
     font-size: var(--font-size-1);
   }
 }
@@ -532,7 +553,8 @@ select {
   flex: 1;
   overflow-y: auto;
   line-height: var(--line-height-2);
-  font-family: var(--font-mono), "Courier New", monospace;
+  font-family:
+    var(--font-mono), "Courier New", monospace;
   min-block-size: 0;
   white-space: pre;
   font-size: var(--font-size-0);
@@ -547,17 +569,70 @@ select {
   max-width: 100%;
 }
 
-.basin-line {
+/* Basin display styling */
+.basin-details {
+  margin: 0;
+  
+  /* Remove default details styling */
+  & > summary {
+    list-style: none;
+  }
+  
+  & > summary::-webkit-details-marker {
+    display: none;
+  }
+  
+  /* Nested details (children) get left border */
+  & .basin-details {
+    border-left: 2px solid var(--gray-6);
+    margin-left: var(--size-2);
+    padding-left: var(--size-1);
+  }
+  
+  /* Nested list items (leaf children) also get left border */
+  & .basin-item {
+    border-left: 2px solid var(--gray-6);
+    margin-left: var(--size-2);
+    padding-left: var(--size-1);
+  }
+  
+  /* Add bottom border to collapsed details */
+  &:not([open]) {
+    border-bottom: 1px solid var(--gray-5);
+    margin-bottom: var(--size-1);
+  }
+}
+
+.basin-summary {
   cursor: pointer;
   padding: var(--size-1) 0;
   transition: var(--transition-standard);
-  /* Ensure lines don't wrap and maintain indentation */
   white-space: nowrap;
   overflow: visible;
   min-width: max-content;
 
   &:hover {
-    background-color: var(--gray-4);
+    background-color: var(--yellow-2);
+    font-weight: bold;
+  }
+
+  &.highlighted {
+    background-color: var(--yellow-2);
+    font-weight: bold;
+  }
+}
+
+.basin-item {
+  list-style: none;
+  padding: var(--size-1) 0;
+  transition: var(--transition-standard);
+  white-space: nowrap;
+  overflow: visible;
+  min-width: max-content;
+
+  &:hover {
+    background-color: var(--yellow-2);
+    font-weight: bold;
   }
 
   &.highlighted {

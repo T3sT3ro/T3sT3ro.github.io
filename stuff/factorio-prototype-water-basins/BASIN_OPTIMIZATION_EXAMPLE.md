@@ -1,6 +1,7 @@
 # Basin Storage Optimization Example
 
 ## Before (Legacy Format)
+
 Each basin stored as individual objects with coordinate lists:
 
 ```json
@@ -15,7 +16,7 @@ Each basin stored as individual objects with coordinate lists:
       "outlets": ["2#A"]
     },
     {
-      "id": "2#A", 
+      "id": "2#A",
       "tiles": ["15,8", "16,8", "17,8", "15,9", "16,9", "17,9"],
       "volume": 80,
       "level": 1,
@@ -29,6 +30,7 @@ Each basin stored as individual objects with coordinate lists:
 **Size**: ~400 characters for 2 small basins
 
 ## After (Optimized Format)
+
 Basin data stored as 2D map + tree structure + metadata:
 
 ```json
@@ -36,16 +38,16 @@ Basin data stored as 2D map + tree structure + metadata:
   "basins": {
     "format": "optimized_v1",
     "basinIdMap": {
-      "format": "string_rows", 
+      "format": "string_rows",
       "data": "0|0|0|0|0|0|0|0|0|0|1#A|1#A|1#A|0|0|2#A|2#A|2#A\n0|0|0|0|0|0|0|0|0|0|1#A|1#A|1#A|0|0|2#A|2#A|2#A\n0|0|0|0|0|0|0|0|0|0|1#A|1#A|1#A|0|0|0|0|0"
     },
     "basinTree": {
-      "1#A": {"outlets": ["2#A"], "height": 1},
-      "2#A": {"outlets": [], "height": 2}
+      "1#A": { "outlets": ["2#A"], "height": 1 },
+      "2#A": { "outlets": [], "height": 2 }
     },
     "basinMetadata": {
-      "1#A": {"volume": 150, "level": 2, "tileCount": 9},
-      "2#A": {"volume": 80, "level": 1, "tileCount": 6}
+      "1#A": { "volume": 150, "level": 2, "tileCount": 9 },
+      "2#A": { "volume": 80, "level": 1, "tileCount": 6 }
     }
   }
 }
@@ -62,6 +64,7 @@ Basin data stored as 2D map + tree structure + metadata:
 5. **Scalability**: Performance doesn't degrade with basin complexity
 
 ## RLE Alternative
+
 For maps with large uniform areas, run-length encoding can provide even better compression:
 
 ```json

@@ -9,7 +9,7 @@ export class BasinLabelManager {
   }
 
   // Generate deterministic positions for basin labels
-  generateBasinLabels(basins, heights, pumps = []) {
+  generateBasinLabels(basins, _heights, pumps = [], basinManager = null) {
     const basinHash = this.createBasinHash(basins, pumps);
     if (basinHash === this.lastBasinHash) {
       return; // No change, reuse existing positions
@@ -19,19 +19,20 @@ export class BasinLabelManager {
     this.basinLabels.clear();
 
     const labels = [];
-    const lineLength = 30;
+    // Make them all visible to avoid collision detection complexity
+    const _lineLength = 30;
 
     // Create pump obstacle positions
     const obstacles = [];
-    pumps.forEach((pump, index) => {
+    pumps.forEach((pump, _index) => {
       const pumpLabelX = pump.x * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2;
       const pumpLabelY = pump.y * CONFIG.TILE_SIZE + CONFIG.TILE_SIZE / 2 - CONFIG.TILE_SIZE * 2;
       obstacles.push({ x: pumpLabelX, y: pumpLabelY, type: "pump" });
     });
 
     // Create initial label positions
-    basins.forEach((basin, id) => {
-      const tiles = Array.from(basin.tiles);
+    basins.forEach((_basin, id) => {
+      const tiles = basinManager ? basinManager.getBasinTiles(id) : [];
       if (tiles.length === 0) return;
 
       // Find a representative tile that belongs to this basin (not centroid)
@@ -191,8 +192,8 @@ export class BasinLabelManager {
   }
 
   // Draw basin labels with connecting lines
-  draw(ctx, basins, heights, pumps = [], zoom = 1) {
-    this.generateBasinLabels(basins, heights, pumps);
+  draw(ctx, basins, heights, pumps = [], zoom = 1, basinManager = null) {
+    this.generateBasinLabels(basins, heights, pumps, basinManager);
 
     if (this.basinLabels.size === 0) return;
 
@@ -254,7 +255,7 @@ export class BasinLabelManager {
     // Create hash to detect basin and pump changes
     let hash = `count:${basins.size}`;
     basins.forEach((basin, id) => {
-      hash += `|${id}:${basin.tiles.size}`;
+      hash += `|${id}:${basin.tileCount}`;
     });
 
     // Include pump positions in hash since they affect label positioning

@@ -1,7 +1,7 @@
 // Main application controller - orchestrates all modules
 
 // Cache busting for module imports
-const moduleVersion = window.moduleVersion || Date.now();
+const moduleVersion = globalThis.moduleVersion || Date.now();
 
 // Dynamic imports with cache busting
 const configModule = import(`./modules/config.js?v=${moduleVersion}`);
@@ -34,7 +34,15 @@ Promise.all([configModule, gameModule, rendererModule, uiModule, constantsModule
       UI_CONSTANTS,
       SaveLoadManager,
     );
-    app.init();
+    
+    // Store app globally and initialize when DOM is ready
+    globalThis.tilemapApp = app;
+    
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => app.init());
+    } else {
+      app.init();
+    }
   })
   .catch((error) => {
     console.error("Failed to load modules:", error);
@@ -105,8 +113,11 @@ class TilemapWaterPumpingApp {
     });
 
     // Initialize save/load manager
-    this.saveLoadManager = new this.SaveLoadManager(this.gameState, () => this.onGameStateChanged());
-    
+    this.saveLoadManager = new this.SaveLoadManager(
+      this.gameState,
+      () => this.onGameStateChanged(),
+    );
+
     // Make save load manager globally accessible for HTML onclick handlers
     globalThis.saveLoadManager = this.saveLoadManager;
 
@@ -204,7 +215,7 @@ class TilemapWaterPumpingApp {
     this.draw();
     this.updateDebugDisplays();
     this.updateReservoirControls();
-    
+
     // Update noise control UI to reflect loaded settings
     this.noiseControlUI.updateUI();
   }
@@ -228,6 +239,59 @@ class TilemapWaterPumpingApp {
 
   updateLegendSelection() {
     this.LegendRenderer.updateSelectedDepth(this.selectedDepth);
+  }
+
+  handleDebugStep() {
+    if (this.gameState.basinManager.debugState.enabled) {
+      if (this.gameState.basinManager.stepDebug()) {
+        // Continue computation after step
+        this.gameState.recomputeAll();
+        this.draw();
+      }
+    }
+  }
+
+  handleStepOverBasin() {
+    if (this.gameState.basinManager.debugState.enabled) {
+      // Get current basin being processed
+      const currentBasinId = this.gameState.basinManager.debugState.currentBasinId;
+      
+      // Step until we finish the current basin or start a new one
+      let stepsCount = 0;
+      const maxSteps = 10000; // Safety limit
+      
+      while (stepsCount < maxSteps && this.gameState.basinManager.debugState.enabled) {
+        const continueProcessing = this.gameState.basinManager.stepDebug();
+        stepsCount++;
+        
+        // Check if we've moved to a different basin or finished
+        if (!continueProcessing || 
+            (this.gameState.basinManager.debugState.currentBasinId !== currentBasinId && 
+             this.gameState.basinManager.debugState.currentBasinId !== null)) {
+          break;
+        }
+      }
+      
+      // Continue computation after stepping over basin
+      this.gameState.recomputeAll();
+      this.scheduleRender();
+    }
+  }
+
+  updateDebugUI(debugState) {
+    const stageEl = document.getElementById("debugStage");
+    const stepCountEl = document.getElementById("debugStepCount");
+    const queueSizeEl = document.getElementById("debugQueueSize");
+    const visitedSizeEl = document.getElementById("debugVisitedSize");
+    const currentDepthEl = document.getElementById("debugCurrentDepth");
+    const bucketsUsedEl = document.getElementById("debugBucketsUsed");
+
+    if (stageEl) stageEl.textContent = debugState.stage || 'uninitialized';
+    if (stepCountEl) stepCountEl.textContent = debugState.currentStep || 0;
+    if (queueSizeEl) queueSizeEl.textContent = debugState.queueSize || 0;
+    if (visitedSizeEl) visitedSizeEl.textContent = debugState.visitedSize || 0;
+    if (currentDepthEl) currentDepthEl.textContent = debugState.currentDepth >= 0 ? debugState.currentDepth : '-';
+    if (bucketsUsedEl) bucketsUsedEl.textContent = `${debugState.bucketsUsed || 0}/10`;
   }
 
   getBrushTiles(centerX, centerY) {
@@ -596,6 +660,102 @@ class TilemapWaterPumpingApp {
     this.canvas.addEventListener("contextmenu", (e) => {
       e.preventDefault(); // Prevent right-click context menu
     });
+
+    // Debug UI event handlers
+    this.setupDebugEventHandlers();
+  }
+
+  setupDebugEventHandlers() {
+    const enableDebugCheckbox = document.getElementById("enableFloodFillDebug");
+    const stepButton = document.getElementById("stepFloodFill");
+    const stepOverBasinButton = document.getElementById("stepOverBasin");
+    const resetButton = document.getElementById("resetFloodFill");
+
+    if (enableDebugCheckbox) {
+      // Restore checkbox state from localStorage
+      const savedDebugState = localStorage.getItem('floodfillDebugEnabled') === 'true';
+      enableDebugCheckbox.checked = savedDebugState;
+      
+      // Initialize button states based on saved checkbox state
+      if (stepButton) stepButton.disabled = !savedDebugState;
+      if (stepOverBasinButton) stepOverBasinButton.disabled = !savedDebugState;
+      if (resetButton) resetButton.disabled = !savedDebugState;
+      
+      // If debug was previously enabled, re-enable it
+      if (savedDebugState) {
+        this.gameState.basinManager.enableStepByStepDebug(true, (debugState) => {
+          this.updateDebugUI(debugState);
+          this.renderer.onDebugStateChanged();
+          this.draw();
+        });
+      }
+
+      enableDebugCheckbox.addEventListener("change", (e) => {
+        const enabled = e.target.checked;
+        
+        // Save checkbox state to localStorage
+        localStorage.setItem('floodfillDebugEnabled', enabled.toString());
+        
+        this.gameState.basinManager.enableStepByStepDebug(enabled, (debugState) => {
+          this.updateDebugUI(debugState);
+          this.renderer.onDebugStateChanged();
+          this.draw();
+        });
+        
+        // Enable/disable step controls
+        if (stepButton) stepButton.disabled = !enabled;
+        if (stepOverBasinButton) stepOverBasinButton.disabled = !enabled;
+        if (resetButton) resetButton.disabled = !enabled;
+        
+        if (!enabled) {
+          // Reset debug state and redraw
+          this.renderer.onDebugStateChanged();
+          this.updateDebugUI({ stage: 'uninitialized', currentStep: 0, queueSize: 0, visitedSize: 0, currentDepth: -1, bucketsUsed: 0 });
+          this.draw();
+        }
+      });
+    }
+
+    // Step forward button with hold-to-repeat functionality
+    if (stepButton) {
+      let stepInterval;
+      
+      const startStepping = () => {
+        this.handleDebugStep();
+        stepInterval = setInterval(() => {
+          this.handleDebugStep();
+        }, 100); // Step every 100ms when holding
+      };
+      
+      const stopStepping = () => {
+        if (stepInterval) {
+          clearInterval(stepInterval);
+          stepInterval = null;
+        }
+      };
+      
+      stepButton.addEventListener("mousedown", startStepping);
+      stepButton.addEventListener("mouseup", stopStepping);
+      stepButton.addEventListener("mouseleave", stopStepping);
+      stepButton.addEventListener("touchstart", startStepping);
+      stepButton.addEventListener("touchend", stopStepping);
+    }
+
+    // Step over basin button
+    if (stepOverBasinButton) {
+      stepOverBasinButton.addEventListener("click", () => {
+        this.handleStepOverBasin();
+      });
+    }
+
+    if (resetButton) {
+      resetButton.addEventListener("click", () => {
+        this.gameState.basinManager.resetDebugState();
+        this.renderer.onDebugStateChanged();
+        this.updateDebugUI({ stage: 'uninitialized', currentStep: 0, queueSize: 0, visitedSize: 0, currentDepth: -1, bucketsUsed: 0 });
+        this.draw();
+      });
+    }
   }
 
   updateInsightsDisplay(tileInfo = null) {
@@ -634,7 +794,7 @@ class TilemapWaterPumpingApp {
         const basinManager = this.gameState.getBasinManager();
         const basin = basinManager.basins.get(tileInfo.basinId);
         if (basin) {
-          const maxCapacity = basin.tiles.size * this.CONFIG.VOLUME_UNIT * this.CONFIG.MAX_DEPTH;
+          const maxCapacity = basin.tileCount * this.CONFIG.VOLUME_UNIT * this.CONFIG.MAX_DEPTH;
           const currentVolume = Math.floor(basin.volume);
           basinInfoEl.textContent = `${tileInfo.basinId} ${currentVolume}/${maxCapacity}`;
         } else {
@@ -727,12 +887,8 @@ class TilemapWaterPumpingApp {
       this.brushOverlay,
       this.brushCenter,
       this.brushSize,
-      this.selectedDepth
+      this.selectedDepth,
+      this.gameState.basinManager.getDebugState(),
     );
   }
 }
-
-// Initialize the application when DOM is loaded
-document.addEventListener("DOMContentLoaded", () => {
-  globalThis.tilemapApp = new TilemapWaterPumpingApp();
-});

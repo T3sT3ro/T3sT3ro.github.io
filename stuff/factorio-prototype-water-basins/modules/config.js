@@ -8,6 +8,16 @@ export const CONFIG = {
   VOLUME_UNIT: 1,
   PUMP_RATE: 1, // volume per tick
 
+  // Basin computation thresholds
+  BASIN_COMPUTATION: {
+    INCREMENTAL_THRESHOLD: 0.1, // Fraction of world tiles changed before full recomputation
+    DIRECTIONS: {
+      ORTHOGONAL: [[1, 0], [-1, 0], [0, 1], [0, -1]],
+      DIAGONAL: [[1, 1], [-1, -1], [1, -1], [-1, 1]],
+      ALL: [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]
+    }
+  },
+
   get WORLD_W() {
     return this.CHUNKS_X * this.CHUNK_SIZE;
   },

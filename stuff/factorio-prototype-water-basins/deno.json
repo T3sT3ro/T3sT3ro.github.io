@@ -8,7 +8,8 @@
     "check": "deno check **/*.js"
   },
   "imports": {
-    "@std/http": "jsr:@std/http@^1.0.0"
+    "@std/http": "jsr:@std/http@^1.0.0",
+    "tinyqueue": "npm:tinyqueue@3.0.0"
   },
   "lint": {
     "rules": {

@@ -210,13 +210,13 @@ export class GameState {
   exportToJSON(options = {}) {
     const heightEncoding = options.heightEncoding || "2d_array";
     const basinEncoding = options.basinEncoding || "string_rows";
-    
+
     const data = {
       version: "1.1.0",
       timestamp: new Date().toISOString(),
       encodingOptions: {
         heightEncoding: heightEncoding,
-        basinEncoding: basinEncoding
+        basinEncoding: basinEncoding,
       },
       // Terrain data
       currentSeed: this.currentSeed,
@@ -234,22 +234,24 @@ export class GameState {
         noiseType: this.heightGenerator.noiseSettings.noiseType,
         warpStrength: this.heightGenerator.noiseSettings.warpStrength,
         warpIterations: this.heightGenerator.noiseSettings.warpIterations,
-        octaveSettings: this.heightGenerator.noiseSettings.octaveSettings
+        octaveSettings: this.heightGenerator.noiseSettings.octaveSettings,
       },
       // Basin data - optimized storage
       basins: this.compressBasins(basinEncoding),
       // Pump data
-      pumps: this.pumpManager.getAllPumps().map(pump => ({
+      pumps: this.pumpManager.getAllPumps().map((pump) => ({
         x: pump.x,
         y: pump.y,
         mode: pump.mode,
-        reservoirId: pump.reservoirId
+        reservoirId: pump.reservoirId,
       })),
       // Reservoir data
-      reservoirs: Array.from(this.reservoirManager.getAllReservoirs().entries()).map(([id, reservoir]) => ({
+      reservoirs: Array.from(this.reservoirManager.getAllReservoirs().entries()).map((
+        [id, reservoir],
+      ) => ({
         id: id,
-        volume: reservoir.volume
-      }))
+        volume: reservoir.volume,
+      })),
     };
     return JSON.stringify(data, null, 2);
   }
@@ -257,28 +259,28 @@ export class GameState {
   importFromJSON(jsonString) {
     try {
       const data = JSON.parse(jsonString);
-      
+
       // Validate version compatibility
       if (!data.version) {
         throw new Error("Invalid save data: missing version information");
       }
-      
+
       // Import terrain data
       if (data.currentSeed !== undefined) {
         this.currentSeed = data.currentSeed;
       }
-      
+
       if (data.heights) {
         this.heights = this.decompressHeights(data.heights);
       } else {
         throw new Error("Invalid save data: missing terrain heights");
       }
-      
+
       // Import game state
       if (data.tickCounter !== undefined) {
         this.tickCounter = data.tickCounter;
       }
-      
+
       // Import noise settings
       if (data.noiseSettings) {
         const settings = this.heightGenerator.getNoiseSettings();
@@ -286,15 +288,15 @@ export class GameState {
         // Update UI controls if they exist
         settings.updateUI();
       }
-      
+
       // Clear existing data
       this.basinManager = new BasinManager();
       this.reservoirManager = new ReservoirManager();
       this.pumpManager = new PumpManager(this.reservoirManager, this.basinManager);
-      
+
       // Recompute basins based on imported heights
       this.basinManager.computeBasins(this.heights);
-      
+
       // Import basin data
       if (data.basins) {
         if (data.basins.format === "optimized_v2" || data.basins.format === "optimized_v1") {
@@ -305,10 +307,10 @@ export class GameState {
           this.importLegacyBasins(data.basins);
         }
       }
-      
+
       // Import reservoirs
       if (data.reservoirs) {
-        data.reservoirs.forEach(reservoirData => {
+        data.reservoirs.forEach((reservoirData) => {
           this.reservoirManager.createReservoir(reservoirData.id);
           const reservoir = this.reservoirManager.getReservoir(reservoirData.id);
           if (reservoir) {
@@ -316,27 +318,27 @@ export class GameState {
           }
         });
       }
-      
+
       // Import pumps
       if (data.pumps) {
-        data.pumps.forEach(pumpData => {
+        data.pumps.forEach((pumpData) => {
           // First create/ensure the reservoir exists
           if (pumpData.reservoirId) {
             this.reservoirManager.createReservoir(pumpData.reservoirId);
             this.reservoirManager.setSelectedReservoir(pumpData.reservoirId);
           }
-          
+
           const _reservoirId = this.pumpManager.addPumpAt(
-            pumpData.x, 
-            pumpData.y, 
-            pumpData.mode || 'auto',
-            true  // Link to existing reservoir
+            pumpData.x,
+            pumpData.y,
+            pumpData.mode || "auto",
+            true, // Link to existing reservoir
           );
-          
+
           // No additional properties to set since pumping and lastPumpTick don't exist
         });
       }
-      
+
       return true;
     } catch (error) {
       console.error("Failed to import save data:", error);
@@ -357,7 +359,7 @@ export class GameState {
           format: "2d_array",
           width: CONFIG.WORLD_W,
           height: CONFIG.WORLD_H,
-          data: this.heights.map(row => row.join('')).join('\n')
+          data: this.heights.map((row) => row.join("")).join("\n"),
         };
     }
   }
@@ -367,7 +369,7 @@ export class GameState {
     let compressed = "";
     let current = flattened[0];
     let count = 1;
-    
+
     for (let i = 1; i < flattened.length; i++) {
       if (flattened[i] === current) {
         count++;
@@ -379,12 +381,12 @@ export class GameState {
       }
     }
     compressed += (compressed ? "," : "") + current + (count > 1 ? ":" + count : "");
-    
+
     return {
       format: "rle",
       width: CONFIG.WORLD_W,
       height: CONFIG.WORLD_H,
-      data: compressed
+      data: compressed,
     };
   }
 
@@ -392,37 +394,37 @@ export class GameState {
     // Pack 2 height values (0-9) into each byte for 50% compression
     const flattened = heights.flat();
     const bytes = [];
-    
+
     for (let i = 0; i < flattened.length; i += 2) {
       const val1 = flattened[i] || 0;
       const val2 = flattened[i + 1] || 0;
       bytes.push((val1 << 4) | val2);
     }
-    
+
     const uint8Array = new Uint8Array(bytes);
     const base64 = btoa(String.fromCharCode.apply(null, uint8Array));
-    
+
     return {
       format: "base64_packed",
       width: CONFIG.WORLD_W,
       height: CONFIG.WORLD_H,
-      data: base64
+      data: base64,
     };
   }
 
   decompressHeights(compressed) {
     switch (compressed.format) {
       case "2d_array":
-        return compressed.data.split('\n').map(row => 
-          row.split('').map(char => parseInt(char, 10))
+        return compressed.data.split("\n").map((row) =>
+          row.split("").map((char) => parseInt(char, 10))
         );
-        
+
       case "rle":
         return this.runLengthDecode(compressed);
-        
+
       case "base64_packed":
         return this.base64Decode(compressed);
-        
+
       default:
         // Fallback for old uncompressed format
         return Array.isArray(compressed) ? compressed : compressed.data;
@@ -431,11 +433,11 @@ export class GameState {
 
   runLengthDecode(compressed) {
     const flattened = [];
-    const pairs = compressed.data.split(',');
-    
+    const pairs = compressed.data.split(",");
+
     for (const pair of pairs) {
-      if (pair.includes(':')) {
-        const [valueStr, countStr] = pair.split(':');
+      if (pair.includes(":")) {
+        const [valueStr, countStr] = pair.split(":");
         const value = parseInt(valueStr, 10);
         const count = parseInt(countStr, 10);
         for (let i = 0; i < count; i++) {
@@ -447,7 +449,7 @@ export class GameState {
         flattened.push(value);
       }
     }
-    
+
     const heights = [];
     for (let y = 0; y < compressed.height; y++) {
       heights[y] = [];
@@ -464,13 +466,13 @@ export class GameState {
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    
+
     const flattened = [];
     for (const byte of bytes) {
-      flattened.push((byte >> 4) & 0xF);  // High 4 bits
-      flattened.push(byte & 0xF);         // Low 4 bits
+      flattened.push((byte >> 4) & 0xF); // High 4 bits
+      flattened.push(byte & 0xF); // Low 4 bits
     }
-    
+
     const heights = [];
     for (let y = 0; y < compressed.height; y++) {
       heights[y] = [];
@@ -494,7 +496,7 @@ export class GameState {
       // 2D array where each cell contains the basin ID for that tile
       basinIdMap: this.compressBasinIdMap(basinIdMap, encodingType),
       // Flat tree structure with integrated metadata and parent pointers
-      basinData: basinTree
+      basinData: basinTree,
     };
   }
 
@@ -520,7 +522,7 @@ export class GameState {
       default:
         return {
           format: "string_rows",
-          data: basinIdMap.map(row => row.join('|')).join('\n')
+          data: basinIdMap.map((row) => row.join("|")).join("\n"),
         };
     }
   }
@@ -545,7 +547,7 @@ export class GameState {
 
     return {
       format: "rle_basin_ids",
-      data: compressed
+      data: compressed,
     };
   }
 
@@ -557,16 +559,16 @@ export class GameState {
         height: basin.height,
         volume: basin.volume || 0,
         level: basin.level || 0,
-        tileCount: basin.tiles ? basin.tiles.size : 0,
+        tileCount: basin.tileCount || 0,
         // Store child IDs instead of parent IDs for correct tree structure
-        children: [] // Will be filled when processing outlets
+        children: [], // Will be filled when processing outlets
       };
     });
 
     // Second pass: outlets are children (deeper basins), not parents
     this.basinManager.basins.forEach((basin, basinId) => {
       if (basin.outlets && basin.outlets.length > 0) {
-        basin.outlets.forEach(outletId => {
+        basin.outlets.forEach((outletId) => {
           if (tree[basinId]) {
             // The outlet (deeper basin) is a child of the current basin
             tree[basinId].children.push(outletId);
@@ -593,14 +595,14 @@ export class GameState {
     if (compressedBasins.format === "optimized_v2") {
       return {
         basinIdMap: this.decompressBasinIdMap(compressedBasins.basinIdMap),
-        basinData: compressedBasins.basinData
+        basinData: compressedBasins.basinData,
       };
     } else if (compressedBasins.format === "optimized_v1") {
       // Handle v1 format
       return {
         basinIdMap: this.decompressBasinIdMap(compressedBasins.basinIdMap),
         basinTree: compressedBasins.basinTree,
-        basinMetadata: compressedBasins.basinMetadata
+        basinMetadata: compressedBasins.basinMetadata,
       };
     }
 
@@ -610,7 +612,7 @@ export class GameState {
   decompressBasinIdMap(compressed) {
     switch (compressed.format) {
       case "string_rows":
-        return compressed.data.split('\n').map(row => row.split('|'));
+        return compressed.data.split("\n").map((row) => row.split("|"));
 
       case "rle_basin_ids":
         return this.runLengthDecodeBasinIds(compressed);
@@ -623,11 +625,11 @@ export class GameState {
 
   runLengthDecodeBasinIds(compressed) {
     const flattened = [];
-    const pairs = compressed.data.split(',');
-    
+    const pairs = compressed.data.split(",");
+
     for (const pair of pairs) {
-      if (pair.includes(':')) {
-        const [value, countStr] = pair.split(':');
+      if (pair.includes(":")) {
+        const [value, countStr] = pair.split(":");
         const count = parseInt(countStr, 10);
         for (let i = 0; i < count; i++) {
           flattened.push(value);
@@ -650,10 +652,10 @@ export class GameState {
 
   reconstructBasinsFromCompressed(compressedData) {
     const decompressed = this.decompressBasins(compressedData);
-    
+
     // Clear existing basin data
     this.basinManager.basins.clear();
-    this.basinManager.basinIdOf.forEach(row => row.fill(0));
+    this.basinManager.basinIdOf.forEach((row) => row.fill(0));
 
     // Handle different formats
     if (compressedData.format === "optimized_v2") {
@@ -675,11 +677,11 @@ export class GameState {
     }
 
     // Reconstruct basin objects from flat structure
-    Object.keys(basinData).forEach(basinId => {
+    Object.keys(basinData).forEach((basinId) => {
       if (basinId === "0") return;
 
       const data = basinData[basinId];
-      
+
       // Collect tiles for this basin
       const tiles = new Set();
       for (let y = 0; y < CONFIG.WORLD_H; y++) {
@@ -698,7 +700,7 @@ export class GameState {
         volume: data.volume || 0,
         level: data.level || 0,
         height: data.height || 0,
-        outlets: outlets
+        outlets: outlets,
       });
     });
   }
@@ -715,7 +717,7 @@ export class GameState {
     }
 
     // Reconstruct basin objects
-    Object.keys(basinTree).forEach(basinId => {
+    Object.keys(basinTree).forEach((basinId) => {
       if (basinId === "0") return;
 
       // Collect tiles for this basin
@@ -730,13 +732,13 @@ export class GameState {
 
       const metadata = basinMetadata[basinId] || {};
       const treeData = basinTree[basinId] || {};
-      
+
       this.basinManager.basins.set(basinId, {
         tiles: tiles,
         volume: metadata.volume || 0,
         level: metadata.level || 0,
         height: treeData.height || 0,
-        outlets: treeData.outlets || []
+        outlets: treeData.outlets || [],
       });
     });
   }
@@ -744,7 +746,7 @@ export class GameState {
   importLegacyBasins(basinsData) {
     // Handle old format where basins were stored as individual objects
     if (Array.isArray(basinsData)) {
-      basinsData.forEach(basinData => {
+      basinsData.forEach((basinData) => {
         const basin = this.basinManager.basins.get(basinData.id);
         if (basin) {
           basin.volume = basinData.volume || 0;
@@ -758,10 +760,10 @@ export class GameState {
   // Size calculation utilities
   calculateEncodingSizes() {
     const results = {};
-    
+
     // Height encoding options
     const heightOptions = ["2d_array", "rle", "base64_packed"];
-    heightOptions.forEach(option => {
+    heightOptions.forEach((option) => {
       try {
         const compressed = this.compressHeights(option);
         const json = JSON.stringify(compressed);
@@ -773,7 +775,7 @@ export class GameState {
 
     // Basin encoding options
     const basinOptions = ["string_rows", "rle_basin_ids"];
-    basinOptions.forEach(option => {
+    basinOptions.forEach((option) => {
       try {
         const compressed = this.compressBasins(option);
         const json = JSON.stringify(compressed);
@@ -788,11 +790,11 @@ export class GameState {
 
   getBestEncodingOptions() {
     const sizes = this.calculateEncodingSizes();
-    
+
     // Find best height encoding
     let bestHeight = "2d_array";
     let minHeightSize = Infinity;
-    ["2d_array", "rle", "base64_packed"].forEach(option => {
+    ["2d_array", "rle", "base64_packed"].forEach((option) => {
       const size = sizes[`height_${option}`];
       if (size < minHeightSize) {
         minHeightSize = size;
@@ -803,7 +805,7 @@ export class GameState {
     // Find best basin encoding
     let bestBasin = "string_rows";
     let minBasinSize = Infinity;
-    ["string_rows", "rle_basin_ids"].forEach(option => {
+    ["string_rows", "rle_basin_ids"].forEach((option) => {
       const size = sizes[`basin_${option}`];
       if (size < minBasinSize) {
         minBasinSize = size;
@@ -814,7 +816,7 @@ export class GameState {
     return {
       heightEncoding: bestHeight,
       basinEncoding: bestBasin,
-      sizes: sizes
+      sizes: sizes,
     };
   }
 }

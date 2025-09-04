@@ -16,7 +16,7 @@ export class ReservoirManager {
         id++;
       }
     }
-    
+
     // Only create if it doesn't already exist
     if (!this.reservoirs.has(id)) {
       this.reservoirs.set(id, { volume: 0 });

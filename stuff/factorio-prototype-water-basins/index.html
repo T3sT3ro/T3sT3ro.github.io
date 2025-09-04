@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tilemap Water Pumping</title>
   <link rel="stylesheet" href="https://unpkg.com/open-props">
+  <script src="https://unpkg.com/tinyqueue@2.0.0/tinyqueue.min.js"></script>
   <script>
     // Cache busting for CSS and JS files
     const cacheBuster = Date.now();
@@ -126,6 +127,46 @@
         </h4>
         <div id="reservoirsText"></div>
       </div>
+      <div id="floodfillDebug" class="control-box">
+        <h4>Flood Fill Debug</h4>
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="enableFloodFillDebug">
+            Enable Step-by-Step Mode
+          </label>
+        </div>
+        <div class="control-group">
+          <button id="stepFloodFill" disabled>Step Forward</button>
+          <button id="stepOverBasin" disabled>Step Over Basin</button>
+          <button id="resetFloodFill" disabled>Reset Debug</button>
+        </div>
+        <div class="debug-info">
+          <div class="insight-item">
+            <span class="insight-label">Stage:</span>
+            <span id="debugStage">uninitialized</span>
+          </div>
+          <div class="insight-item">
+            <span class="insight-label">Step:</span>
+            <span id="debugStepCount">0</span>
+          </div>
+          <div class="insight-item">
+            <span class="insight-label">Current Depth:</span>
+            <span id="debugCurrentDepth">-</span>
+          </div>
+          <div class="insight-item">
+            <span class="insight-label">Queue Size:</span>
+            <span id="debugQueueSize">0</span>
+          </div>
+          <div class="insight-item">
+            <span class="insight-label">Visited Size:</span>
+            <span id="debugVisitedSize">0</span>
+          </div>
+          <div class="insight-item">
+            <span class="insight-label">Buckets Used:</span>
+            <span id="debugBucketsUsed">0/10</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -134,7 +175,9 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>Load Map</h3>
-        <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
+        <button type="button" class="close-btn" onclick="this.closest('dialog').close()">
+          &times;
+        </button>
       </div>
       <div class="modal-body">
         <div class="load-options">
@@ -170,7 +213,9 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>Export/Save Map</h3>
-        <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
+        <button type="button" class="close-btn" onclick="this.closest('dialog').close()">
+          &times;
+        </button>
       </div>
       <div class="modal-body">
         <div class="export-options">
@@ -223,24 +268,32 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>Controls Help</h3>
-        <button type="button" class="close-btn" onclick="this.closest('dialog').close()">&times;</button>
+        <button type="button" class="close-btn" onclick="this.closest('dialog').close()">
+          &times;
+        </button>
       </div>
       <div class="modal-body">
         <div class="help-sections">
           <div class="help-section">
             <h4>Terrain Painting</h4>
             <div class="control-item"><code>0-9</code> Select depth level</div>
-            <div class="control-item"><code>LMB drag</code> Paint terrain with selected depth</div>
+            <div class="control-item">
+              <code>LMB drag</code> Paint terrain with selected depth
+            </div>
             <div class="control-item"><code>ALT + Mouse wheel</code> Change selected depth</div>
             <div class="control-item"><code>ALT + RMB</code> Pipette tool (pick depth)</div>
-            <div class="control-item"><code>SHIFT + Mouse wheel</code> Change brush size (1-8)</div>
+            <div class="control-item">
+              <code>SHIFT + Mouse wheel</code> Change brush size (1-8)
+            </div>
           </div>
 
           <div class="help-section">
             <h4>Pumps & Water</h4>
             <div class="control-item"><code>SHIFT + LMB</code> Add outlet pump</div>
             <div class="control-item"><code>SHIFT + RMB</code> Add inlet pump</div>
-            <div class="control-item"><code>SHIFT + CTRL + LMB</code> Link pump to pipe system</div>
+            <div class="control-item">
+              <code>SHIFT + CTRL + LMB</code> Link pump to pipe system
+            </div>
             <div class="control-item"><code>CTRL + LMB</code> Flood fill</div>
             <div class="control-item"><code>CTRL + RMB</code> Flood empty</div>
           </div>

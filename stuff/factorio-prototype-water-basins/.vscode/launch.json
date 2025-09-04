@@ -10,7 +10,7 @@
       "name": "Launch Chrome against localhost",
       "url": "http://localhost:8000",
       "webRoot": "${workspaceFolder}",
-      "preLaunchTask": "deno: dev"
+      "preLaunchTask": "deno: dev",
     },
     {
       "type": "node",
@@ -19,7 +19,7 @@
       "port": 9229,
       "restart": true,
       "remoteRoot": "${workspaceFolder}",
-      "localRoot": "${workspaceFolder}"
+      "localRoot": "${workspaceFolder}",
     }
   ],
   "compounds": [

@@ -56,12 +56,12 @@ export class SaveLoadManager {
     // Encoding selection handlers
     const heightEncodingSelect = document.getElementById("heightEncoding");
     if (heightEncodingSelect) {
-      heightEncodingSelect.addEventListener('change', () => this.updateExportData());
+      heightEncodingSelect.addEventListener("change", () => this.updateExportData());
     }
 
     const basinEncodingSelect = document.getElementById("basinEncoding");
     if (basinEncodingSelect) {
-      basinEncodingSelect.addEventListener('change', () => this.updateExportData());
+      basinEncodingSelect.addEventListener("change", () => this.updateExportData());
     }
   }
 
@@ -94,24 +94,28 @@ export class SaveLoadManager {
     if (!container) return;
 
     const saves = this.getSavedMaps();
-    
+
     if (saves.length === 0) {
       container.innerHTML = '<p class="no-saves">No saved maps found</p>';
       return;
     }
 
-    container.innerHTML = saves.map(save => `
+    container.innerHTML = saves.map((save) => `
       <div class="saved-map-item">
         <div class="saved-map-info">
           <div class="saved-map-name">${this.escapeHtml(save.name)}</div>
           <div class="saved-map-date">${new Date(save.timestamp).toLocaleString()}</div>
         </div>
         <div class="saved-map-actions">
-          <button onclick="window.saveLoadManager.loadFromBrowser('${this.escapeHtml(save.key)}')">Load</button>
-          <button class="delete-btn" onclick="window.saveLoadManager.deleteFromBrowser('${this.escapeHtml(save.key)}')">Delete</button>
+          <button onclick="window.saveLoadManager.loadFromBrowser('${
+      this.escapeHtml(save.key)
+    }')">Load</button>
+          <button class="delete-btn" onclick="window.saveLoadManager.deleteFromBrowser('${
+      this.escapeHtml(save.key)
+    }')">Delete</button>
         </div>
       </div>
-    `).join('');
+    `).join("");
   }
 
   generateExportJson() {
@@ -130,14 +134,14 @@ export class SaveLoadManager {
   setupOptimalDefaults() {
     try {
       const bestOptions = this.gameState.getBestEncodingOptions();
-      
+
       const heightSelect = document.getElementById("heightEncoding");
       const basinSelect = document.getElementById("basinEncoding");
-      
+
       if (heightSelect && bestOptions.heightEncoding) {
         heightSelect.value = bestOptions.heightEncoding;
       }
-      
+
       if (basinSelect && bestOptions.basinEncoding) {
         basinSelect.value = bestOptions.basinEncoding;
       }
@@ -149,21 +153,21 @@ export class SaveLoadManager {
   updateExportData() {
     const heightSelect = document.getElementById("heightEncoding");
     const basinSelect = document.getElementById("basinEncoding");
-    
+
     if (!heightSelect || !basinSelect) return;
-    
+
     const heightEncoding = heightSelect.value;
     const basinEncoding = basinSelect.value;
-    
+
     // Update size information
     this.updateSizeInfo(heightEncoding, basinEncoding);
-    
+
     // Update the JSON output
     const options = {
       heightEncoding: heightEncoding,
-      basinEncoding: basinEncoding
+      basinEncoding: basinEncoding,
     };
-    
+
     const output = document.getElementById("exportJsonOutput");
     if (output) {
       try {
@@ -180,22 +184,22 @@ export class SaveLoadManager {
     const heightSizeInfo = document.getElementById("heightSizeInfo");
     const basinSizeInfo = document.getElementById("basinSizeInfo");
     const totalSizeInfo = document.getElementById("totalSizeInfo");
-    
+
     try {
       // Calculate individual sizes
       const heightCompressed = this.gameState.compressHeights(heightEncoding);
       const basinCompressed = this.gameState.compressBasins(basinEncoding);
-      
+
       const heightSize = JSON.stringify(heightCompressed).length;
       const basinSize = JSON.stringify(basinCompressed).length;
-      
+
       // Calculate total JSON size
       const options = {
         heightEncoding: heightEncoding,
-        basinEncoding: basinEncoding
+        basinEncoding: basinEncoding,
       };
       const totalSize = this.gameState.exportToJSON(options).length;
-      
+
       // Update displays
       if (heightSizeInfo) {
         heightSizeInfo.textContent = this.formatBytes(heightSize);
@@ -215,11 +219,11 @@ export class SaveLoadManager {
   }
 
   formatBytes(bytes) {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB'];
+    const sizes = ["B", "KB", "MB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   }
 
   loadFromText() {
@@ -268,19 +272,19 @@ export class SaveLoadManager {
 
     const saveName = nameInput.value.trim();
     const saveKey = `mapSave_${Date.now()}_${saveName}`;
-    
+
     try {
       const jsonData = this.gameState.exportToJSON();
       const saveData = {
         name: saveName,
         timestamp: new Date().toISOString(),
-        data: jsonData
+        data: jsonData,
       };
-      
+
       localStorage.setItem(saveKey, JSON.stringify(saveData));
       nameInput.value = "";
       alert(`Map saved as "${saveName}"!`);
-      
+
       // Refresh the saved maps list if the load modal is open
       if (document.getElementById("loadModal").open) {
         this.populateSavedMapsList();
@@ -333,7 +337,7 @@ export class SaveLoadManager {
     output.setSelectionRange(0, 99999); // For mobile devices
 
     try {
-      document.execCommand('copy');
+      document.execCommand("copy");
       alert("JSON data copied to clipboard!");
     } catch (_error) {
       // Fallback for modern browsers
@@ -351,10 +355,10 @@ export class SaveLoadManager {
 
     const blob = new Blob([output.value], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement("a");
     a.href = url;
-    a.download = `water-basins-map-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `water-basins-map-${new Date().toISOString().split("T")[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -371,21 +375,21 @@ export class SaveLoadManager {
           saves.push({
             key: key,
             name: saveData.name,
-            timestamp: saveData.timestamp
+            timestamp: saveData.timestamp,
           });
         } catch (_error) {
           console.warn(`Invalid save data for key ${key}:`, _error);
         }
       }
     }
-    
+
     // Sort by timestamp, newest first
     saves.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     return saves;
   }
 
   escapeHtml(text) {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
   }
