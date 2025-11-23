@@ -6,9 +6,9 @@ published: 2022-12-19T13:41:06.481Z
 draft: true
 modified: 2024-09-27T18:00:45.150Z
 layout: post
+lastmod: 2025-11-12T23:39:28.298Z
 ---
 
-- [ ] USE "N00BS" or "NOBS" or some other name for the site! It's intent is "No BS" where no-bs, meaty articles are without the fluff. You have a problem and you have a solution without fancy paragraphs and stories.
 - [x] time using `<time>`
 - [ ] links and buttons
   - [ ] codepen
